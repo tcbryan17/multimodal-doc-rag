@@ -23,6 +23,7 @@ cp .env.example .env          # first time only
 docker compose up -d --wait   # start local Postgres + pgvector (needs OrbStack running)
 docker compose down           # stop it (data is kept in the pgdata volume)
 uv sync                 # install deps into .venv
+uv run python -m multimodal_doc_rag.db.migrate   # apply SQL migrations to DATABASE_URL
 uv run pytest -W error::DeprecationWarning      # tests (the flag is how we keep deprecations at zero)
 uv run pytest tests/test_api.py::test_health    # a single test
 uv run mypy src tests   # type check (strict)
