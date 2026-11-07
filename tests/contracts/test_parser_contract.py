@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from multimodal_doc_rag.fakes import PlainTextParser
+from multimodal_doc_rag.parsing.edgar import EdgarHtmlParser
 from multimodal_doc_rag.protocols import Parser
 from multimodal_doc_rag.types import Corpus, ParsedDocument, SourceInfo
 
@@ -22,6 +23,19 @@ CASES: list[object] = [
             SourceInfo(doc_key="plain", corpus=Corpus.FAA, title="Plain", source_url="file://p"),
         ),
         id="fake-plaintext",
+    ),
+    pytest.param(
+        (
+            EdgarHtmlParser,
+            FIXTURES / "mini_10k.html",
+            SourceInfo(
+                doc_key="example-10k-2025",
+                corpus=Corpus.TEN_K,
+                title="Example Corp 10-K FY2025",
+                source_url="file://mini_10k.html",
+            ),
+        ),
+        id="edgar-html",
     ),
 ]
 
