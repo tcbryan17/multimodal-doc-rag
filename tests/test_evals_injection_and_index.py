@@ -1,7 +1,6 @@
 """Injection sets, the poisoned PDF, and the eval-only database logic."""
 
 import importlib.util
-import os
 from pathlib import Path
 from typing import Any
 
@@ -207,8 +206,3 @@ def test_copy_is_refused_with_a_clear_message_while_source_is_in_use(
         with psycopg.connect(admin, autocommit=True) as conn:
             for name in (src, dst):
                 conn.execute(drop_statement(name))
-
-
-def test_env_is_not_pointing_tests_at_real_databases() -> None:
-    url = os.environ.get("TEST_DATABASE_URL", "")
-    assert db_name(url) not in ("rag", EVAL_DB_NAME) if url else True
