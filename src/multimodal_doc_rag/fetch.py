@@ -32,6 +32,14 @@ SEC_ARCHIVE_URL = "https://www.sec.gov/Archives/edgar/data/{cik}/{accession}/{do
 # ADR 0013: dev = Apple, Microsoft, J&J; held out = Costco.
 EDGAR_TICKERS = ("AAPL", "MSFT", "JNJ", "COST")
 HELDOUT_TICKERS = frozenset({"COST"})
+# SEC registrant names are legal names in mixed styles ("COSTCO WHOLESALE CORP /NEW",
+# "Apple Inc."). Titles appear in every citation, so ours use a short consistent name.
+EDGAR_DISPLAY_NAMES = {
+    "AAPL": "Apple",
+    "MSFT": "Microsoft",
+    "JNJ": "Johnson & Johnson",
+    "COST": "Costco",
+}
 # SEC allows 10 req/s; we stay at ~5 to leave headroom.
 SEC_MIN_INTERVAL_S = 0.2
 
@@ -261,6 +269,13 @@ def pad_cik(cik: int | str) -> str:
     return f"{int(cik):010d}"
 
 
+def display_name(ticker: str, sec_name: str) -> str:
+    """Short name for titles; unknown tickers fall back to the SEC name minus a state suffix
+    like " /NEW" or " /DE/"."""
+    known = EDGAR_DISPLAY_NAMES.get(ticker.upper())
+    return known if known is not None else re.sub(r"\s*/[A-Z]+/?$", "", sec_name)
+
+
 def lookup_company(tickers_json: dict[str, Any], ticker: str) -> tuple[str, str]:
     """(zero-padded CIK, company name) for a ticker from company_tickers.json."""
     for row in tickers_json.values():
@@ -355,7 +370,7 @@ def fetch_edgar(
             ManifestEntry(
                 doc_key=doc_key,
                 corpus=Corpus.TEN_K,
-                title=f"{company} 10-K FY{filing.fiscal_year}",
+                title=f"{display_name(ticker, company)} 10-K FY{filing.fiscal_year}",
                 source_url=url,
                 company=company,
                 fiscal_year=filing.fiscal_year,

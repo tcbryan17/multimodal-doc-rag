@@ -13,6 +13,7 @@ from multimodal_doc_rag.fetch import (
     MissingUserAgentError,
     archive_url,
     chapter_pdf_url,
+    display_name,
     faa_chapter_links,
     fetch_edgar,
     fetch_faa,
@@ -147,6 +148,12 @@ def test_pad_cik_and_lookup() -> None:
         lookup_company(TICKERS, "NOPE")
 
 
+def test_display_name() -> None:
+    assert display_name("cost", "COSTCO WHOLESALE CORP /NEW") == "Costco"
+    assert display_name("XYZ", "EXAMPLE HOLDINGS CORP /DE/") == "EXAMPLE HOLDINGS CORP"
+    assert display_name("XYZ", "Example Inc.") == "Example Inc."
+
+
 def test_latest_10k_ignores_amendments_and_older_filings() -> None:
     filing = latest_10k(SUBMISSIONS)
     assert filing.accession_number == "0000320193-26-000106"  # not the 10-K/A, not the 10-Q
@@ -195,7 +202,7 @@ def test_fetch_edgar_sends_configured_user_agent_and_builds_entries(tmp_path: Pa
     assert requests and all(r.headers["user-agent"] == UA for r in requests)
     aapl, cost = entries
     assert aapl.doc_key == "aapl-10k-2026"
-    assert aapl.title == "Apple Inc. 10-K FY2026"
+    assert aapl.title == "Apple 10-K FY2026"  # short display name; company keeps the SEC name
     assert (aapl.company, aapl.fiscal_year, aapl.corpus) == ("Apple Inc.", 2026, Corpus.TEN_K)
     assert aapl.source_url == (
         "https://www.sec.gov/Archives/edgar/data/320193/000032019326000106/aapl-20260926.htm"
