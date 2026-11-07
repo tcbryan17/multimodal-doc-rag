@@ -1,17 +1,34 @@
 """Contract for every Parser (ADR 0006/0012). Each case pairs a parser with a fixture file
 it understands; add the EDGAR and PDF parsers here with their fixtures."""
 
+import importlib.util
 import re
+import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 
 from multimodal_doc_rag.fakes import PlainTextParser
+from multimodal_doc_rag.parsing.handbook_pdf import HandbookPdfParser
 from multimodal_doc_rag.protocols import Parser
 from multimodal_doc_rag.types import Corpus, ParsedDocument, SourceInfo
 
 FIXTURES = Path(__file__).parent.parent / "fixtures"
+
+
+def _mini_handbook_pdf() -> Path:
+    """The PDF fixture is generated, not committed, so build it once at collection time."""
+    spec = importlib.util.spec_from_file_location(
+        "make_mini_handbook", FIXTURES / "make_mini_handbook.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    out = Path(tempfile.gettempdir()) / "mmdr_mini_handbook_contract.pdf"
+    module.build(out)
+    return out
+
 
 CASES: list[object] = [
     # Each case is one (parser factory, fixture file, SourceInfo) tuple.
@@ -22,6 +39,14 @@ CASES: list[object] = [
             SourceInfo(doc_key="plain", corpus=Corpus.FAA, title="Plain", source_url="file://p"),
         ),
         id="fake-plaintext",
+    ),
+    pytest.param(
+        (
+            HandbookPdfParser,
+            _mini_handbook_pdf(),
+            SourceInfo(doc_key="mini", corpus=Corpus.FAA, title="Mini", source_url="file://m"),
+        ),
+        id="handbook-pdf",
     ),
 ]
 

@@ -13,6 +13,7 @@ dependencies = [
     "pgvector>=0.5.1",
     "psycopg[binary,pool]>=3.3.8",
     "pydantic-settings>=2.16.2",
+    "pymupdf>=2.1",
     "uvicorn[standard]>=0.54.0",
 ]
 
@@ -40,7 +41,13 @@ testpaths = ["tests"]
 # Live tests (real OpenRouter calls, cost money) are off by default; run them with `-m live`.
 addopts = "--strict-markers -m 'not live'"
 # Turn deprecation warnings into errors so they stay at zero.
-filterwarnings = ["error::DeprecationWarning"]
+filterwarnings = [
+    "error::DeprecationWarning",
+    # PyMuPDF's SWIG bindings warn at import ("builtin type SwigPy... has no __module__").
+    # Third-party and harmless; later entries win, so this exempts only those messages.
+    "ignore:builtin type Swig:DeprecationWarning",
+    "ignore:builtin type swigvarlink:DeprecationWarning",
+]
 markers = [
     "db: needs a reachable Postgres (skipped when unreachable)",
     "live: makes real OpenRouter calls (skipped unless selected with -m live)",
@@ -49,3 +56,11 @@ markers = [
 [tool.mypy]
 python_version = "3.12"
 strict = true
+
+# PyMuPDF ships partial type hints: many of its methods are unannotated, which strict mode
+# rejects ("call to untyped function"). Treat the whole package as Any instead of
+# sprinkling ignores; our own code around it stays fully typed.
+[[tool.mypy.overrides]]
+module = ["pymupdf", "pymupdf.*"]
+follow_imports = "skip"
+ignore_missing_imports = true
