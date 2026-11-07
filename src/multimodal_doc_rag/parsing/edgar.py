@@ -9,10 +9,11 @@ Pipeline: HTML -> flat list of blocks (text lines, tables, page breaks) -> pages
 
 import hashlib
 import re
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, Tag, XMLParsedAsHTMLWarning
 from bs4.element import NavigableString
 
 from multimodal_doc_rag.types import Element, ElementKind, PageRef, ParsedDocument, SourceInfo
@@ -27,10 +28,29 @@ _BLOCKS = ("div", "p", "table", "hr", "ul", "ol", "li", "h1", "h2", "h3", "h4", 
 # A footer is only a page number: "23", "F-7", "Page 4", or a roman numeral "ii".
 # Limited to 1-3 digits so a stray year ("2024") is never taken for a page number.
 _FOOTER = re.compile(r"(?:page\s+)?(?:[A-Z]-)?\d{1,3}|[ivxl]{1,6}", re.I)
-_ITEM = re.compile(r"Item\s+\d{1,2}[A-C]?\.", re.I)
+# Item headings come as "Item 1A. Risk Factors" (Apple, J&J, MSFT) or "Item 1A—Risk Factors"
+# (Costco: em/en dash or hyphen, no period), so accept any of those separators after the number.
+_ITEM = re.compile(r"Item\s+\d{1,2}[A-C]?\s*[.\u2014\u2013-]", re.I)
 _PART = re.compile(r"PART\s+[IV]+\.?", re.I)
-_MAX_HEADING_LEN = 120  # real headings are short; this keeps body text citing "Item 7." out
+# Real headings are short; this keeps body text citing "Item 7." out. 200 (not 120) because
+# Costco's Item 7 line is "Item 7—Management's Discussion ... Operations (amounts in millions,
+# except per share ... data)": the title plus a long non-bold parenthetical in the same <div>.
+_MAX_HEADING_LEN = 200
+# MSFT opens every page with a running header "PART II" + "Item 8" (or "Item 2, 3, 4"): same
+# words as a heading but with no separator or title. It must not act as a heading, or the PART
+# line would end the current Item on every page.
+_RUNNING_ITEM = re.compile(r"Items?\s+\d{1,2}[A-C]?(?:\s*,\s*\d{1,2}[A-C]?)*", re.I)
 _MAX_SUBHEADING_LEN = 80
+
+# A running footer that carries a document name next to the number, written either as one line
+# ("Apple Inc. | 2026 Form 10-K | 23") or as a one-row table ("2025 Annual Report" | "43", J&J).
+# Requiring "10-K" / "Annual Report" in the text is what keeps a genuine two-cell data table
+# ("Net sales | 12") that happens to end a page from being mistaken for a footer.
+_RUNNING_FOOTER = re.compile(
+    r"(?:[^|]{1,60}\|\s*)?[^|]*(?:10-K|annual\s+report)[^|]*\|\s*(?:[A-Z]-)?\d{1,3}", re.I
+)
+# Costco repeats a "Table of Contents" back-link at the top of every page; it is navigation.
+_NAV_LINE = re.compile(r"table of contents", re.I)
 
 _PREFIX_CELLS = {"$", "(", "$("}  # glued onto the number to their right
 _SUFFIX_CELLS = {")", "%", ")%"}  # glued onto the number to their left
@@ -132,7 +152,12 @@ def _table_block(table: Tag) -> _Line | _Table | None:
     grid = [r for r in grid if any(r)]
     if not grid:
         return None
-    if sum(1 for r in grid for c in r if c) == 1:
+    cells = [c for r in grid for c in r if c]
+    if len(grid) == 1 and _RUNNING_FOOTER.fullmatch(" | ".join(cells)):
+        # Footer laid out as a table. Emit it as a line so the page logic treats it like any
+        # other footer (it is then stripped and its trailing number becomes the label).
+        return _Line(" | ".join(cells), False)
+    if len(cells) == 1:
         # Layout-only table (a single cell used for positioning): treat it as plain text.
         text = next(c for r in grid for c in r if c)
         return _Line(text, _is_bold(table))
@@ -170,6 +195,15 @@ def _walk(node: Tag, out: list[_Block]) -> None:
             out.append(_BREAK)
 
 
+def _footer_label(text: str) -> str | None:
+    """The printed page label if this line is a page footer, else None."""
+    if _FOOTER.fullmatch(text):
+        return re.sub(r"(?i)^page\s+", "", text)
+    if _RUNNING_FOOTER.fullmatch(text):
+        return text.rsplit("|", 1)[1].strip()
+    return None
+
+
 def _split_pages(blocks: list[_Block]) -> list[list[_Line | _Table]]:
     pages: list[list[_Line | _Table]] = [[]]
     for b in blocks:
@@ -186,7 +220,12 @@ class EdgarHtmlParser:
 
     def parse(self, path: Path, source: SourceInfo) -> ParsedDocument:
         raw = path.read_bytes()
-        soup = BeautifulSoup(raw, "lxml")
+        with warnings.catch_warnings():
+            # Expected: 10-Ks are inline XBRL, i.e. XHTML, so they start with "<?xml". We still
+            # want the lenient lxml *HTML* parser (it copes with the sloppy markup and keeps
+            # the ix: tags as plain tags), so the warning telling us to use an XML parser is noise.
+            warnings.simplefilter("ignore", XMLParsedAsHTMLWarning)
+            soup = BeautifulSoup(raw, "lxml")
         body = soup.body or soup
         blocks: list[_Block] = []
         _walk(body, blocks)
@@ -200,11 +239,22 @@ class EdgarHtmlParser:
         for idx, page in enumerate(pages):
             label: str | None = None
             last = page[-1]
-            if isinstance(last, _Line) and _FOOTER.fullmatch(last.text):
-                # Footer = last line on the page that is only a page number. It's the page's
-                # printed label and is not content, so it's dropped from the elements.
-                label = re.sub(r"(?i)^page\s+", "", last.text)
+            footer = _footer_label(last.text) if isinstance(last, _Line) else None
+            if footer is not None:
+                # Footer = last line on the page that is a page number (bare or with a
+                # document name). It's the page's printed label, not content, so it's dropped.
+                label = footer
                 page = page[:-1]
+            if (
+                len(page) > 2
+                and isinstance(page[0], _Line)
+                and isinstance(page[1], _Line)
+                and _PART.fullmatch(page[0].text)
+                and _RUNNING_ITEM.fullmatch(page[1].text)
+            ):
+                page = page[2:]
+            if page and isinstance(page[0], _Line) and _NAV_LINE.fullmatch(page[0].text):
+                page = page[1:]
             ref = PageRef(idx=idx, label=label)
             for b in page:
                 kind: ElementKind
