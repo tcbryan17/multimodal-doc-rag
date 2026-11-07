@@ -37,7 +37,7 @@ What this makes easier or harder later, and what would make us revisit it.
 | [0003](0003-docker-local-and-live-demo.md) | Docker Compose locally; replay first, then a capped live demo | Accepted |
 | [0004](0004-corpora-10k-and-faa-handbook.md) | Corpora: SEC 10-Ks and the FAA Pilot's Handbook | Accepted |
 | [0005](0005-ux-and-ask-contract.md) | User experience and the `/ask` contract | Accepted |
-| [0006](0006-parsing.md) | Parsing: hand-rolled HTML for EDGAR; the PDF parser chosen by a spike | Accepted (PDF pending spike) |
+| [0006](0006-parsing.md) | Parsing: hand-rolled HTML for EDGAR; PyMuPDF for the PDF | Accepted (PDF: PyMuPDF) |
 | [0007](0007-chunking.md) | Chunking: structure-aware, page-spanning, deterministic context headers | Accepted |
 | [0008](0008-image-handling.md) | Image handling: describe for retrieval, send the image for answering | Accepted |
 | [0009](0009-models-and-privacy.md) | Models and privacy: strict zero data retention | Accepted |

@@ -3,18 +3,18 @@
 Every step is one or more commits that are green on ruff, ruff format, mypy (strict) and pytest, locally and in CI. Each step lists what its tests prove and the concept to be able to explain afterwards. The reasoning lives in the ADRs (`docs/decisions/`); this file is just the order. Tick steps off as they land.
 
 - [x] **0. Record decisions.** ADRs 0005–0013, README and CLAUDE.md.
-- [ ] **0b. FAA parser spike** (throwaway branch, not merged). Run PyMuPDF and Docling on two figure-heavy chapters. Measure the raster vs vector figure count, heading accuracy and caption pairing. Write the results and the choice into ADR 0006 *before step 4*, because the figure element shape depends on them.
-- [ ] **1. Quality gate.**
+- [x] **0b. FAA parser spike** (throwaway branch, not merged). Run PyMuPDF and Docling on two figure-heavy chapters. Measure the raster vs vector figure count, heading accuracy and caption pairing. Write the results and the choice into ADR 0006 *before step 4*, because the figure element shape depends on them.
+- [x] **1. Quality gate.**
   - Set pytest `filterwarnings` (DeprecationWarning becomes an error) and register the `db` and `live` markers.
   - Add a pre-commit config (`uv run` system hooks).
   - Add a GitHub Actions workflow with a pgvector service container.
   - *Concept:* CI service containers vs the local compose container.
-- [ ] **2. The `/ask` contract.**
+- [x] **2. The `/ask` contract.**
   - Add Pydantic request and response models.
   - Inject the pipeline **and the DB connection** as FastAPI dependencies.
   - Tests: the response shape, `ms >= 0`, and that `replay/sample-run.json` validates once it exists.
   - *Concept:* dependency injection, and the API as a contract.
-- [ ] **3. Migrations and schema.**
+- [x] **3. Migrations and schema.**
   - Write the runner and `0001_init.sql`.
   - Add a session fixture for the `rag_test` database, plus a fixture that rolls back each test.
   - Tests: migrations are idempotent; the tables and indexes exist; a vector round-trips.
@@ -45,7 +45,7 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
   - Record one trace step per stage.
   - **End-to-end test:** ingest the fixture, call `/ask`, and get a citation with the right page label. This completes the skeleton.
   - *Concept:* grounding, and checking citations rather than trusting them.
-- [ ] **10. The OpenRouter client and real adapters.**
+- [ ] **10. The OpenRouter client and real adapters.** *(The raw client and its MockTransport tests are done; the adapters remain.)*
   - Embeddings (truncated and re-normalised), rerank with a fallback, and chat with images.
   - `MockTransport` tests check that every request sends `zdr: true` and `data_collection: "deny"`, plus errors and fallbacks.
   - Add an opt-in `live` smoke test.

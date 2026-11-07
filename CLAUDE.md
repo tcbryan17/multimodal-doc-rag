@@ -51,7 +51,7 @@ Before calling work done, run pytest, mypy, and ruff check. All of them pass rig
 - If the repo folder is moved or renamed, `.venv` breaks because it stores absolute paths. Delete `.venv` and run `uv sync`.
 
 ## Current status (update as things change)
-**Done:** the environment (uv project, FastAPI with only `/health`, config, Docker Postgres + pgvector) and decision records 0001–0013. **No pipeline code exists yet.**
+**Done:** decision records 0001–0013; build-plan steps 0–3 (quality gate + CI, the `/ask` contract with an injected pipeline, migrations/schema/DB fixtures) and the raw OpenRouter client from step 10. No pipeline stages exist yet.
 
 **Decided** (read the ADR before working in its area; details and rejected options are in `docs/decisions/`):
 - 0001: our own retrieval pipeline, with no LangChain or LlamaIndex.
@@ -59,7 +59,7 @@ Before calling work done, run pytest, mypy, and ruff check. All of them pass rig
 - 0003: Docker Compose locally. Build against replay first, then a capped live `/ask`.
 - 0004 / 0013: SEC 10-Ks (Apple, Microsoft, J&J; Costco held out) and FAA-H-8083-25C (all chapters; ~3 held out).
 - 0005: v1 handles fact, figure and concept questions; figure answers show the figure; everything is searched by default with an optional filter. **Citations use printed page labels (`page: str`).**
-- 0006: EDGAR HTML is parsed by hand with BeautifulSoup. **The FAA PDF parser (PyMuPDF vs Docling) is pending a spike.**
+- 0006: EDGAR HTML is parsed by hand with BeautifulSoup; the FAA PDF uses **PyMuPDF** with our own layout rules (most figures are vector, so regions are found and rendered, not extracted).
 - 0007: structure-aware chunks that may span pages, a deterministic context header, and a size tuned by the eval.
 - 0008: a vision-model description makes each figure findable; the image itself goes to the generator when answering; decorative images are filtered; failures degrade and are reported.
 - 0009: **strict zero-data-retention.** Every OpenRouter request must send `provider: {zdr: true, data_collection: "deny"}`. qwen3-embedding-8b @1024 dims, qwen3-reranker-8b with a fallback, and Claude Haiku 5.5 as the default generator. No OpenRouter key exists yet.
@@ -67,6 +67,6 @@ Before calling work done, run pytest, mypy, and ruff check. All of them pass rig
 - 0011: evals run outside pytest; 60 dev + 20 held-out questions per corpus; an LLM judge calibrated against human grades; injection sets.
 - 0012: a walking skeleton; contract tests over fake and real implementations; db tests in a rolled-back transaction; GitHub Actions + pre-commit.
 
-**Build plan:** `docs/build-plan.md` lists the ordered, test-first steps. Tick each one off as it lands. Next up: the FAA parser spike (0b), then the quality gate (step 1).
+**Build plan:** `docs/build-plan.md` lists the ordered, test-first steps. Tick each one off as it lands. Next up: step 4 (protocols, fakes, contract suites).
 
 **Still open:** deployment (production Postgres host, app hosting, hardening: per-IP rate limits, input and output caps, a read-only DB role, a non-root container). This is deliberately deferred until after the eval, and it's the owner's decision.
