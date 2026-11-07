@@ -67,6 +67,6 @@ Before calling work done, run pytest, mypy, and ruff check. All of them pass rig
 - 0011: evals run outside pytest; 60 dev + 20 held-out questions per corpus; an LLM judge calibrated against human grades; injection sets.
 - 0012: a walking skeleton; contract tests over fake and real implementations; db tests in a rolled-back transaction; GitHub Actions + pre-commit.
 
-**Build plan:** `docs/build-plan.md` lists the ordered, test-first steps. Tick each one off as it lands. Next up: step 4 (protocols, fakes, contract suites).
+**Build plan:** `docs/build-plan.md` lists the ordered, test-first steps. Tick each one off as it lands. Next up: steps 5–8, 10–12 in parallel. Core types live in `types.py`, seams in `protocols.py`, fakes in `fakes.py`, contract suites in `tests/contracts/`.
 
 **Still open:** deployment (production Postgres host, app hosting, hardening: per-IP rate limits, input and output caps, a read-only DB role, a non-root container). This is deliberately deferred until after the eval, and it's the owner's decision.

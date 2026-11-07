@@ -19,7 +19,7 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
   - Add a session fixture for the `rag_test` database, plus a fixture that rolls back each test.
   - Tests: migrations are idempotent; the tables and indexes exist; a vector round-trips.
   - *Concept:* migrations, and transactions as test isolation.
-- [ ] **4. Protocols, fakes and contract suites.**
+- [x] **4. Protocols, fakes and contract suites.**
   - Protocols: `Parser`, `Embedder`, `Reranker`, `Generator`, `FigureDescriber`.
   - Give each a trivial fake.
   - Write one contract suite per protocol, parametrised over its implementations.

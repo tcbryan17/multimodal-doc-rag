@@ -1,0 +1,14 @@
+# Principles of Flight
+
+Lift is the force that opposes weight.
+
+## Angle of Attack
+
+The angle of attack is the angle between the chord line and the relative wind.
+## Stalls
+
+A stall occurs when the critical angle of attack is exceeded.
+
+# Flight Instruments
+
+The altimeter measures height above a reference level.
