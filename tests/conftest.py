@@ -45,6 +45,11 @@ def db_conn(test_database_url: str) -> Iterator[psycopg.Connection[Any]]:
     """
     with psycopg.connect(test_database_url) as conn:
         register_vector(conn)
+        # Explicitly open the outer transaction. register_vector alone leaves the connection
+        # IDLE, and then a `conn.transaction()` inside the code under test (corpus ingest uses
+        # one per document) would be an OUTERMOST block that really commits, leaking rows
+        # into other tests. With a transaction already open it becomes a SAVEPOINT.
+        conn.execute("SELECT 1")
         try:
             yield conn
         finally:
