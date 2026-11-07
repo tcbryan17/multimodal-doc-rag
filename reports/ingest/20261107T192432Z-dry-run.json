@@ -3,79 +3,79 @@
     {
       "chunks_by_kind": {
         "table": 66,
-        "text": 237
+        "text": 224
       },
-      "content_tokens": 59246,
+      "content_tokens": 58716,
       "corpus": "10k",
       "doc_key": "aapl-10k-2026",
       "elements_by_kind": {
         "table": 60,
-        "text": 535
+        "text": 472
       },
-      "embed_tokens": 66451,
+      "embed_tokens": 65596,
       "figure_image_tokens": 0,
       "figures": 0,
       "pages": 65,
       "path": "edgar/aapl-10k-2026.htm",
       "seconds": 0.3,
       "split": "dev",
-      "unlabelled_elements": 595
+      "unlabelled_elements": 44
     },
     {
       "chunks_by_kind": {
         "table": 62,
-        "text": 149
+        "text": 179
       },
-      "content_tokens": 54657,
+      "content_tokens": 53417,
       "corpus": "10k",
       "doc_key": "cost-10k-2026",
       "elements_by_kind": {
         "table": 58,
-        "text": 662
+        "text": 496
       },
-      "embed_tokens": 55712,
+      "embed_tokens": 59857,
       "figure_image_tokens": 0,
       "figures": 0,
       "pages": 70,
       "path": "edgar/cost-10k-2026.htm",
       "seconds": 0.3,
       "split": "heldout",
-      "unlabelled_elements": 35
+      "unlabelled_elements": 34
     },
     {
       "chunks_by_kind": {
-        "table": 187,
-        "text": 352
+        "table": 126,
+        "text": 344
       },
-      "content_tokens": 108319,
+      "content_tokens": 107655,
       "corpus": "10k",
       "doc_key": "jnj-10k-2025",
       "elements_by_kind": {
-        "table": 174,
+        "table": 113,
         "text": 830
       },
-      "embed_tokens": 123661,
+      "embed_tokens": 121009,
       "figure_image_tokens": 0,
       "figures": 0,
       "pages": 127,
       "path": "edgar/jnj-10k-2025.htm",
       "seconds": 0.7,
       "split": "dev",
-      "unlabelled_elements": 542
+      "unlabelled_elements": 80
     },
     {
       "chunks_by_kind": {
         "table": 98,
-        "text": 255
+        "text": 300
       },
-      "content_tokens": 85928,
+      "content_tokens": 84777,
       "corpus": "10k",
       "doc_key": "msft-10k-2026",
       "elements_by_kind": {
         "table": 88,
-        "text": 1073
+        "text": 850
       },
-      "embed_tokens": 88796,
+      "embed_tokens": 94869,
       "figure_image_tokens": 0,
       "figures": 0,
       "pages": 101,
@@ -99,7 +99,7 @@
       "figures": 0,
       "pages": 24,
       "path": "faa/phak-appendices.pdf",
-      "seconds": 2.1,
+      "seconds": 2.0,
       "split": "dev",
       "unlabelled_elements": 0
     },
@@ -120,7 +120,7 @@
       "figures": 24,
       "pages": 24,
       "path": "faa/phak-ch01.pdf",
-      "seconds": 10.9,
+      "seconds": 11.0,
       "split": "dev",
       "unlabelled_elements": 0
     },
@@ -162,7 +162,7 @@
       "figures": 22,
       "pages": 16,
       "path": "faa/phak-ch03.pdf",
-      "seconds": 9.1,
+      "seconds": 8.8,
       "split": "dev",
       "unlabelled_elements": 0
     },
@@ -183,7 +183,7 @@
       "figures": 8,
       "pages": 10,
       "path": "faa/phak-ch04.pdf",
-      "seconds": 2.9,
+      "seconds": 2.8,
       "split": "dev",
       "unlabelled_elements": 0
     },
@@ -204,7 +204,7 @@
       "figures": 71,
       "pages": 51,
       "path": "faa/phak-ch05.pdf",
-      "seconds": 12.3,
+      "seconds": 12.1,
       "split": "dev",
       "unlabelled_elements": 0
     },
@@ -225,7 +225,7 @@
       "figures": 24,
       "pages": 12,
       "path": "faa/phak-ch06.pdf",
-      "seconds": 5.7,
+      "seconds": 5.6,
       "split": "dev",
       "unlabelled_elements": 0
     },
@@ -246,7 +246,7 @@
       "figures": 49,
       "pages": 42,
       "path": "faa/phak-ch07.pdf",
-      "seconds": 12.6,
+      "seconds": 12.1,
       "split": "dev",
       "unlabelled_elements": 0
     },
@@ -330,7 +330,7 @@
       "figures": 34,
       "pages": 28,
       "path": "faa/phak-ch11.pdf",
-      "seconds": 7.9,
+      "seconds": 7.5,
       "split": "heldout",
       "unlabelled_elements": 0
     },
@@ -351,7 +351,7 @@
       "figures": 29,
       "pages": 26,
       "path": "faa/phak-ch12.pdf",
-      "seconds": 9.5,
+      "seconds": 9.7,
       "split": "dev",
       "unlabelled_elements": 0
     },
@@ -393,7 +393,7 @@
       "figures": 59,
       "pages": 41,
       "path": "faa/phak-ch14.pdf",
-      "seconds": 18.4,
+      "seconds": 18.2,
       "split": "dev",
       "unlabelled_elements": 9
     },
@@ -456,7 +456,7 @@
       "figures": 24,
       "pages": 30,
       "path": "faa/phak-ch17.pdf",
-      "seconds": 29.0,
+      "seconds": 28.6,
       "split": "dev",
       "unlabelled_elements": 0
     },
@@ -494,7 +494,7 @@
       "figures": 0,
       "pages": 36,
       "path": "faa/phak-glossary.pdf",
-      "seconds": 1.7,
+      "seconds": 1.8,
       "split": "dev",
       "unlabelled_elements": 0
     },
@@ -526,17 +526,17 @@
       "Prices come from MODEL_PRICES (USD per million tokens), rounded up when set; if OpenRouter reports the real `usage.cost` the actual bill will differ.",
       "Chunk counts assume the default 500-token chunk size. Retries, preflight and failed calls are not included: the suggested credit limit is 2x the estimate, minimum $1."
     ],
-    "embed_tokens": 998100,
-    "embed_usd": 0.02,
+    "embed_tokens": 1004811,
+    "embed_usd": 0.0201,
     "embedding_model": "qwen/qwen3-embedding-8b",
     "figures": 496,
     "suggested_credit_limit_usd": 1.0,
-    "total_usd": 0.2333,
+    "total_usd": 0.2334,
     "vision_input_tokens": 430045,
     "vision_model": "anthropic/claude-haiku-5.5",
     "vision_output_tokens": 198400,
     "vision_usd": 0.2133
   },
   "failed": {},
-  "generated_at": "2026-11-07T19:13:38+00:00"
+  "generated_at": "2026-11-07T19:24:32+00:00"
 }
