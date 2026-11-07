@@ -60,9 +60,13 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
   - Add `image_url` to citations.
   - Send figure images to the generator.
 - [ ] **14. Real ingest** of both corpora (a manual run). Review the ingest report.
+  - [x] Tooling: `scripts/ingest_corpus.py` (dry run + cost estimate, preflight canary, `--replace`, `--retry-failures`, reports in `reports/ingest/`), and a fail-closed spending cap (`models/cost.py`).
+  - [x] Parsers validated on the real corpus without model calls (see the dry-run report).
+  - [ ] The owner adds the OpenRouter key; run the preflight, then the ingest.
 - [ ] **15. Eval harness.**
-  - Gold-set schema, metric functions (unit-tested), and a runner with a cost cap that writes reports.
-  - Then the owner builds the gold set.
+  - [x] Gold-set schema, metric functions (unit-tested), LLM judge, a runner with a cost cap that writes reports, drafting + review tools, injection sets, the eval-only index, judge calibration. See `evals/README.md`.
+  - [ ] The owner picks `JUDGE_MODEL`, then builds the gold set.
 - [ ] **16. Replay file.** Save one real response as `replay/sample-run.json`. The test from step 2 then validates it.
+  - [x] Tooling: `scripts/save_replay.py` (inlines figures as data URIs).
 
 Afterwards, as separate plans: the eval comparisons (ADR 0011), then deployment and the live demo.

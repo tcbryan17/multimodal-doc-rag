@@ -50,5 +50,14 @@ uv run pytest
 uv run uvicorn multimodal_doc_rag.api:app --reload
 ```
 
+Building the index (needs `OPENROUTER_API_KEY` in `.env`; every run has a spending cap):
+```bash
+uv run python scripts/fetch_corpus.py                      # public 10-Ks + FAA handbook into data/
+uv run python scripts/ingest_corpus.py --dry-run           # parse + cost estimate, no model calls
+uv run python scripts/ingest_corpus.py --preflight-only    # ~1 cent check of the live model APIs
+uv run python scripts/ingest_corpus.py                     # ingest; report in reports/ingest/
+```
+Evals (gold set, metrics, LLM judge, injection tests) are described in [`evals/README.md`](evals/README.md).
+
 ## Status
-In progress
+In progress: the pipeline, parsers, ingest and eval tooling are built and tested; real ingest and the first eval run come next.

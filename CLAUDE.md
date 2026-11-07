@@ -26,9 +26,12 @@ uv sync                 # install deps into .venv
 uv run python -m multimodal_doc_rag.db.migrate   # apply SQL migrations to DATABASE_URL
 uv run pytest           # tests (DeprecationWarning is already an error via pyproject; live tests skipped)
 uv run pytest -m live   # live tests: real OpenRouter calls that cost money, never run by default
+uv run python scripts/fetch_corpus.py           # download the corpus into data/
+uv run python scripts/ingest_corpus.py --dry-run   # parse + chunk + cost estimate, no models (see --help)
+uv run python scripts/run_eval.py --help        # evals; workflow in evals/README.md
 uv run pre-commit install   # one-time: run lint/format/mypy/tests automatically before each commit
 uv run pytest tests/test_api.py::test_health    # a single test
-uv run mypy src tests scripts   # type check (strict)
+uv run mypy src tests scripts evals   # type check (strict)
 uv run ruff check .     # lint
 uv run ruff format .    # format
 uv run uvicorn multimodal_doc_rag.api:app --reload   # dev server
@@ -51,7 +54,7 @@ Before calling work done, run pytest, mypy, and ruff check. All of them pass rig
 - If the repo folder is moved or renamed, `.venv` breaks because it stores absolute paths. Delete `.venv` and run `uv sync`.
 
 ## Current status (update as things change)
-**Done:** decision records 0001–0013; build-plan steps 0–12: every pipeline stage, the end-to-end `/ask` test on a fixture 10-K, the handbook PDF parser (validated on real Ch. 8 and 11), and fetch scripts.
+**Done:** decision records 0001–0013; build-plan steps 0–13: every pipeline stage, end-to-end `/ask` tests (text and figures), both parsers validated on the real corpus, fetch scripts; plus the step 14–16 tooling (see Build plan).
 
 **Decided** (read the ADR before working in its area; details and rejected options are in `docs/decisions/`):
 - 0001: our own retrieval pipeline, with no LangChain or LlamaIndex.
@@ -67,6 +70,6 @@ Before calling work done, run pytest, mypy, and ruff check. All of them pass rig
 - 0011: evals run outside pytest; 60 dev + 20 held-out questions per corpus; an LLM judge calibrated against human grades; injection sets.
 - 0012: a walking skeleton; contract tests over fake and real implementations; db tests in a rolled-back transaction; GitHub Actions + pre-commit.
 
-**Build plan:** `docs/build-plan.md` lists the ordered, test-first steps. Tick each one off as it lands. The walking skeleton is complete (steps 0–12). Steps 0–13 are done, including figures end to end. Next up: step 14 (real ingest). It needs the owner's OpenRouter key: project-only, low credit limit, ZDR-only account setting. Core types live in `types.py`, seams in `protocols.py`, fakes in `fakes.py`, contract suites in `tests/contracts/`.
+**Build plan:** `docs/build-plan.md` lists the ordered, test-first steps. Tick each one off as it lands. Steps 0–13 are done. The tooling for steps 14–16 is built and tested with fakes: corpus ingest (`scripts/ingest_corpus.py`), the eval harness (`src/multimodal_doc_rag/evals/`, CLIs in `scripts/`, data and workflow in `evals/`), and the replay writer (`scripts/save_replay.py`). Every model-calling run goes through a `CostMeter` cap (`models/cost.py`). **Waiting on the owner:** the OpenRouter key (project-only, low credit limit, ZDR-only account setting) and the choice of `JUDGE_MODEL`. Core types live in `types.py`, seams in `protocols.py`, fakes in `fakes.py`, contract suites in `tests/contracts/`.
 
 **Still open:** deployment (production Postgres host, app hosting, hardening: per-IP rate limits, input and output caps, a read-only DB role, a non-root container). This is deliberately deferred until after the eval, and it's the owner's decision.
