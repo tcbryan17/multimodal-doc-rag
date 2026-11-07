@@ -24,17 +24,17 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
   - Give each a trivial fake.
   - Write one contract suite per protocol, parametrised over its implementations.
   - *Concept:* contract tests make swapping a fake for the real thing checkable.
-- [ ] **5. The EDGAR parser,** tested on a hand-written `tests/fixtures/mini_10k.html`.
+- [x] **5. The EDGAR parser,** tested on a hand-written `tests/fixtures/mini_10k.html`.
   - Tests: page labels come from footers and page breaks; sections from Item headings; tables become Markdown.
   - *Concept:* HTML layout becoming document structure.
-- [ ] **6. The chunker.**
+- [x] **6. The chunker.**
   - Tests: the size cap; tables stay whole, or repeat their header when split; page ranges across page breaks; context headers.
   - *Concept:* the chunk is both the retrieval unit and the citation unit.
-- [ ] **7. The indexer** (`db` tests).
+- [x] **7. The indexer** (`db` tests).
   - Store documents, chunks and per-model embeddings.
   - Re-ingesting a file with the same hash does nothing.
   - *Concept:* keying embeddings by model allows comparisons without re-ingesting.
-- [ ] **8. Hybrid search.**
+- [x] **8. Hybrid search.**
   - Write `rrf()` as a pure function.
   - `db` tests: full-text search finds an exact term; the corpus and doc filters work; fusion keeps results from both lists.
   - *Concept:* RRF, and why vectors and keywords cover each other's blind spots.
@@ -45,12 +45,12 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
   - Record one trace step per stage.
   - **End-to-end test:** ingest the fixture, call `/ask`, and get a citation with the right page label. This completes the skeleton.
   - *Concept:* grounding, and checking citations rather than trusting them.
-- [ ] **10. The OpenRouter client and real adapters.** *(The raw client and its MockTransport tests are done; the adapters remain.)*
+- [ ] **10. The OpenRouter client and real adapters.** *(Client, Embedder, Reranker and FigureDescriber adapters done; the Generator adapter comes with step 9.)*
   - Embeddings (truncated and re-normalised), rerank with a fallback, and chat with images.
   - `MockTransport` tests check that every request sends `zdr: true` and `data_collection: "deny"`, plus errors and fallbacks.
   - Add an opt-in `live` smoke test.
   - *Concept:* testing an HTTP client without the network, and privacy enforced in code.
-- [ ] **11. Fetch scripts** for EDGAR filings and FAA chapters, downloading into `data/`.
+- [x] **11. Fetch scripts** for EDGAR filings and FAA chapters, downloading into `data/`.
   - Ask the owner what contact to put in the SEC User-Agent.
 - [ ] **12. The PDF path** (the parser chosen in 0b).
   - Test it against a fixture PDF.
