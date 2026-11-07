@@ -1,0 +1,36 @@
+# Runs before every commit once you do `uv run pre-commit install`.
+# Local hooks go through `uv run` so they use the project's own venv (same deps as CI).
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: ruff-format
+        name: ruff format --check
+        entry: uv run ruff format --check
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: mypy
+        name: mypy
+        entry: uv run mypy src tests
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: pytest
+        name: pytest (no db, no live)
+        entry: uv run pytest -m "not db and not live" -q
+        language: system
+        pass_filenames: false
+        always_run: true

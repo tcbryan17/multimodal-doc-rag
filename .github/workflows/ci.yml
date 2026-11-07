@@ -1,0 +1,40 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    # A "service container" is a Docker container GitHub starts next to the job and tears
+    # down afterwards. It is the CI twin of the `db` service in docker-compose.yml: same
+    # image, same credentials, same host port, so tests see the same database as locally.
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.7-pg18
+        env:
+          POSTGRES_USER: rag
+          POSTGRES_PASSWORD: rag-dev-only
+          POSTGRES_DB: rag
+        ports:
+          - 5433:5432 # host:container, like compose
+        options: >-
+          --health-cmd "pg_isready -U rag -d rag"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      # Test fixtures create the rag_test database themselves on this server.
+      TEST_DATABASE_URL: postgresql://rag:rag-dev-only@localhost:5433/rag_test
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy src tests
+      - run: uv run pytest
