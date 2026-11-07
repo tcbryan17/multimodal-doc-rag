@@ -1,5 +1,7 @@
 """App settings, loaded from environment variables or a local .env file."""
 
+from pathlib import Path
+
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -12,6 +14,13 @@ class Settings(BaseSettings):
     openrouter_api_key: SecretStr | None = None
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     openrouter_timeout_s: float = 30.0
+
+    # SEC fair-access policy requires a User-Agent that names a real contact ("Jane Doe
+    # jane@example.com"). The owner picks it; there is deliberately no default, and EDGAR
+    # fetching fails fast when it is unset.
+    sec_user_agent: str | None = None
+    # Where fetch scripts put downloaded source documents (gitignored).
+    data_dir: Path = Path("data")
 
     # Model IDs live here, never in code (ADR 0009).
     embedding_model: str = "qwen/qwen3-embedding-8b"
