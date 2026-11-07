@@ -7,8 +7,21 @@ import pytest
 from multimodal_doc_rag.fakes import OverlapReranker
 from multimodal_doc_rag.protocols import Reranker
 
+
+def _live_reranker() -> Reranker:
+    from multimodal_doc_rag.config import Settings
+    from multimodal_doc_rag.models.adapters import OpenRouterReranker
+    from multimodal_doc_rag.models.openrouter import OpenRouterClient
+
+    s = Settings()
+    if s.openrouter_api_key is None:
+        pytest.skip("OPENROUTER_API_KEY not set")
+    return OpenRouterReranker(OpenRouterClient.from_settings(), s.rerank_model)
+
+
 IMPLEMENTATIONS: list[object] = [
     pytest.param(OverlapReranker, id="fake-overlap"),
+    pytest.param(_live_reranker, id="openrouter-reranker", marks=pytest.mark.live),
 ]
 
 DOCS = [

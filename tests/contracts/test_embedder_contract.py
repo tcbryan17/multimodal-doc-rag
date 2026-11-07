@@ -9,8 +9,21 @@ import pytest
 from multimodal_doc_rag.fakes import HashingEmbedder
 from multimodal_doc_rag.protocols import Embedder
 
+
+def _live_embedder() -> Embedder:
+    from multimodal_doc_rag.config import Settings
+    from multimodal_doc_rag.models.adapters import OpenRouterEmbedder
+    from multimodal_doc_rag.models.openrouter import OpenRouterClient
+
+    s = Settings()
+    if s.openrouter_api_key is None:
+        pytest.skip("OPENROUTER_API_KEY not set")
+    return OpenRouterEmbedder.from_settings(s, OpenRouterClient.from_settings())
+
+
 IMPLEMENTATIONS: list[object] = [
     pytest.param(lambda: HashingEmbedder(dim=64), id="fake-hashing"),
+    pytest.param(_live_embedder, id="openrouter-embedder", marks=pytest.mark.live),
 ]
 
 TEXTS = [

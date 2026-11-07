@@ -7,8 +7,21 @@ import pytest
 from multimodal_doc_rag.fakes import CaptionFigureDescriber
 from multimodal_doc_rag.protocols import FigureDescriber
 
+
+def _live_figure_describer() -> FigureDescriber:
+    from multimodal_doc_rag.config import Settings
+    from multimodal_doc_rag.models.adapters import OpenRouterFigureDescriber
+    from multimodal_doc_rag.models.openrouter import OpenRouterClient
+
+    s = Settings()
+    if s.openrouter_api_key is None:
+        pytest.skip("OPENROUTER_API_KEY not set")
+    return OpenRouterFigureDescriber(OpenRouterClient.from_settings(), s.generation_model)
+
+
 IMPLEMENTATIONS: list[object] = [
     pytest.param(CaptionFigureDescriber, id="fake-caption"),
+    pytest.param(_live_figure_describer, id="openrouter-describer", marks=pytest.mark.live),
 ]
 
 # Smallest valid PNG (1x1 transparent pixel), so the contract needs no image fixtures.
