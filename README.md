@@ -33,6 +33,11 @@ POST /ask   { "question": str, "corpus"?: str, "doc"?: str }
     "trace": [{ "step": str, "detail": str, "ms": int }] }
 ```
 `page` is the printed page label (e.g. `"4-12"` in the handbook). `page_end` appears when a passage spans a page break. `image_url` appears when the cited passage is a figure; in the replay file it's an inline `data:` URI. See [ADR 0005](docs/decisions/0005-ux-and-ask-contract.md).
+
+```
+GET /figures/{chunk_id}.png   → image/png (cached for a year; 404 if that chunk has no figure)
+```
+`image_url` in a live response is this path, relative to the API's base URL. A figure's image never changes after ingestion, and chunk ids are never reused, so the response is safe to cache indefinitely.
 Save one real response's `trace` to `replay/sample-run.json`. The portfolio site plays it as this project's demo. A rate-limited live endpoint will follow once the eval results are good.
 
 ## Development

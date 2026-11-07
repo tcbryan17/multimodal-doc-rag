@@ -55,7 +55,7 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
 - [x] **12. The PDF path** (the parser chosen in 0b).
   - Test it against a fixture PDF.
   - Add figure cropping, the decorative-image rules, the figure-description step (faked in tests), `ingest_failures` and the ingest report.
-- [ ] **13. Figures end to end.**
+- [x] **13. Figures end to end.**
   - Store figures and serve them at `GET /figures/{id}.png`.
   - Add `image_url` to citations.
   - Send figure images to the generator.
