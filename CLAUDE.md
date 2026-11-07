@@ -28,7 +28,7 @@ uv run pytest           # tests (DeprecationWarning is already an error via pypr
 uv run pytest -m live   # live tests: real OpenRouter calls that cost money, never run by default
 uv run pre-commit install   # one-time: run lint/format/mypy/tests automatically before each commit
 uv run pytest tests/test_api.py::test_health    # a single test
-uv run mypy src tests   # type check (strict)
+uv run mypy src tests scripts   # type check (strict)
 uv run ruff check .     # lint
 uv run ruff format .    # format
 uv run uvicorn multimodal_doc_rag.api:app --reload   # dev server
