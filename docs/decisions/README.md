@@ -36,3 +36,12 @@ What this makes easier or harder later, and what would make us revisit it.
 | [0002](0002-openrouter-for-all-model-calls.md) | Route all model calls through OpenRouter | Accepted |
 | [0003](0003-docker-local-and-live-demo.md) | Docker Compose locally; replay first, then a capped live demo | Accepted |
 | [0004](0004-corpora-10k-and-faa-handbook.md) | Corpora: SEC 10-Ks and the FAA Pilot's Handbook | Accepted |
+| [0005](0005-ux-and-ask-contract.md) | User experience and the `/ask` contract | Accepted |
+| [0006](0006-parsing.md) | Parsing: hand-rolled HTML for EDGAR; the PDF parser chosen by a spike | Accepted (PDF pending spike) |
+| [0007](0007-chunking.md) | Chunking: structure-aware, page-spanning, deterministic context headers | Accepted |
+| [0008](0008-image-handling.md) | Image handling: describe for retrieval, send the image for answering | Accepted |
+| [0009](0009-models-and-privacy.md) | Models and privacy: strict zero data retention | Accepted |
+| [0010](0010-database-access-schema-search.md) | Database access, schema and hybrid search | Accepted |
+| [0011](0011-eval-methodology.md) | Eval methodology | Accepted |
+| [0012](0012-testing-strategy-and-ci.md) | Testing strategy and CI | Accepted |
+| [0013](0013-corpus-specifics.md) | Corpus specifics | Accepted |

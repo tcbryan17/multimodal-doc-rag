@@ -48,20 +48,22 @@ Before calling work done, run pytest (with the flag), mypy, and ruff check. All 
 - If the repo folder is moved or renamed, `.venv` breaks because it stores absolute paths. Delete `.venv` and run `uv sync`.
 
 ## Current status (update as things change)
-**Done:** environment only. That covers the uv project, a FastAPI app with just `/health` and one test, config, the Docker Postgres + pgvector setup (verified working), and decision records 0001–0004. **No pipeline code exists yet.**
+**Done:** the environment (uv project, FastAPI with only `/health`, config, Docker Postgres + pgvector) and decision records 0001–0013. **No pipeline code exists yet.**
 
-**Decided** (details in `docs/decisions/`):
-- 0001: write our own retrieval pipeline, with no LangChain or LlamaIndex.
-- 0002: all model calls go through OpenRouter, using a project-only key with a low credit limit and low rate limit. *Specific models are deferred.*
-- 0003: Docker Compose for local Postgres. Build against replay first, then add a capped live `/ask` demo.
-- 0004: two corpora, SEC 10-Ks (HTML from EDGAR) and the FAA *Pilot's Handbook of Aeronautical Knowledge* (FAA-H-8083-25, a PDF full of figures). The repo was renamed from `fin-doc-rag`.
+**Decided** (read the ADR before working in its area; details and rejected options are in `docs/decisions/`):
+- 0001: our own retrieval pipeline, with no LangChain or LlamaIndex.
+- 0002: all model calls go through OpenRouter with a capped, project-only key.
+- 0003: Docker Compose locally. Build against replay first, then a capped live `/ask`.
+- 0004 / 0013: SEC 10-Ks (Apple, Microsoft, J&J; Costco held out) and FAA-H-8083-25C (all chapters; ~3 held out).
+- 0005: v1 handles fact, figure and concept questions; figure answers show the figure; everything is searched by default with an optional filter. **Citations use printed page labels (`page: str`).**
+- 0006: EDGAR HTML is parsed by hand with BeautifulSoup. **The FAA PDF parser (PyMuPDF vs Docling) is pending a spike.**
+- 0007: structure-aware chunks that may span pages, a deterministic context header, and a size tuned by the eval.
+- 0008: a vision-model description makes each figure findable; the image itself goes to the generator when answering; decorative images are filtered; failures degrade and are reported.
+- 0009: **strict zero-data-retention.** Every OpenRouter request must send `provider: {zdr: true, data_collection: "deny"}`. qwen3-embedding-8b @1024 dims, qwen3-reranker-8b with a fallback, and Claude Haiku 5.5 as the default generator. No OpenRouter key exists yet.
+- 0010: psycopg 3 with raw SQL; numbered SQL migrations; an `embeddings` table keyed by model; RRF hybrid search; figures stored as `bytea`.
+- 0011: evals run outside pytest; 60 dev + 20 held-out questions per corpus; an LLM judge calibrated against human grades; injection sets.
+- 0012: a walking skeleton; contract tests over fake and real implementations; db tests in a rolled-back transaction; GitHub Actions + pre-commit.
 
-**Open decisions.** The owner plans to work through these deliberately. Bring each one to them; don't decide on their behalf:
-1. **Parsing:** a PDF parser for the FAA handbook and an HTML path for EDGAR 10-Ks, both preserving page numbers and section headers. 10-K page numbers come from page-break markers and footers.
-2. **Image handling:** caption with a vision model then embed the caption, embed the image directly with a multimodal model (e.g. NVIDIA Nemotron Embed VL), or embed page screenshots. Also how to sort informational figures from decorative photos, and how parse failures are handled. Ideally compare approaches in the eval.
-3. **Database access:** raw SQL with psycopg, a query builder, or an ORM (SQLAlchemy); plus migrations and the schema (documents, chunks, vectors, full-text index).
-4. **Chunking strategy.**
-5. **Models** (embedding, reranker, generation, vision). Requirement: very cheap **and** no training on or retention of inputs. The owner is wary of free endpoints that collect data. Investigate OpenRouter's privacy and zero-data-retention settings. No OpenRouter key exists yet.
-6. **Eval methodology:** Q&A sets per corpus (a larger primary set, a smaller generalisation set), recall@5, faithfulness, citation accuracy, an adversarial / prompt-injection set, and a cost-vs-quality comparison across models. The owner considers eval central to the portfolio story.
-7. **Deployment:** the production Postgres host (Neon is the front-runner) and app hosting, plus security hardening before the live demo. That means per-IP rate limiting, input and output caps, a read-only DB role for `/ask`, and a non-root container.
-8. **Corpus specifics:** which companies and years of 10-Ks, and which handbook edition.
+**Build plan:** `docs/build-plan.md` lists the ordered, test-first steps. Tick each one off as it lands. Next up: the FAA parser spike (0b), then the quality gate (step 1).
+
+**Still open:** deployment (production Postgres host, app hosting, hardening: per-IP rate limits, input and output caps, a read-only DB role, a non-root container). This is deliberately deferred until after the eval, and it's the owner's decision.

@@ -1,0 +1,68 @@
+# Build plan: a walking skeleton, test-first
+
+Every step is one or more commits that are green on ruff, ruff format, mypy (strict) and pytest, locally and in CI. Each step lists what its tests prove and the concept to be able to explain afterwards. The reasoning lives in the ADRs (`docs/decisions/`); this file is just the order. Tick steps off as they land.
+
+- [x] **0. Record decisions.** ADRs 0005–0013, README and CLAUDE.md.
+- [ ] **0b. FAA parser spike** (throwaway branch, not merged). Run PyMuPDF and Docling on two figure-heavy chapters. Measure the raster vs vector figure count, heading accuracy and caption pairing. Write the results and the choice into ADR 0006 *before step 4*, because the figure element shape depends on them.
+- [ ] **1. Quality gate.**
+  - Set pytest `filterwarnings` (DeprecationWarning becomes an error) and register the `db` and `live` markers.
+  - Add a pre-commit config (`uv run` system hooks).
+  - Add a GitHub Actions workflow with a pgvector service container.
+  - *Concept:* CI service containers vs the local compose container.
+- [ ] **2. The `/ask` contract.**
+  - Add Pydantic request and response models.
+  - Inject the pipeline **and the DB connection** as FastAPI dependencies.
+  - Tests: the response shape, `ms >= 0`, and that `replay/sample-run.json` validates once it exists.
+  - *Concept:* dependency injection, and the API as a contract.
+- [ ] **3. Migrations and schema.**
+  - Write the runner and `0001_init.sql`.
+  - Add a session fixture for the `rag_test` database, plus a fixture that rolls back each test.
+  - Tests: migrations are idempotent; the tables and indexes exist; a vector round-trips.
+  - *Concept:* migrations, and transactions as test isolation.
+- [ ] **4. Protocols, fakes and contract suites.**
+  - Protocols: `Parser`, `Embedder`, `Reranker`, `Generator`, `FigureDescriber`.
+  - Give each a trivial fake.
+  - Write one contract suite per protocol, parametrised over its implementations.
+  - *Concept:* contract tests make swapping a fake for the real thing checkable.
+- [ ] **5. The EDGAR parser,** tested on a hand-written `tests/fixtures/mini_10k.html`.
+  - Tests: page labels come from footers and page breaks; sections from Item headings; tables become Markdown.
+  - *Concept:* HTML layout becoming document structure.
+- [ ] **6. The chunker.**
+  - Tests: the size cap; tables stay whole, or repeat their header when split; page ranges across page breaks; context headers.
+  - *Concept:* the chunk is both the retrieval unit and the citation unit.
+- [ ] **7. The indexer** (`db` tests).
+  - Store documents, chunks and per-model embeddings.
+  - Re-ingesting a file with the same hash does nothing.
+  - *Concept:* keying embeddings by model allows comparisons without re-ingesting.
+- [ ] **8. Hybrid search.**
+  - Write `rrf()` as a pure function.
+  - `db` tests: full-text search finds an exact term; the corpus and doc filters work; fusion keeps results from both lists.
+  - *Concept:* RRF, and why vectors and keywords cover each other's blind spots.
+- [ ] **9. Answering and the end-to-end test.**
+  - Wrap retrieved passages in delimiters in the prompt.
+  - Drop any citation that doesn't point to a retrieved passage.
+  - Return "I don't know" when nothing is retrieved.
+  - Record one trace step per stage.
+  - **End-to-end test:** ingest the fixture, call `/ask`, and get a citation with the right page label. This completes the skeleton.
+  - *Concept:* grounding, and checking citations rather than trusting them.
+- [ ] **10. The OpenRouter client and real adapters.**
+  - Embeddings (truncated and re-normalised), rerank with a fallback, and chat with images.
+  - `MockTransport` tests check that every request sends `zdr: true` and `data_collection: "deny"`, plus errors and fallbacks.
+  - Add an opt-in `live` smoke test.
+  - *Concept:* testing an HTTP client without the network, and privacy enforced in code.
+- [ ] **11. Fetch scripts** for EDGAR filings and FAA chapters, downloading into `data/`.
+  - Ask the owner what contact to put in the SEC User-Agent.
+- [ ] **12. The PDF path** (the parser chosen in 0b).
+  - Test it against a fixture PDF.
+  - Add figure cropping, the decorative-image rules, the figure-description step (faked in tests), `ingest_failures` and the ingest report.
+- [ ] **13. Figures end to end.**
+  - Store figures and serve them at `GET /figures/{id}.png`.
+  - Add `image_url` to citations.
+  - Send figure images to the generator.
+- [ ] **14. Real ingest** of both corpora (a manual run). Review the ingest report.
+- [ ] **15. Eval harness.**
+  - Gold-set schema, metric functions (unit-tested), and a runner with a cost cap that writes reports.
+  - Then the owner builds the gold set.
+- [ ] **16. Replay file.** Save one real response as `replay/sample-run.json`. The test from step 2 then validates it.
+
+Afterwards, as separate plans: the eval comparisons (ADR 0011), then deployment and the live demo.
