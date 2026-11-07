@@ -90,6 +90,17 @@ def get_db_conn() -> Iterator[psycopg.Connection[Any]]:
         yield conn
 
 
+def build_pipeline(conn: psycopg.Connection[Any], client: OpenRouterClient) -> RagPipeline:
+    """The real pipeline over a connection and client. Shared with scripts/save_replay.py so the
+    recorded replay comes from exactly the pipeline the API serves."""
+    return RagPipeline(
+        conn,
+        embedder=OpenRouterEmbedder.from_settings(settings, client),
+        reranker=OpenRouterReranker(client, settings.rerank_model),
+        generator=OpenRouterGenerator(client, settings.generation_model, MAX_ANSWER_TOKENS),
+    )
+
+
 def get_pipeline(
     # FastAPI resolves dependencies in parameter order, so the key check runs first: with no
     # key `/ask` answers 503 without ever touching the database.
@@ -105,12 +116,7 @@ def get_pipeline(
     """
     client = OpenRouterClient.from_settings()
     try:
-        yield RagPipeline(
-            conn,
-            embedder=OpenRouterEmbedder.from_settings(settings, client),
-            reranker=OpenRouterReranker(client, settings.rerank_model),
-            generator=OpenRouterGenerator(client, settings.generation_model, MAX_ANSWER_TOKENS),
-        )
+        yield build_pipeline(conn, client)
     finally:
         client.close()
 
