@@ -23,14 +23,16 @@ cp .env.example .env          # first time only
 docker compose up -d --wait   # start local Postgres + pgvector (needs OrbStack running)
 docker compose down           # stop it (data is kept in the pgdata volume)
 uv sync                 # install deps into .venv
-uv run pytest -W error::DeprecationWarning      # tests (the flag is how we keep deprecations at zero)
+uv run pytest           # tests (DeprecationWarning is already an error via pyproject; live tests skipped)
+uv run pytest -m live   # live tests: real OpenRouter calls that cost money, never run by default
+uv run pre-commit install   # one-time: run lint/format/mypy/tests automatically before each commit
 uv run pytest tests/test_api.py::test_health    # a single test
 uv run mypy src tests   # type check (strict)
 uv run ruff check .     # lint
 uv run ruff format .    # format
 uv run uvicorn multimodal_doc_rag.api:app --reload   # dev server
 ```
-Before calling work done, run pytest (with the flag), mypy, and ruff check. All of them pass right now.
+Before calling work done, run pytest, mypy, and ruff check. All of them pass right now.
 
 ## Conventions
 - Python 3.12, managed by `uv`. Src layout: code lives in `src/multimodal_doc_rag/`.
@@ -38,7 +40,7 @@ Before calling work done, run pytest (with the flag), mypy, and ruff check. All 
 - Downloaded source documents go in `data/` (gitignored). Fetch them with a script and never commit them. Public documents only; never personal data.
 - Use `httpx2`, not `httpx`, for HTTP. Starlette's TestClient deprecated `httpx`, and httpx2 is its drop-in successor from Pydantic. Model calls go through our own thin client, not a provider SDK (see ADR 0002).
 - Settings live in `config.py` (pydantic-settings) as a module-level `settings` singleton. Secrets are `SecretStr` so they never show up in logs; call `.get_secret_value()` only at the point of use. `openrouter_api_key` is optional so tests and `/health` run without it, which means model-calling code must fail fast when it's `None`.
-- mypy runs in strict mode. The test suite must pass with `-W error::DeprecationWarning`. That flag isn't set in `pyproject.toml`, so pass it explicitly.
+- mypy runs in strict mode. `filterwarnings = ["error::DeprecationWarning"]` in `pyproject.toml` keeps deprecations at zero. Tests marked `db` need Postgres (skipped when unreachable); tests marked `live` call OpenRouter and only run with `-m live`. CI runs everything except `live`.
 - The `/ask` response shape in `README.md` is a contract with the portfolio site, which replays `replay/sample-run.json`. Don't change the shape without updating both.
 
 ## Environment notes
