@@ -1,17 +1,19 @@
-"""Real Embedder / Reranker / FigureDescriber implementations over OpenRouterClient.
+"""Real Embedder / Reranker / FigureDescriber / Generator implementations over OpenRouterClient.
 
-Generator is not here: it needs the answer prompt (step 9). Privacy (ADR 0009) is enforced
-inside OpenRouterClient._post, so every call made here already carries the ZDR fields.
+Privacy (ADR 0009) is enforced inside OpenRouterClient._post, so every call made here
+already carries the ZDR fields.
 """
 
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any, Self
 
+from multimodal_doc_rag.answer import build_messages, parse_citations
 from multimodal_doc_rag.config import Settings
+from multimodal_doc_rag.fakes import IDK
 from multimodal_doc_rag.models.openrouter import OpenRouterClient, image_part
 from multimodal_doc_rag.models.vectors import truncate_and_normalize
-from multimodal_doc_rag.types import FigureDescription
+from multimodal_doc_rag.types import FigureDescription, GeneratedAnswer, Passage
 
 # Qwen3-Embedding was trained with a task instruction in front of QUERIES only; documents
 # are embedded bare. The instruction tells the model what "relevant" means for this task,
@@ -145,3 +147,24 @@ class OpenRouterFigureDescriber:
         ]
         result = self._client.chat(self._model, messages, max_tokens=self._max_tokens)
         return _parse_description(result.text)
+
+
+class OpenRouterGenerator:
+    """Answers from the given passages only; citations are validated, not trusted."""
+
+    def __init__(self, client: OpenRouterClient, model: str, max_tokens: int = 600) -> None:
+        self._client = client
+        self._model = model
+        self._max_tokens = max_tokens
+
+    def generate(
+        self, question: str, passages: Sequence[Passage], figures: Mapping[int, bytes]
+    ) -> GeneratedAnswer:
+        if not passages:
+            # Nothing to ground an answer in: don't spend a call (or invite a guess).
+            return GeneratedAnswer(text=IDK, cited_chunk_ids=())
+        messages = build_messages(question, passages, figures)
+        result = self._client.chat(self._model, messages, max_tokens=self._max_tokens)
+        return GeneratedAnswer(
+            text=result.text, cited_chunk_ids=parse_citations(result.text, passages)
+        )

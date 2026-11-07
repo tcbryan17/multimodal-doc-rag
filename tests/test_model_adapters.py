@@ -10,15 +10,17 @@ import pytest
 from pydantic import SecretStr
 
 from multimodal_doc_rag.config import Settings
+from multimodal_doc_rag.fakes import IDK
 from multimodal_doc_rag.models.adapters import (
     DEFAULT_QUERY_TASK,
     FigureDescriptionError,
     OpenRouterEmbedder,
     OpenRouterFigureDescriber,
+    OpenRouterGenerator,
     OpenRouterReranker,
 )
 from multimodal_doc_rag.models.openrouter import PRIVACY_PROVIDER, OpenRouterClient
-from multimodal_doc_rag.types import FigureDescription
+from multimodal_doc_rag.types import FigureDescription, PageRef, Passage
 
 PNG = b"\x89PNG-fake"
 
@@ -178,3 +180,44 @@ def test_describer_decorative_may_have_empty_description() -> None:
 def test_describer_garbage_raises(reply: str) -> None:
     with pytest.raises(FigureDescriptionError):
         describe(reply)
+
+
+# ---- OpenRouterGenerator -------------------------------------------------------------
+
+
+def _passage(chunk_id: int, content: str) -> Passage:
+    page = PageRef(idx=1, label="8-4")
+    return Passage(chunk_id, "doc", "Doc Title", "text", page, page, content, "hdr", 1.0)
+
+
+def test_generator_sends_delimited_sources_and_image_and_parses_citations() -> None:
+    client, seen = make_client(chat_handler("Altimeters measure height [2]."))
+    gen = OpenRouterGenerator(client, "m", 100)
+    passages = [_passage(101, "first text"), _passage(102, "second text")]
+    answer = gen.generate("what?", passages, {102: PNG})
+    assert answer.cited_chunk_ids == (102,)
+    sent = body(seen[0])
+    assert sent["max_tokens"] == 100
+    assert sent["provider"] == PRIVACY_PROVIDER
+    assert sent["messages"][0]["role"] == "system"
+    parts = sent["messages"][1]["content"]
+    texts = [p["text"] for p in parts if p["type"] == "text"]
+    assert texts[0].startswith('<source n="1"')
+    assert texts[1].startswith('<source n="2"')
+    # the image sits right after source 2's block
+    assert [p["type"] for p in parts] == ["text", "text", "image_url", "text"]
+
+
+def test_generator_drops_invalid_markers() -> None:
+    client, _ = make_client(chat_handler("Yes [1][9]. Also [0] and [3]."))
+    gen = OpenRouterGenerator(client, "m", 100)
+    answer = gen.generate("q", [_passage(7, "a"), _passage(8, "b")], {})
+    assert answer.cited_chunk_ids == (7,)
+
+
+def test_generator_with_no_passages_does_not_call_the_api() -> None:
+    client, seen = make_client(chat_handler("should not be used"))
+    answer = OpenRouterGenerator(client, "m", 100).generate("q", [], {})
+    assert answer.text == IDK
+    assert answer.cited_chunk_ids == ()
+    assert seen == []

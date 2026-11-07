@@ -211,3 +211,14 @@ def hybrid_search(
     kw_ids = keyword_search(conn, query, limit=candidates, corpus=corpus, doc_key=doc_key)
     fused = rrf([vec_ids, kw_ids])[:candidates]
     return fetch_passages(conn, fused)
+
+
+def fetch_figure_pngs(conn: Conn, chunk_ids: Sequence[int]) -> dict[int, bytes]:
+    """PNG bytes for the given chunk ids that are figures; other ids are simply absent."""
+    if not chunk_ids:
+        return {}
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT chunk_id, png FROM figures WHERE chunk_id = ANY(%s)", (list(chunk_ids),)
+        )
+        return {row[0]: bytes(row[1]) for row in cur.fetchall()}
