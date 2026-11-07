@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from pydantic import SecretStr
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,6 +12,14 @@ class Settings(BaseSettings):
     # SecretStr keeps the key out of logs and reprs. Optional for now so tests and the
     # /health route run without it; model-calling code should fail fast if it's missing.
     openrouter_api_key: SecretStr | None = None
+
+    @field_validator("openrouter_api_key", mode="before")
+    @classmethod
+    def _blank_key_is_unset(cls, value: object) -> object:
+        # `.env.example` ships `OPENROUTER_API_KEY=`; a copied blank line must mean "no key"
+        # (so /ask answers 503), not an empty key that gets sent to OpenRouter.
+        return None if isinstance(value, str) and not value.strip() else value
+
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     openrouter_timeout_s: float = 30.0
 

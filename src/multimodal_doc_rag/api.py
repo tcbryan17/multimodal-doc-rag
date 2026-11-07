@@ -6,7 +6,8 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import psycopg
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pgvector.psycopg import register_vector
 from psycopg_pool import ConnectionPool
 
@@ -17,7 +18,7 @@ from multimodal_doc_rag.models.adapters import (
     OpenRouterGenerator,
     OpenRouterReranker,
 )
-from multimodal_doc_rag.models.openrouter import OpenRouterClient
+from multimodal_doc_rag.models.openrouter import OpenRouterClient, OpenRouterError
 from multimodal_doc_rag.pipeline import RagPipeline
 
 # Why a lazily created module-level pool: `/health` and most tests must work with no
@@ -58,6 +59,15 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="multimodal-doc-rag", lifespan=lifespan)
+
+
+@app.exception_handler(OpenRouterError)
+def model_provider_error(_: Request, exc: OpenRouterError) -> JSONResponse:
+    """A model provider failure (embedding or generation) is an upstream problem: answer 502
+    with a generic message instead of a bare 500. The rerank step already degrades on its own,
+    and OpenRouterError messages never contain the API key, but we still don't echo them."""
+    return JSONResponse(status_code=502, content={"detail": "model provider unavailable"})
+
 
 MAX_ANSWER_TOKENS = 600  # output cap: also a cost guard for the live demo
 

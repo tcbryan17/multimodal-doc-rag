@@ -137,3 +137,19 @@ def test_replay_file_matches_contract() -> None:
     if not REPLAY.exists():
         pytest.skip("replay/sample-run.json not created yet (build-plan step 16)")
     AskResponse.model_validate(json.loads(REPLAY.read_text()))
+
+
+def test_model_provider_failure_returns_502_not_500() -> None:
+    from multimodal_doc_rag.models.openrouter import OpenRouterError
+
+    class FailingPipeline:
+        def ask(self, request: AskRequest) -> AskResponse:
+            raise OpenRouterError("upstream exploded", status=503)
+
+    app.dependency_overrides[get_pipeline] = lambda: FailingPipeline()
+    try:
+        response = TestClient(app).post("/ask", json={"question": "anything?"})
+    finally:
+        app.dependency_overrides.clear()
+    assert response.status_code == 502
+    assert response.json() == {"detail": "model provider unavailable"}
