@@ -12,6 +12,7 @@ import psycopg
 
 from multimodal_doc_rag.chunking import chunk_document
 from multimodal_doc_rag.db.repository import document_exists, index_document, record_ingest_failure
+from multimodal_doc_rag.models.cost import BudgetExceededError
 from multimodal_doc_rag.protocols import Embedder, FigureDescriber, Parser
 from multimodal_doc_rag.types import SourceInfo
 
@@ -40,6 +41,8 @@ def ingest_document(
             result = describer.describe(
                 chunk.figure.png, chunk.figure.caption, chunk.context_header
             )
+        except BudgetExceededError:
+            raise  # out of money is not a figure failure: stop the whole run
         except Exception as exc:  # noqa: BLE001 - any failure degrades, never aborts (ADR 0008)
             # Keep the caption-only chunk so the figure is still findable by its caption.
             failures.append((chunk.ordinal, f"{type(exc).__name__}: {exc}"))

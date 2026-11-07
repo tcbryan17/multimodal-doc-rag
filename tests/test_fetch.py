@@ -12,6 +12,7 @@ from multimodal_doc_rag.fetch import (
     Filing,
     MissingUserAgentError,
     archive_url,
+    chapter_pdf_url,
     faa_chapter_links,
     fetch_edgar,
     fetch_faa,
@@ -31,6 +32,13 @@ SUBMISSIONS = json.loads((FIXTURES / "submissions.json").read_text(encoding="utf
 UA = "Test Person test@example.com"
 
 
+def landing_html(slug: str) -> str:
+    return (
+        f'<html><a href="/about">About</a>'
+        f'<a href="/sites/faa.gov/files/{slug}.pdf" type="application/pdf">{slug}.pdf</a></html>'
+    )
+
+
 def make_client(requests: list[httpx2.Request], pdf_bytes: bytes = b"%PDF-fake") -> httpx2.Client:
     """Fake FAA + SEC servers; records every request it sees."""
 
@@ -39,6 +47,9 @@ def make_client(requests: list[httpx2.Request], pdf_bytes: bytes = b"%PDF-fake")
         url = str(request.url)
         if url == FAA_PHAK_URL:
             return httpx2.Response(200, text=PHAK_HTML)
+        if "/phak/" in url:  # a part's landing page: HTML that links to the real PDF
+            slug = url.rstrip("/").rsplit("/", 1)[-1]
+            return httpx2.Response(200, text=landing_html(slug))
         if url.endswith("company_tickers.json"):
             return httpx2.Response(200, json=TICKERS)
         if url.startswith("https://data.sec.gov/submissions/"):
@@ -77,6 +88,10 @@ def test_fetch_faa_downloads_and_assigns_split(tmp_path: Path) -> None:
     assert ch8.title == "FAA-H-8083-25C, Ch. 8: Flight Instruments"
     assert ch8.corpus is Corpus.FAA
     assert ch8.path == "faa/phak-ch08.pdf"
+    # The landing page was followed: the PDF itself is the source, not the HTML slug page.
+    assert (
+        ch8.source_url == "https://www.faa.gov/sites/faa.gov/files/chapter-8-flight-instruments.pdf"
+    )
     assert (tmp_path / ch8.path).read_bytes() == b"%PDF-fake"
     assert len(ch8.sha256) == 64
     assert by_key["phak-ch11"].split == "heldout"
@@ -90,9 +105,9 @@ def test_fetch_faa_downloads_and_assigns_split(tmp_path: Path) -> None:
 def test_skips_download_when_same_size_file_exists(tmp_path: Path) -> None:
     (tmp_path / "faa").mkdir()
     existing = tmp_path / "faa" / "phak-ch08.pdf"
-    existing.write_bytes(b"OLD-BYTES")  # same length as the b"%PDF-fake" the server sends
+    existing.write_bytes(b"%PDF-old!")  # same length as the b"%PDF-fake" the server sends
     fetch_faa(make_client([]), tmp_path)
-    assert existing.read_bytes() == b"OLD-BYTES"  # untouched
+    assert existing.read_bytes() == b"%PDF-old!"  # untouched
     other = tmp_path / "faa" / "phak-ch04.pdf"
     assert other.read_bytes() == b"%PDF-fake"  # a missing file is still downloaded
 
@@ -103,6 +118,22 @@ def test_redownloads_when_size_differs(tmp_path: Path) -> None:
     existing.write_bytes(b"short")
     fetch_faa(make_client([]), tmp_path)
     assert existing.read_bytes() == b"%PDF-fake"
+
+
+def test_chapter_pdf_url_follows_landing_page() -> None:
+    page = "https://www.faa.gov/x/phak/chapter-8-flight-instruments"
+    assert chapter_pdf_url(landing_html("10_phak_ch8"), page) == (
+        "https://www.faa.gov/sites/faa.gov/files/10_phak_ch8.pdf"
+    )
+    with pytest.raises(LookupError):
+        chapter_pdf_url('<a href="/about">About</a>', page)
+
+
+def test_rejects_a_download_that_is_not_a_pdf(tmp_path: Path) -> None:
+    # Regression: the first real run saved every landing page (HTML) under a .pdf name.
+    with pytest.raises(ValueError, match="did not return a PDF"):
+        fetch_faa(make_client([], pdf_bytes=b"<!DOCTYPE html>"), tmp_path)
+    assert not list((tmp_path / "faa").glob("*.pdf"))  # the bad file is not left behind
 
 
 # --- EDGAR ----------------------------------------------------------------------------------

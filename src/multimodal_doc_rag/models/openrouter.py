@@ -10,6 +10,7 @@ import httpx2
 from pydantic import SecretStr
 
 from multimodal_doc_rag.config import settings
+from multimodal_doc_rag.models.cost import CostMeter
 
 EMBED_BATCH_SIZE = 64
 MAX_RETRIES = 2  # so at most 3 attempts in total
@@ -64,9 +65,13 @@ class OpenRouterClient:
         transport: httpx2.BaseTransport | None = None,
         referer: str | None = None,
         sleep: Callable[[float], None] = time.sleep,
+        meter: CostMeter | None = None,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._sleep = sleep
+        # Optional spend tracking + cap (models/cost.py). The API runs without one; ingest and
+        # the eval runner always pass one.
+        self.meter = meter
         headers = {
             # The only place the secret is unwrapped.
             "Authorization": f"Bearer {api_key.get_secret_value()}",
@@ -77,13 +82,14 @@ class OpenRouterClient:
         self._http = httpx2.Client(headers=headers, timeout=timeout, transport=transport)
 
     @classmethod
-    def from_settings(cls) -> Self:
+    def from_settings(cls, meter: CostMeter | None = None) -> Self:
         if settings.openrouter_api_key is None:
             raise OpenRouterError("OPENROUTER_API_KEY is not set; add it to .env")
         return cls(
             api_key=settings.openrouter_api_key,
             base_url=settings.openrouter_base_url,
             timeout=settings.openrouter_timeout_s,
+            meter=meter,
         )
 
     def __repr__(self) -> str:
@@ -95,6 +101,8 @@ class OpenRouterClient:
     def _post(self, path: str, body: dict[str, Any]) -> dict[str, Any]:
         payload = {**body, "provider": dict(PRIVACY_PROVIDER)}
         url = f"{self._base_url}{path}"
+        if self.meter is not None:
+            self.meter.check()  # raises BudgetExceededError before spending any more
         for attempt in range(MAX_RETRIES + 1):
             try:
                 resp = self._http.post(url, json=payload)
@@ -119,6 +127,8 @@ class OpenRouterClient:
                 raise OpenRouterError(f"non-JSON response from {path}") from exc
             if not isinstance(data, dict):
                 raise OpenRouterError(f"unexpected response shape from {path}")
+            if self.meter is not None:
+                self.meter.record(body.get("model"), data.get("usage"))
             return data
         raise AssertionError("unreachable")  # pragma: no cover
 
@@ -169,6 +179,9 @@ class OpenRouterClient:
                 "messages": messages,
                 "max_tokens": max_tokens,
                 "temperature": temperature,
+                # Ask OpenRouter to report the call's price in `usage.cost` (the cost meter
+                # prefers a reported price over its own estimate).
+                "usage": {"include": True},
             },
         )
         try:

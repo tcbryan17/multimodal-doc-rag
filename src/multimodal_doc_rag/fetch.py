@@ -35,8 +35,6 @@ HELDOUT_TICKERS = frozenset({"COST"})
 # SEC allows 10 req/s; we stay at ~5 to leave headroom.
 SEC_MIN_INTERVAL_S = 0.2
 
-# ADR 0013 says ~3 chapters are held out, including Ch. 11. Only Ch. 11 is chosen so far; the
-# other two are an open decision for the owner, so they stay in the dev split for now.
 # Held out from all tuning, scored once at the end (ADR 0011/0013): performance charts,
 # weather services and airspace diagrams. Ch. 8 is deliberately NOT held out: the PDF
 # parser was developed against it.
@@ -177,11 +175,12 @@ class _AnchorCollector(HTMLParser):
 
 
 def faa_chapter_links(html: str, base_url: str) -> list[ChapterLink]:
-    """Per-part PDF links from the PHAK landing page, in page order.
+    """Per-part landing-page links from the PHAK index page, in page order.
 
-    On the live page the hrefs are slugs like `/.../phak/chapter-8-flight-instruments` (no .pdf
-    suffix) that the FAA serves as PDFs, so we match on the link text and the last path segment.
-    The "Full Version" single-PDF link is skipped: the parts already cover it.
+    On the live page the hrefs are slugs like `/.../phak/chapter-8-flight-instruments`. Each slug
+    is an HTML page that links to the actual PDF (see `chapter_pdf_url`), so we match on the link
+    text and the last path segment. The "Full Version" single-PDF link is skipped: the parts
+    already cover it.
     """
     parser = _AnchorCollector()
     parser.feed(html)
@@ -203,20 +202,39 @@ def faa_chapter_links(html: str, base_url: str) -> list[ChapterLink]:
     return links
 
 
+def chapter_pdf_url(html: str, page_url: str) -> str:
+    """The PDF link on one part's landing page, e.g. `/sites/faa.gov/files/10_phak_ch8.pdf`."""
+    parser = _AnchorCollector()
+    parser.feed(html)
+    for href, _ in parser.anchors:
+        if href.split("?", 1)[0].lower().endswith(".pdf"):
+            return urljoin(page_url, href)
+    raise LookupError(f"no PDF link found on {page_url}")
+
+
 def fetch_faa(client: httpx2.Client, data_dir: Path) -> list[ManifestEntry]:
     headers = {"User-Agent": FAA_USER_AGENT}
     page = client.get(FAA_PHAK_URL, headers=headers, follow_redirects=True)
     page.raise_for_status()
     entries: list[ManifestEntry] = []
     for link in faa_chapter_links(page.text, FAA_PHAK_URL):
+        landing = client.get(link.url, headers=headers, follow_redirects=True)
+        landing.raise_for_status()
+        pdf_url = chapter_pdf_url(landing.text, link.url)
         dest = data_dir / "faa" / f"{link.doc_key}.pdf"
-        download(client, link.url, dest, headers)
+        download(client, pdf_url, dest, headers)
+        # Guard against saving an HTML page (an error page, or a landing page) under a .pdf
+        # name: every real PDF starts with these magic bytes.
+        with dest.open("rb") as fh:
+            if fh.read(5) != b"%PDF-":
+                dest.unlink()
+                raise ValueError(f"{pdf_url} did not return a PDF")
         entries.append(
             ManifestEntry(
                 doc_key=link.doc_key,
                 corpus=Corpus.FAA,
                 title=f"{FAA_TITLE_PREFIX}, {link.display_title}",
-                source_url=link.url,
+                source_url=pdf_url,
                 company=None,
                 fiscal_year=None,
                 path=dest.relative_to(data_dir).as_posix(),

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from pydantic import SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -35,6 +35,33 @@ class Settings(BaseSettings):
     embedding_dim: int = 1024
     rerank_model: str = "qwen/qwen3-reranker-8b"
     generation_model: str = "anthropic/claude-haiku-5.5"
+    # Describes figures at ingest (ADR 0008). Same default as the generator; the eval may
+    # pick a different one.
+    vision_model: str = "anthropic/claude-haiku-5.5"
+
+    # The LLM judge for evals (ADR 0011). Deliberately no default: it must come from a
+    # different model family than every generator it grades (Claude, Gemma, Qwen), and must
+    # have a zero-data-retention endpoint. The owner chooses it; the eval runner refuses to
+    # judge until it's set.
+    judge_model: str | None = None
+
+    # Spending caps in USD, enforced by models/cost.py. Keep them below the key's own credit
+    # limit, so our cap trips first with a clear message.
+    ingest_budget_usd: float = 3.0
+    eval_budget_usd: float = 2.0
+    # Charged per call when OpenRouter reports no cost and the model isn't in model_prices.
+    unpriced_call_usd: float = 0.005
+    # Fallback prices (USD per million input / output tokens), used only when a response has
+    # no `usage.cost`. From ADR 0009 (checked 2026-11-07), rounded UP so estimates err high.
+    model_prices: dict[str, tuple[float, float]] = Field(
+        default_factory=lambda: {
+            "qwen/qwen3-embedding-8b": (0.02, 0.0),
+            "openai/text-embedding-3-small": (0.03, 0.0),
+            "anthropic/claude-haiku-5.5": (0.15, 0.75),
+            "google/gemma-4-26b": (0.06, 0.20),
+            "qwen/qwen3.6-35b-a3b": (0.02, 0.15),
+        }
+    )
 
     @property
     def embedding_key(self) -> str:

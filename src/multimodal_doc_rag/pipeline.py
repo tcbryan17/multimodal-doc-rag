@@ -9,6 +9,7 @@ import psycopg
 
 from multimodal_doc_rag.contracts import AskRequest, AskResponse, Citation, TraceStep
 from multimodal_doc_rag.fakes import IDK
+from multimodal_doc_rag.models.cost import BudgetExceededError
 from multimodal_doc_rag.protocols import Embedder, Generator, Reranker
 from multimodal_doc_rag.search import fetch_figure_pngs, hybrid_search
 from multimodal_doc_rag.types import Passage
@@ -67,6 +68,8 @@ class RagPipeline:
         try:
             ranked = self._reranker.rerank(question, [p.content for p in passages], self._top_k)
             kept = [replace(passages[i], score=score) for i, score in ranked[: self._top_k]]
+        except BudgetExceededError:
+            raise  # a spending cap must stop the run, not quietly degrade it
         except Exception as exc:  # noqa: BLE001 - reranking is an optimisation, never fatal
             # ADR 0009: fall back to hybrid (RRF) order, so a reranker outage costs quality,
             # not availability.
