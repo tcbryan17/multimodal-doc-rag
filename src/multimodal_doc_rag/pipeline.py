@@ -2,7 +2,7 @@
 
 import re
 import time
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from typing import Any
 
 import psycopg
@@ -46,6 +46,20 @@ def _citation(p: Passage) -> Citation:
     )
 
 
+@dataclass(frozen=True)
+class PipelineRun:
+    """Everything one question produced, for callers that need more than the HTTP response.
+
+    The eval runner (ADR 0011) needs the retrieved passages themselves to score recall@k and
+    to hand the judge the evidence, and the cited chunk ids to score citation accuracy. The
+    API response only carries printed page labels and snippets, which can't answer either.
+    """
+
+    response: AskResponse
+    passages: list[Passage]  # what the generator saw, best first (after reranking)
+    cited_chunk_ids: tuple[int, ...]  # validated: always a subset of `passages`
+
+
 class RagPipeline:
     def __init__(
         self,
@@ -77,6 +91,9 @@ class RagPipeline:
         return kept, f"kept {len(kept)} of {len(passages)}"
 
     def ask(self, request: AskRequest) -> AskResponse:
+        return self.run(request).response
+
+    def run(self, request: AskRequest) -> PipelineRun:
         trace: list[TraceStep] = []
         t0 = time.perf_counter()
 
@@ -107,10 +124,17 @@ class RagPipeline:
 
         if not passages:  # nothing retrieved: don't ask a model to answer from nothing
             mark("generate", "skipped: no passages")
-            return AskResponse(answer=IDK, citations=[], trace=trace)
+            return PipelineRun(
+                AskResponse(answer=IDK, citations=[], trace=trace), passages=[], cited_chunk_ids=()
+            )
         answer = self._generator.generate(request.question, passages, figures)
         by_id = {p.chunk_id: p for p in passages}
         # Defensive: the generator contract says ids are a subset, but never trust it blindly.
-        citations = [_citation(by_id[cid]) for cid in answer.cited_chunk_ids if cid in by_id]
+        cited = tuple(cid for cid in answer.cited_chunk_ids if cid in by_id)
+        citations = [_citation(by_id[cid]) for cid in cited]
         mark("generate", f"{len(citations)} citations")
-        return AskResponse(answer=answer.text, citations=citations, trace=trace)
+        return PipelineRun(
+            AskResponse(answer=answer.text, citations=citations, trace=trace),
+            passages=passages,
+            cited_chunk_ids=cited,
+        )

@@ -183,3 +183,29 @@ def test_figure_passages_get_image_url_and_generator_gets_their_pngs(
     for passage, citation in zip(spy.passages, resp.citations, strict=True):
         expected = f"/figures/{passage.chunk_id}.png" if passage.kind == "figure" else None
         assert citation.image_url == expected
+
+
+def test_run_exposes_passages_and_validated_cited_ids(db_conn: Conn, tmp_path: Path) -> None:
+    _ingest(db_conn, tmp_path, "a", Corpus.FAA, "# Ch\n\naltimeter pressure\n\nairspeed indicator")
+    # 999999 is not one of the passages: run() must drop it, exactly as the citations do.
+    gen = SpyGenerator(cite=(999999,))
+    run = _pipeline(db_conn, gen).run(AskRequest(question="altimeter pressure"))
+    assert run.passages and run.passages == gen.passages
+    assert run.cited_chunk_ids == ()
+    assert run.response.citations == []
+
+
+def test_run_and_ask_agree(db_conn: Conn, tmp_path: Path) -> None:
+    _ingest(db_conn, tmp_path, "a", Corpus.FAA, "# Ch\n\naltimeter pressure\n\nairspeed indicator")
+    pipe = _pipeline(db_conn)
+    req = AskRequest(question="altimeter pressure")
+    run, resp = pipe.run(req), pipe.ask(req)
+    assert run.response.answer == resp.answer
+    assert [c.snippet for c in run.response.citations] == [c.snippet for c in resp.citations]
+    assert run.cited_chunk_ids == (run.passages[0].chunk_id,)
+
+
+def test_run_with_no_passages(db_conn: Conn) -> None:
+    run = _pipeline(db_conn).run(AskRequest(question="anything at all"))
+    assert run.passages == [] and run.cited_chunk_ids == ()
+    assert run.response.answer == IDK
