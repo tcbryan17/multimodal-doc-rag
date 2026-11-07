@@ -8,8 +8,21 @@ from multimodal_doc_rag.fakes import EchoGenerator
 from multimodal_doc_rag.protocols import Generator
 from multimodal_doc_rag.types import PageRef, Passage
 
+
+def _live_generator() -> Generator:
+    from multimodal_doc_rag.config import Settings
+    from multimodal_doc_rag.models.adapters import OpenRouterGenerator
+    from multimodal_doc_rag.models.openrouter import OpenRouterClient
+
+    s = Settings()
+    if s.openrouter_api_key is None:
+        pytest.skip("OPENROUTER_API_KEY not set")
+    return OpenRouterGenerator(OpenRouterClient.from_settings(), s.generation_model, 400)
+
+
 IMPLEMENTATIONS: list[object] = [
     pytest.param(EchoGenerator, id="fake-echo"),
+    pytest.param(_live_generator, id="openrouter-generator", marks=pytest.mark.live),
 ]
 
 
