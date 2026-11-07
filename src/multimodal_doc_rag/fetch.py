@@ -37,7 +37,10 @@ SEC_MIN_INTERVAL_S = 0.2
 
 # ADR 0013 says ~3 chapters are held out, including Ch. 11. Only Ch. 11 is chosen so far; the
 # other two are an open decision for the owner, so they stay in the dev split for now.
-FAA_HELDOUT_KEYS = frozenset({"phak-ch11"})
+# Held out from all tuning, scored once at the end (ADR 0011/0013): performance charts,
+# weather services and airspace diagrams. Ch. 8 is deliberately NOT held out: the PDF
+# parser was developed against it.
+FAA_HELDOUT_KEYS = frozenset({"phak-ch11", "phak-ch13", "phak-ch15"})
 
 SPLIT_DEV = "dev"
 SPLIT_HELDOUT = "heldout"

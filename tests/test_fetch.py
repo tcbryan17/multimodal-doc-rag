@@ -7,6 +7,7 @@ import httpx2
 import pytest
 
 from multimodal_doc_rag.fetch import (
+    FAA_HELDOUT_KEYS,
     FAA_PHAK_URL,
     Filing,
     MissingUserAgentError,
@@ -79,8 +80,10 @@ def test_fetch_faa_downloads_and_assigns_split(tmp_path: Path) -> None:
     assert (tmp_path / ch8.path).read_bytes() == b"%PDF-fake"
     assert len(ch8.sha256) == 64
     assert by_key["phak-ch11"].split == "heldout"
-    # Only Ch. 11 is chosen so far; the other held-out chapters are the owner's call.
-    assert {k for k, e in by_key.items() if e.split == "heldout"} == {"phak-ch11"}
+    # Exactly the held-out chapters present in the fixture page, nothing else (ADR 0013).
+    heldout = {k for k, e in by_key.items() if e.split == "heldout"}
+    assert heldout == FAA_HELDOUT_KEYS & by_key.keys()
+    assert "phak-ch08" not in FAA_HELDOUT_KEYS  # the parser was developed on Ch. 8
     assert all(r.headers["user-agent"] == "multimodal-doc-rag/0.1" for r in requests)
 
 

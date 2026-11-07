@@ -26,7 +26,7 @@ The current handbook edition is **FAA-H-8083-25C** (November 2023). The FAA publ
   - **Held-out set:** Costco (retail).
 
   All four include their financial statements directly in the 10-K.
-- **Handbook:** FAA-H-8083-25C, **all chapters and appendices**, downloaded from the FAA's handbook page. About 3 chapters are held out from tuning, including a chart-heavy one (Ch. 11, Aircraft Performance).
+- **Handbook:** FAA-H-8083-25C, **all chapters and appendices**, downloaded from the FAA's handbook page. Three chapters are held out from tuning: **Ch. 11 (Aircraft Performance), Ch. 13 (Aviation Weather Services) and Ch. 15 (Airspace)**. All are figure-heavy, in different ways. Ch. 8 is not held out, because the PDF parser was developed against it.
 - Each source file is one document. A handbook chapter's display title looks like "FAA-H-8083-25C, Ch. 4: Principles of Flight".
 
 ## Why
