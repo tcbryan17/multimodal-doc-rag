@@ -1,0 +1,32 @@
+# Local development services. Start with `docker compose up -d`, stop with `docker compose down`.
+# Values like ${POSTGRES_PASSWORD} are read from .env (see .env.example); defaults apply if unset.
+
+services:
+  db:
+    # Official Postgres 18 with the pgvector extension preinstalled. Pinned to an exact
+    # version so everyone gets the same database, and upgrades are a deliberate change.
+    image: pgvector/pgvector:0.8.7-pg18
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rag}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rag-dev-only}
+      POSTGRES_DB: ${POSTGRES_DB:-rag}
+    ports:
+      # host:container. 127.0.0.1 means only this Mac can connect, not other devices on
+      # your network. 5433 on the host avoids clashing with a Homebrew Postgres on 5432.
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      # Named volume: the data survives `docker compose down` and container rebuilds.
+      # Postgres 18 images expect the mount at /var/lib/postgresql (not .../data).
+      - pgdata:/var/lib/postgresql
+      # SQL files here run once, the first time the database is created.
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # Lets `docker compose up --wait` know when the database is ready for connections.
+      # $$ escapes $ so the variable is expanded inside the container, not by Compose.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

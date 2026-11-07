@@ -4,3 +4,11 @@ __pycache__/
 .env
 *.env.local
 .DS_Store
+
+# Downloaded source documents (fetched by script, never committed)
+data/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
