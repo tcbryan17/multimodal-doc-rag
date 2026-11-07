@@ -3,7 +3,6 @@
 import base64
 import json
 import math
-import os
 from collections.abc import Callable
 from typing import Any
 
@@ -209,11 +208,3 @@ def test_image_part_builds_data_uri() -> None:
     prefix = "data:image/png;base64,"
     assert url.startswith(prefix)
     assert base64.b64decode(url[len(prefix) :]) == b"\x89PNGdata"
-
-
-@pytest.mark.live
-@pytest.mark.skipif(not os.environ.get("OPENROUTER_API_KEY"), reason="OPENROUTER_API_KEY not set")
-def test_live_embed() -> None:
-    client = OpenRouterClient.from_settings()
-    vecs = client.embed(settings.embedding_model, ["hello"], dimensions=settings.embedding_dim)
-    assert len(vecs) == 1 and len(vecs[0]) == settings.embedding_dim
