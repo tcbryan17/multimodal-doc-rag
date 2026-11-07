@@ -12,3 +12,6 @@ data/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+
+# Claude Code agent worktrees (temporary checkouts of this repo)
+.claude/worktrees/
