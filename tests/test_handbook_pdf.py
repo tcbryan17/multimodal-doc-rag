@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from multimodal_doc_rag.parsing.handbook_pdf import HandbookPdfParser
+from multimodal_doc_rag.parsing.handbook_pdf import FOOTER_LABEL, HandbookPdfParser
 from multimodal_doc_rag.types import Corpus, Element, ParsedDocument, SourceInfo
 
 _spec = importlib.util.spec_from_file_location(
@@ -187,3 +187,22 @@ def test_real_ch11(ch11: ParsedDocument) -> None:
         assert f"Sample Problem {n}" in flat
     assert "Performance Charts" in flat
     assert any("Aircraft Performance" in h for h in flat)
+
+
+@pytest.mark.parametrize(
+    "text, label",
+    [
+        ("8-22", "8-22"),  # chapter page
+        (" 17-3 ", "17-3"),
+        ("A-1", "A-1"),  # appendices
+        ("G-12", "G-12"),  # glossary
+        ("I-3", "I-3"),  # index
+        ("iii", "iii"),  # front matter
+        ("Left rudder", None),  # a caption line near the bottom is not a label
+        ("2026", None),  # nor is a year
+        ("Figure 8-22", None),
+    ],
+)
+def test_footer_label_forms(text: str, label: str | None) -> None:
+    m = FOOTER_LABEL.match(text)
+    assert (m.group(1) if m else None) == label

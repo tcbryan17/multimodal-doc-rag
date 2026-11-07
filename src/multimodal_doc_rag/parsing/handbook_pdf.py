@@ -35,7 +35,9 @@ FOOTER_ZONE = 60.0
 # Body text starts at y ~ 43, so a line that ends above this is a running header (none in
 # the real book; the guard keeps a header from ever becoming a "paragraph").
 HEADER_ZONE = 36.0
-FOOTER_LABEL = re.compile(r"^\s*(\d+-\d+)\s*$")
+# Chapters print "8-22"; the appendices, glossary and index print "A-1", "G-1", "I-1"; the
+# front matter prints lowercase roman numerals ("iii").
+FOOTER_LABEL = re.compile(r"^\s*((?:\d{1,2}|[A-Z])-\d{1,3}|[ivxlc]{1,7})\s*$")
 
 # ---- Headings -----------------------------------------------------------------------------
 # Measured from the two spike chapters (see probe_headings in the spike branch):
