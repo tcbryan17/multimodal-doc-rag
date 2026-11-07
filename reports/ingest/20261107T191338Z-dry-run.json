@@ -1,0 +1,542 @@
+{
+  "docs": [
+    {
+      "chunks_by_kind": {
+        "table": 66,
+        "text": 237
+      },
+      "content_tokens": 59246,
+      "corpus": "10k",
+      "doc_key": "aapl-10k-2026",
+      "elements_by_kind": {
+        "table": 60,
+        "text": 535
+      },
+      "embed_tokens": 66451,
+      "figure_image_tokens": 0,
+      "figures": 0,
+      "pages": 65,
+      "path": "edgar/aapl-10k-2026.htm",
+      "seconds": 0.3,
+      "split": "dev",
+      "unlabelled_elements": 595
+    },
+    {
+      "chunks_by_kind": {
+        "table": 62,
+        "text": 149
+      },
+      "content_tokens": 54657,
+      "corpus": "10k",
+      "doc_key": "cost-10k-2026",
+      "elements_by_kind": {
+        "table": 58,
+        "text": 662
+      },
+      "embed_tokens": 55712,
+      "figure_image_tokens": 0,
+      "figures": 0,
+      "pages": 70,
+      "path": "edgar/cost-10k-2026.htm",
+      "seconds": 0.3,
+      "split": "heldout",
+      "unlabelled_elements": 35
+    },
+    {
+      "chunks_by_kind": {
+        "table": 187,
+        "text": 352
+      },
+      "content_tokens": 108319,
+      "corpus": "10k",
+      "doc_key": "jnj-10k-2025",
+      "elements_by_kind": {
+        "table": 174,
+        "text": 830
+      },
+      "embed_tokens": 123661,
+      "figure_image_tokens": 0,
+      "figures": 0,
+      "pages": 127,
+      "path": "edgar/jnj-10k-2025.htm",
+      "seconds": 0.7,
+      "split": "dev",
+      "unlabelled_elements": 542
+    },
+    {
+      "chunks_by_kind": {
+        "table": 98,
+        "text": 255
+      },
+      "content_tokens": 85928,
+      "corpus": "10k",
+      "doc_key": "msft-10k-2026",
+      "elements_by_kind": {
+        "table": 88,
+        "text": 1073
+      },
+      "embed_tokens": 88796,
+      "figure_image_tokens": 0,
+      "figures": 0,
+      "pages": 101,
+      "path": "edgar/msft-10k-2026.htm",
+      "seconds": 1.3,
+      "split": "dev",
+      "unlabelled_elements": 27
+    },
+    {
+      "chunks_by_kind": {
+        "text": 29
+      },
+      "content_tokens": 10715,
+      "corpus": "faa",
+      "doc_key": "phak-appendices",
+      "elements_by_kind": {
+        "text": 345
+      },
+      "embed_tokens": 11297,
+      "figure_image_tokens": 0,
+      "figures": 0,
+      "pages": 24,
+      "path": "faa/phak-appendices.pdf",
+      "seconds": 2.1,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 24,
+        "text": 79
+      },
+      "content_tokens": 20197,
+      "corpus": "faa",
+      "doc_key": "phak-ch01",
+      "elements_by_kind": {
+        "figure": 24,
+        "text": 341
+      },
+      "embed_tokens": 23925,
+      "figure_image_tokens": 7970,
+      "figures": 24,
+      "pages": 24,
+      "path": "faa/phak-ch01.pdf",
+      "seconds": 10.9,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 24,
+        "text": 95
+      },
+      "content_tokens": 25992,
+      "corpus": "faa",
+      "doc_key": "phak-ch02",
+      "elements_by_kind": {
+        "figure": 24,
+        "text": 338
+      },
+      "embed_tokens": 30422,
+      "figure_image_tokens": 13150,
+      "figures": 24,
+      "pages": 32,
+      "path": "faa/phak-ch02.pdf",
+      "seconds": 10.6,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 22,
+        "text": 41
+      },
+      "content_tokens": 9672,
+      "corpus": "faa",
+      "doc_key": "phak-ch03",
+      "elements_by_kind": {
+        "figure": 22,
+        "text": 97
+      },
+      "embed_tokens": 11697,
+      "figure_image_tokens": 9741,
+      "figures": 22,
+      "pages": 16,
+      "path": "faa/phak-ch03.pdf",
+      "seconds": 9.1,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 8,
+        "text": 32
+      },
+      "content_tokens": 7660,
+      "corpus": "faa",
+      "doc_key": "phak-ch04",
+      "elements_by_kind": {
+        "figure": 8,
+        "text": 76
+      },
+      "embed_tokens": 8939,
+      "figure_image_tokens": 2459,
+      "figures": 8,
+      "pages": 10,
+      "path": "faa/phak-ch04.pdf",
+      "seconds": 2.9,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 71,
+        "text": 151
+      },
+      "content_tokens": 45788,
+      "corpus": "faa",
+      "doc_key": "phak-ch05",
+      "elements_by_kind": {
+        "figure": 71,
+        "text": 529
+      },
+      "embed_tokens": 52900,
+      "figure_image_tokens": 19628,
+      "figures": 71,
+      "pages": 51,
+      "path": "faa/phak-ch05.pdf",
+      "seconds": 12.3,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 24,
+        "text": 44
+      },
+      "content_tokens": 9124,
+      "corpus": "faa",
+      "doc_key": "phak-ch06",
+      "elements_by_kind": {
+        "figure": 24,
+        "text": 88
+      },
+      "embed_tokens": 11174,
+      "figure_image_tokens": 5654,
+      "figures": 24,
+      "pages": 12,
+      "path": "faa/phak-ch06.pdf",
+      "seconds": 5.7,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 49,
+        "text": 151
+      },
+      "content_tokens": 36049,
+      "corpus": "faa",
+      "doc_key": "phak-ch07",
+      "elements_by_kind": {
+        "figure": 49,
+        "text": 481
+      },
+      "embed_tokens": 41696,
+      "figure_image_tokens": 15018,
+      "figures": 49,
+      "pages": 42,
+      "path": "faa/phak-ch07.pdf",
+      "seconds": 12.6,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 39,
+        "text": 92
+      },
+      "content_tokens": 21370,
+      "corpus": "faa",
+      "doc_key": "phak-ch08",
+      "elements_by_kind": {
+        "figure": 39,
+        "text": 246
+      },
+      "embed_tokens": 25900,
+      "figure_image_tokens": 12395,
+      "figures": 39,
+      "pages": 28,
+      "path": "faa/phak-ch08.pdf",
+      "seconds": 12.5,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 9,
+        "text": 52
+      },
+      "content_tokens": 10904,
+      "corpus": "faa",
+      "doc_key": "phak-ch09",
+      "elements_by_kind": {
+        "figure": 9,
+        "text": 148
+      },
+      "embed_tokens": 13414,
+      "figure_image_tokens": 3826,
+      "figures": 9,
+      "pages": 14,
+      "path": "faa/phak-ch09.pdf",
+      "seconds": 4.3,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 11,
+        "text": 36
+      },
+      "content_tokens": 8515,
+      "corpus": "faa",
+      "doc_key": "phak-ch10",
+      "elements_by_kind": {
+        "figure": 11,
+        "text": 169
+      },
+      "embed_tokens": 10218,
+      "figure_image_tokens": 4094,
+      "figures": 11,
+      "pages": 12,
+      "path": "faa/phak-ch10.pdf",
+      "seconds": 2.4,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 34,
+        "text": 89
+      },
+      "content_tokens": 22208,
+      "corpus": "faa",
+      "doc_key": "phak-ch11",
+      "elements_by_kind": {
+        "figure": 34,
+        "text": 304
+      },
+      "embed_tokens": 26253,
+      "figure_image_tokens": 11745,
+      "figures": 34,
+      "pages": 28,
+      "path": "faa/phak-ch11.pdf",
+      "seconds": 7.9,
+      "split": "heldout",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 29,
+        "text": 76
+      },
+      "content_tokens": 17777,
+      "corpus": "faa",
+      "doc_key": "phak-ch12",
+      "elements_by_kind": {
+        "figure": 29,
+        "text": 194
+      },
+      "embed_tokens": 20597,
+      "figure_image_tokens": 13450,
+      "figures": 29,
+      "pages": 26,
+      "path": "faa/phak-ch12.pdf",
+      "seconds": 9.5,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 21,
+        "text": 72
+      },
+      "content_tokens": 17243,
+      "corpus": "faa",
+      "doc_key": "phak-ch13",
+      "elements_by_kind": {
+        "figure": 21,
+        "text": 241
+      },
+      "embed_tokens": 20858,
+      "figure_image_tokens": 10169,
+      "figures": 21,
+      "pages": 24,
+      "path": "faa/phak-ch13.pdf",
+      "seconds": 6.0,
+      "split": "heldout",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 59,
+        "text": 126
+      },
+      "content_tokens": 25370,
+      "corpus": "faa",
+      "doc_key": "phak-ch14",
+      "elements_by_kind": {
+        "figure": 59,
+        "text": 349
+      },
+      "embed_tokens": 31908,
+      "figure_image_tokens": 22773,
+      "figures": 59,
+      "pages": 41,
+      "path": "faa/phak-ch14.pdf",
+      "seconds": 18.4,
+      "split": "dev",
+      "unlabelled_elements": 9
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 9,
+        "text": 44
+      },
+      "content_tokens": 8012,
+      "corpus": "faa",
+      "doc_key": "phak-ch15",
+      "elements_by_kind": {
+        "figure": 9,
+        "text": 113
+      },
+      "embed_tokens": 9699,
+      "figure_image_tokens": 3782,
+      "figures": 9,
+      "pages": 12,
+      "path": "faa/phak-ch15.pdf",
+      "seconds": 4.3,
+      "split": "heldout",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 39,
+        "text": 106
+      },
+      "content_tokens": 26040,
+      "corpus": "faa",
+      "doc_key": "phak-ch16",
+      "elements_by_kind": {
+        "figure": 39,
+        "text": 317
+      },
+      "embed_tokens": 30143,
+      "figure_image_tokens": 15898,
+      "figures": 39,
+      "pages": 35,
+      "path": "faa/phak-ch16.pdf",
+      "seconds": 19.0,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "figure": 24,
+        "text": 109
+      },
+      "content_tokens": 24018,
+      "corpus": "faa",
+      "doc_key": "phak-ch17",
+      "elements_by_kind": {
+        "figure": 24,
+        "text": 318
+      },
+      "embed_tokens": 29186,
+      "figure_image_tokens": 10293,
+      "figures": 24,
+      "pages": 30,
+      "path": "faa/phak-ch17.pdf",
+      "seconds": 29.0,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "text": 7
+      },
+      "content_tokens": 1323,
+      "corpus": "faa",
+      "doc_key": "phak-front",
+      "elements_by_kind": {
+        "text": 43
+      },
+      "embed_tokens": 1424,
+      "figure_image_tokens": 0,
+      "figures": 0,
+      "pages": 5,
+      "path": "faa/phak-front.pdf",
+      "seconds": 0.5,
+      "split": "dev",
+      "unlabelled_elements": 4
+    },
+    {
+      "chunks_by_kind": {
+        "text": 74
+      },
+      "content_tokens": 34622,
+      "corpus": "faa",
+      "doc_key": "phak-glossary",
+      "elements_by_kind": {
+        "text": 907
+      },
+      "embed_tokens": 35304,
+      "figure_image_tokens": 0,
+      "figures": 0,
+      "pages": 36,
+      "path": "faa/phak-glossary.pdf",
+      "seconds": 1.7,
+      "split": "dev",
+      "unlabelled_elements": 0
+    },
+    {
+      "chunks_by_kind": {
+        "text": 49
+      },
+      "content_tokens": 17746,
+      "corpus": "faa",
+      "doc_key": "phak-index",
+      "elements_by_kind": {
+        "text": 140
+      },
+      "embed_tokens": 18126,
+      "figure_image_tokens": 0,
+      "figures": 0,
+      "pages": 10,
+      "path": "faa/phak-index.pdf",
+      "seconds": 0.8,
+      "split": "dev",
+      "unlabelled_elements": 0
+    }
+  ],
+  "estimate": {
+    "assumptions": [
+      "Embedding tokens = approx tokens (chars / 4) of each chunk's context header + content, plus 400 per figure for the description that gets prepended.",
+      "Every figure is assumed to get one vision call: ~500 prompt tokens + image tokens + ~400 output tokens. Decorative figures cost the same call, so none are assumed to be skipped.",
+      "Image tokens ~ width x height / 750 (Anthropic's rule of thumb), capped at 1600 per image because large images are downscaled.",
+      "Prices come from MODEL_PRICES (USD per million tokens), rounded up when set; if OpenRouter reports the real `usage.cost` the actual bill will differ.",
+      "Chunk counts assume the default 500-token chunk size. Retries, preflight and failed calls are not included: the suggested credit limit is 2x the estimate, minimum $1."
+    ],
+    "embed_tokens": 998100,
+    "embed_usd": 0.02,
+    "embedding_model": "qwen/qwen3-embedding-8b",
+    "figures": 496,
+    "suggested_credit_limit_usd": 1.0,
+    "total_usd": 0.2333,
+    "vision_input_tokens": 430045,
+    "vision_model": "anthropic/claude-haiku-5.5",
+    "vision_output_tokens": 198400,
+    "vision_usd": 0.2133
+  },
+  "failed": {},
+  "generated_at": "2026-11-07T19:13:38+00:00"
+}
