@@ -28,6 +28,23 @@ def document_exists(conn: Conn, sha256: str) -> bool:
     return row is not None
 
 
+def get_document_sha(conn: Conn, doc_key: str) -> str | None:
+    """The stored source hash for a doc_key, or None when that document isn't ingested."""
+    row = conn.execute("SELECT sha256 FROM documents WHERE doc_key = %s", (doc_key,)).fetchone()
+    return None if row is None else str(row[0])
+
+
+def delete_document(conn: Conn, doc_key: str) -> bool:
+    """Delete a document by its doc_key; True if there was one.
+
+    Foreign keys do the rest: chunks, embeddings and figures cascade away, and
+    ingest_failures.document_id is set to NULL (the failure history survives). Like everything
+    here it never commits, so a caller can delete and re-ingest inside one transaction.
+    """
+    cur = conn.execute("DELETE FROM documents WHERE doc_key = %s", (doc_key,))
+    return cur.rowcount > 0
+
+
 def insert_document(conn: Conn, parsed: ParsedDocument) -> int:
     src = parsed.source
     row = conn.execute(
