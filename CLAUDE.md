@@ -51,7 +51,7 @@ Before calling work done, run pytest, mypy, and ruff check. All of them pass rig
 - If the repo folder is moved or renamed, `.venv` breaks because it stores absolute paths. Delete `.venv` and run `uv sync`.
 
 ## Current status (update as things change)
-**Done:** decision records 0001–0013; build-plan steps 0–3 (quality gate + CI, the `/ask` contract with an injected pipeline, migrations/schema/DB fixtures) and the raw OpenRouter client from step 10. No pipeline stages exist yet.
+**Done:** decision records 0001–0013; build-plan steps 0–12: every pipeline stage, the end-to-end `/ask` test on a fixture 10-K, the handbook PDF parser (validated on real Ch. 8 and 11), and fetch scripts.
 
 **Decided** (read the ADR before working in its area; details and rejected options are in `docs/decisions/`):
 - 0001: our own retrieval pipeline, with no LangChain or LlamaIndex.
@@ -67,6 +67,6 @@ Before calling work done, run pytest, mypy, and ruff check. All of them pass rig
 - 0011: evals run outside pytest; 60 dev + 20 held-out questions per corpus; an LLM judge calibrated against human grades; injection sets.
 - 0012: a walking skeleton; contract tests over fake and real implementations; db tests in a rolled-back transaction; GitHub Actions + pre-commit.
 
-**Build plan:** `docs/build-plan.md` lists the ordered, test-first steps. Tick each one off as it lands. Next up: steps 5–8, 10–12 in parallel. Core types live in `types.py`, seams in `protocols.py`, fakes in `fakes.py`, contract suites in `tests/contracts/`.
+**Build plan:** `docs/build-plan.md` lists the ordered, test-first steps. Tick each one off as it lands. The walking skeleton is complete (steps 0–12). Next up: step 13 (figures end to end), then step 14 (real ingest, which needs an OpenRouter key). Core types live in `types.py`, seams in `protocols.py`, fakes in `fakes.py`, contract suites in `tests/contracts/`.
 
 **Still open:** deployment (production Postgres host, app hosting, hardening: per-IP rate limits, input and output caps, a read-only DB role, a non-root container). This is deliberately deferred until after the eval, and it's the owner's decision.

@@ -38,21 +38,21 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
   - Write `rrf()` as a pure function.
   - `db` tests: full-text search finds an exact term; the corpus and doc filters work; fusion keeps results from both lists.
   - *Concept:* RRF, and why vectors and keywords cover each other's blind spots.
-- [ ] **9. Answering and the end-to-end test.**
+- [x] **9. Answering and the end-to-end test.**
   - Wrap retrieved passages in delimiters in the prompt.
   - Drop any citation that doesn't point to a retrieved passage.
   - Return "I don't know" when nothing is retrieved.
   - Record one trace step per stage.
   - **End-to-end test:** ingest the fixture, call `/ask`, and get a citation with the right page label. This completes the skeleton.
   - *Concept:* grounding, and checking citations rather than trusting them.
-- [ ] **10. The OpenRouter client and real adapters.** *(Client, Embedder, Reranker and FigureDescriber adapters done; the Generator adapter comes with step 9.)*
+- [x] **10. The OpenRouter client and real adapters.** *(The live calls have never run: no key yet.)*
   - Embeddings (truncated and re-normalised), rerank with a fallback, and chat with images.
   - `MockTransport` tests check that every request sends `zdr: true` and `data_collection: "deny"`, plus errors and fallbacks.
   - Add an opt-in `live` smoke test.
   - *Concept:* testing an HTTP client without the network, and privacy enforced in code.
 - [x] **11. Fetch scripts** for EDGAR filings and FAA chapters, downloading into `data/`.
   - Ask the owner what contact to put in the SEC User-Agent.
-- [ ] **12. The PDF path** (the parser chosen in 0b).
+- [x] **12. The PDF path** (the parser chosen in 0b).
   - Test it against a fixture PDF.
   - Add figure cropping, the decorative-image rules, the figure-description step (faked in tests), `ingest_failures` and the ingest report.
 - [ ] **13. Figures end to end.**
