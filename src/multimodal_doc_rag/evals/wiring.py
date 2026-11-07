@@ -6,6 +6,7 @@ from typing import Any
 
 import psycopg
 
+from multimodal_doc_rag.api import MAX_ANSWER_TOKENS
 from multimodal_doc_rag.config import Settings
 from multimodal_doc_rag.evals.judge import Judge, OpenRouterJudge
 from multimodal_doc_rag.models.adapters import (
@@ -75,6 +76,10 @@ def build_components(
     """One client (hence one meter) behind the embedder, reranker, generator and judge, so the
     cap covers the whole run.
 
+    Not `api.build_pipeline`: that one is fixed to the configured generator, reranker on and
+    default top_k, while evals vary exactly those. Answer length (MAX_ANSWER_TOKENS) is shared,
+    so evals measure the answers the API would give.
+
     The judge is built FIRST so a missing JUDGE_MODEL fails before any money is spent.
     """
     meter = build_meter(settings, budget_usd)
@@ -89,7 +94,7 @@ def build_components(
         reranker=OpenRouterReranker(client, settings.rerank_model)
         if rerank
         else PassThroughReranker(),
-        generator=OpenRouterGenerator(client, generator_model),
+        generator=OpenRouterGenerator(client, generator_model, MAX_ANSWER_TOKENS),
         candidates=candidates,
         top_k=top_k,
     )
