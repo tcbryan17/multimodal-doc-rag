@@ -39,7 +39,9 @@ def _citation(p: Passage) -> Citation:
         page=start,
         page_end=end if end != start else None,
         snippet=_snippet(p.content),
-        image_url=None,  # step 13 adds /figures/{id}.png
+        # Relative on purpose: the server doesn't know its public origin; the client prefixes
+        # its API base. Only figure chunks have an image behind this URL.
+        image_url=f"/figures/{p.chunk_id}.png" if p.kind == "figure" else None,
     )
 
 

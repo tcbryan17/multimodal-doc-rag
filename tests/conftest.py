@@ -1,7 +1,9 @@
 """Shared fixtures. `db` tests need the compose Postgres; they skip when it is unreachable."""
 
+import importlib.util
 import os
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 
 import psycopg
@@ -47,3 +49,17 @@ def db_conn(test_database_url: str) -> Iterator[psycopg.Connection[Any]]:
             yield conn
         finally:
             conn.rollback()
+
+
+@pytest.fixture
+def mini_handbook_pdf(tmp_path: Path) -> Path:
+    """The synthetic handbook PDF, built at test time (no binary committed)."""
+    spec = importlib.util.spec_from_file_location(
+        "make_mini_handbook", Path(__file__).parent / "fixtures" / "make_mini_handbook.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    path = tmp_path / "mini_handbook.pdf"
+    module.build(path)
+    return path

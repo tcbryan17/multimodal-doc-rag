@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import psycopg
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Path, Request, Response
 from fastapi.responses import JSONResponse
 from pgvector.psycopg import register_vector
 from psycopg_pool import ConnectionPool
@@ -20,6 +20,7 @@ from multimodal_doc_rag.models.adapters import (
 )
 from multimodal_doc_rag.models.openrouter import OpenRouterClient, OpenRouterError
 from multimodal_doc_rag.pipeline import RagPipeline
+from multimodal_doc_rag.search import fetch_figure_pngs
 
 # Why a lazily created module-level pool: `/health` and most tests must work with no
 # database, so the pool is not opened at import or at startup. The first `/ask` that
@@ -79,17 +80,20 @@ def _require_api_key() -> None:
         )
 
 
-def get_db_conn(_: None = Depends(_require_api_key)) -> Iterator[psycopg.Connection[Any]]:  # noqa: B008
+def get_db_conn() -> Iterator[psycopg.Connection[Any]]:
     """Yield one pooled connection per request; it goes back to the pool afterwards.
 
-    Depending on `_require_api_key` first means an unconfigured server answers 503 without
-    ever touching the database.
+    Deliberately independent of the model key: `/figures` only reads the database and must
+    work without one. The key check lives on `get_pipeline` instead.
     """
     with _get_pool().connection() as conn:  # commits (or rolls back on error) on exit
         yield conn
 
 
 def get_pipeline(
+    # FastAPI resolves dependencies in parameter order, so the key check runs first: with no
+    # key `/ask` answers 503 without ever touching the database.
+    _: None = Depends(_require_api_key),  # noqa: B008
     conn: psycopg.Connection[Any] = Depends(get_db_conn),  # noqa: B008
 ) -> Iterator[Pipeline]:
     """Dependency that supplies the pipeline to `/ask`.
@@ -123,3 +127,22 @@ def ask(
     pipeline: Pipeline = Depends(get_pipeline),  # noqa: B008
 ) -> AskResponse:
     return pipeline.ask(request)
+
+
+# Chunk ids are identity columns and are never reused, and a figure's PNG is written once at
+# ingest, so the bytes behind a given URL never change. Hence "immutable" and a one-year
+# max-age: browsers and CDNs may keep it forever.
+FIGURE_CACHE_CONTROL = "public, max-age=31536000, immutable"
+
+
+@app.get("/figures/{chunk_id}.png")
+def figure(
+    chunk_id: int = Path(gt=0),
+    conn: psycopg.Connection[Any] = Depends(get_db_conn),  # noqa: B008
+) -> Response:
+    png = fetch_figure_pngs(conn, [chunk_id]).get(chunk_id)
+    if png is None:
+        raise HTTPException(status_code=404, detail="figure not found")
+    return Response(
+        content=png, media_type="image/png", headers={"Cache-Control": FIGURE_CACHE_CONTROL}
+    )

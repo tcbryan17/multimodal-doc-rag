@@ -17,6 +17,7 @@ from multimodal_doc_rag.fakes import (
     PlainTextParser,
 )
 from multimodal_doc_rag.ingest import ingest_document
+from multimodal_doc_rag.parsing.handbook_pdf import HandbookPdfParser
 from multimodal_doc_rag.pipeline import RagPipeline
 from multimodal_doc_rag.types import Corpus, GeneratedAnswer, Passage, SourceInfo
 
@@ -136,3 +137,49 @@ def test_unknown_cited_ids_are_ignored(db_conn: Conn, tmp_path: Path) -> None:
     _ingest(db_conn, tmp_path, "a", Corpus.FAA, "# Ch\n\naltimeter")
     resp = _pipeline(db_conn, SpyGenerator(cite=(999999,))).ask(AskRequest(question="altimeter"))
     assert resp.citations == []
+
+
+class SpyFiguresGenerator(SpyGenerator):
+    """Also records the `figures` argument, to prove the pipeline hands over the PNGs."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.figures: dict[int, bytes] = {}
+
+    def generate(
+        self, question: str, passages: Sequence[Passage], figures: Mapping[int, bytes]
+    ) -> GeneratedAnswer:
+        self.figures = dict(figures)
+        return super().generate(question, passages, figures)
+
+
+def test_figure_passages_get_image_url_and_generator_gets_their_pngs(
+    db_conn: Conn, mini_handbook_pdf: Path
+) -> None:
+    src = SourceInfo("mini-phak", Corpus.FAA, "Mini Handbook", "file://mini.pdf")
+    ingest_document(
+        db_conn,
+        HandbookPdfParser(),
+        mini_handbook_pdf,
+        src,
+        embedder=EMB,
+        describer=CaptionFigureDescriber(),
+    )
+    spy = SpyFiguresGenerator()
+    question = "Lift versus angle of attack airspeed indicator"
+    _pipeline(db_conn, spy, top_k=10).ask(AskRequest(question=question))
+
+    figure_ids = {p.chunk_id for p in spy.passages if p.kind == "figure"}
+    assert figure_ids
+    assert any(p.kind != "figure" for p in spy.passages)
+    # The generator receives PNG bytes for figure passages only.
+    assert set(spy.figures) == figure_ids
+    assert all(png.startswith(b"\x89PNG") for png in spy.figures.values())
+
+    # Cite every passage: figure citations carry a relative image_url, text ones do not.
+    spy.cite = tuple(p.chunk_id for p in spy.passages)
+    resp = _pipeline(db_conn, spy, top_k=10).ask(AskRequest(question=question))
+    assert len(resp.citations) == len(spy.passages)
+    for passage, citation in zip(spy.passages, resp.citations, strict=True):
+        expected = f"/figures/{passage.chunk_id}.png" if passage.kind == "figure" else None
+        assert citation.image_url == expected

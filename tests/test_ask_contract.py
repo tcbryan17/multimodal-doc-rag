@@ -5,7 +5,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from multimodal_doc_rag.api import app, get_pipeline
+from multimodal_doc_rag.api import app, get_db_conn, get_pipeline
+from multimodal_doc_rag.config import settings
 from multimodal_doc_rag.contracts import (
     AskRequest,
     AskResponse,
@@ -117,6 +118,17 @@ def test_no_pipeline_returns_503(client: TestClient) -> None:
     r = client.post("/ask", json={"question": "hi"})
     assert r.status_code == 503
     assert "pipeline not configured" in r.json()["detail"]
+
+
+def test_no_key_answers_503_without_touching_the_database(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def boom() -> None:
+        raise AssertionError("the database was touched before the key check")
+
+    monkeypatch.setattr(settings, "openrouter_api_key", None)
+    app.dependency_overrides[get_db_conn] = boom
+    assert client.post("/ask", json={"question": "hi"}).status_code == 503
 
 
 def test_filters_passed_through(client: TestClient) -> None:
