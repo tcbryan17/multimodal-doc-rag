@@ -23,6 +23,7 @@ cp .env.example .env          # first time only
 docker compose up -d --wait   # start local Postgres + pgvector (needs OrbStack running)
 docker compose down           # stop it (data is kept in the pgdata volume)
 uv sync                 # install deps into .venv
+uv run python -m multimodal_doc_rag.db.migrate   # apply SQL migrations to DATABASE_URL
 uv run pytest           # tests (DeprecationWarning is already an error via pyproject; live tests skipped)
 uv run pytest -m live   # live tests: real OpenRouter calls that cost money, never run by default
 uv run pre-commit install   # one-time: run lint/format/mypy/tests automatically before each commit

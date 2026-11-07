@@ -19,6 +19,15 @@ class Settings(BaseSettings):
     rerank_model: str = "qwen/qwen3-reranker-8b"
     generation_model: str = "anthropic/claude-haiku-5.5"
 
+    @property
+    def embedding_key(self) -> str:
+        """The `embeddings.model` value: '<model id>@<dimensions>'.
+
+        Each key needs its own partial HNSW index (see migrations/0001_init.sql), so a
+        query must filter on exactly this string for the index to be used.
+        """
+        return f"{self.embedding_model}@{self.embedding_dim}"
+
     # Default matches docker-compose.yml; override in .env or the deploy environment.
     database_url: SecretStr = SecretStr("postgresql://rag:rag-dev-only@localhost:5433/rag")
 
