@@ -13,6 +13,8 @@ Design points worth being able to explain:
 import subprocess
 import time
 from collections.abc import Callable, Sequence
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -248,3 +250,63 @@ def index_stats(conn: psycopg.Connection[Any], embedding_key: str) -> dict[str, 
         "chunks_embedded": int(embedded[0]),
         "embedding_key": embedding_key,
     }
+
+
+# --- command-line options -------------------------------------------------------------------
+
+
+class OptionsError(ValueError):
+    """The requested run is not allowed as specified."""
+
+
+@dataclass(frozen=True)
+class RunOptions:
+    corpus: str | None = None
+    split: str = "dev"
+    i_know_this_is_heldout: bool = False
+    limit: int | None = None
+    top_k: int = 5
+    recall_k: int = 5
+    budget_usd: float = 2.0
+    judge: bool = True
+    include_drafts: bool = False
+    rerank: bool = True
+    generator: str = ""
+
+
+def validate_options(o: RunOptions) -> list[str]:
+    """Raise OptionsError for a disallowed run; otherwise return warnings to print.
+
+    Held-out is gated because its whole value is being unseen: every look at it that informs
+    a decision turns it into another dev set (ADR 0011).
+    """
+    warnings: list[str] = []
+    if o.split not in ("dev", "heldout"):
+        raise OptionsError(f"unknown split {o.split!r}")
+    if o.split == "heldout":
+        if not o.i_know_this_is_heldout:
+            raise OptionsError(
+                "the held-out split is meant to be scored ONCE, at the very end (ADR 0011). "
+                "If that is what you are doing, add --i-know-this-is-heldout."
+            )
+        warnings.append(
+            "HELD-OUT run: do not change anything in response to these numbers (ADR 0011)."
+        )
+    if o.recall_k < 1 or o.top_k < 1:
+        raise OptionsError("--top-k and --recall-k must be at least 1")
+    if o.recall_k > o.top_k:
+        raise OptionsError(
+            f"--recall-k ({o.recall_k}) cannot exceed --top-k ({o.top_k}): "
+            "recall is measured on the passages the pipeline returns"
+        )
+    if o.budget_usd <= 0:
+        raise OptionsError("--budget must be positive")
+    if o.include_drafts:
+        warnings.append("including UNVERIFIED draft questions: smoke test only, not for quoting.")
+    if not o.judge:
+        warnings.append("--no-judge: correctness and faithfulness will not be scored.")
+    return warnings
+
+
+def utc_stamp() -> str:
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
