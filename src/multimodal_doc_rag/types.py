@@ -107,8 +107,16 @@ class Chunk:
 
     @property
     def embed_text(self) -> str:
-        """What gets embedded: the context header first, so the chunk carries where it's from."""
-        return f"{self.context_header}\n\n{self.content}"
+        return embed_text(self.context_header, self.content)
+
+
+def embed_text(context_header: str, content: str) -> str:
+    """What gets embedded: the context header first, so the chunk carries where it's from.
+
+    The single definition: the indexer rebuilds this from stored columns, and documents must
+    be embedded the same way every time or old and new vectors stop being comparable.
+    """
+    return f"{context_header}\n\n{content}"
 
 
 @dataclass(frozen=True)

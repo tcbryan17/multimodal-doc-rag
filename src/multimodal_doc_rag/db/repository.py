@@ -18,7 +18,7 @@ import psycopg
 from pgvector import Vector
 
 from multimodal_doc_rag.protocols import Embedder
-from multimodal_doc_rag.types import Chunk, ParsedDocument
+from multimodal_doc_rag.types import Chunk, ParsedDocument, embed_text
 
 Conn = psycopg.Connection[Any]
 
@@ -161,7 +161,7 @@ def embed_missing(conn: Conn, embedder: Embedder, *, batch_size: int = 64) -> in
         if not rows:
             return total
         # Same text as Chunk.embed_text, rebuilt from the stored columns.
-        texts = [f"{header}\n\n{content}" for _, header, content in rows]
+        texts = [embed_text(header, content) for _, header, content in rows]
         insert_embeddings(
             conn, embedder.model_key, [r[0] for r in rows], embedder.embed_documents(texts)
         )
