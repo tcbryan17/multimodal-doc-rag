@@ -60,6 +60,10 @@ class Settings(BaseSettings):
             "anthropic/claude-haiku-5.5": (0.15, 0.75),
             "google/gemma-4-26b": (0.06, 0.20),
             "qwen/qwen3.6-35b-a3b": (0.02, 0.15),
+            # Judge candidates (ZDR endpoints, other model families), checked 2026-11-07.
+            "openai/gpt-5.4-mini": (0.85, 5.00),
+            "openai/gpt-5-mini": (0.30, 2.25),
+            "deepseek/deepseek-v4-flash": (0.15, 0.30),
         }
     )
 
