@@ -15,3 +15,6 @@ data/
 
 # Claude Code agent worktrees (temporary checkouts of this repo)
 .claude/worktrees/
+
+# Private notes (local only, never pushed)
+private/
