@@ -59,5 +59,8 @@ uv run python scripts/ingest_corpus.py                     # ingest; report in r
 ```
 Evals (gold set, metrics, LLM judge, injection tests) are described in [`evals/README.md`](evals/README.md).
 
+## Governance
+The system is mapped to the NIST AI RMF (with its Generative AI Profile) and the OWASP Top 10 for LLM Applications (2026). Release gates were pre-registered before any eval ran. A release check fails unless every gate passes on held-out evidence, and deployment will be required to pass it. See [`docs/governance/`](docs/governance/README.md) and [ADR 0016](docs/decisions/0016-governance-and-release-gates.md).
+
 ## Status
-In progress: the pipeline, parsers, ingest and eval tooling are built and tested; real ingest and the first eval run come next.
+In progress: the pipeline, parsers and eval tooling are built and tested. Both corpora are ingested, and a recorded replay runs on the portfolio site. The release gates are pre-registered. Next: the gold set and the first eval runs.

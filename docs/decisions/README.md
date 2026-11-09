@@ -47,3 +47,4 @@ What this makes easier or harder later, and what would make us revisit it.
 | [0013](0013-corpus-specifics.md) | Corpus specifics | Accepted |
 | [0014](0014-judge-model.md) | The eval judge model: GPT-6 Luna | Accepted |
 | [0015](0015-reasoning-off-and-output-caps.md) | Hidden reasoning off for figure descriptions and answers; truncation detected | Accepted |
+| [0016](0016-governance-and-release-gates.md) | Governance: NIST AI RMF + OWASP mapping, pre-registered release gates | Accepted |

@@ -11,6 +11,7 @@ paid model calls, produce scores, and run when something changes. The code is in
 | `poisoned/` | generator for the synthetic poisoned handbook chapter (eval-only index) |
 | `reports/` | committed run reports (`.json` full detail, `.md` summary) |
 | `calibration/` | your hand grades of judge-graded answers, and the agreement summary |
+| `gates.toml` | the pre-registered release gates (ADR 0016); frozen once the dev baseline exists |
 
 ## Workflow
 
@@ -52,9 +53,17 @@ uv run python scripts/calibrate_judge.py sample --report evals/reports/<run>.jso
 uv run python scripts/calibrate_judge.py grade --name <run>
 uv run python scripts/calibrate_judge.py agreement --name <run>
 
-# 6. At the very end, once: the held-out split
+# 6. At the very end, once: the held-out split, then the release decision (ADR 0016)
 uv run python scripts/run_eval.py --split heldout --i-know-this-is-heldout --label final
+uv run python scripts/release_check.py --final evals/reports/<final>.json \
+    --injection evals/reports/<direct>.json --injection evals/reports/<indirect>.json \
+    --calibration <run>
 ```
+
+Every report has a **Release gates** table. On dev runs it is guidance: tune against it, but
+it can't decide release. Only the held-out final run, plus the injection, calibration and
+figure-coverage evidence, can do that, through `release_check.py`. A gate with no data is
+"not measured", and that blocks release just like a failure.
 
 `JUDGE_MODEL` defaults to `openai/gpt-6-luna` (ADR 0014): a **different family** from every
 generator being compared (Claude, Gemma and Qwen), with a zero-data-retention endpoint. The
