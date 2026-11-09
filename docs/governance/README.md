@@ -1,6 +1,6 @@
 # Governance
 
-How this system is held to account: which frameworks it maps to, what "good enough to release" means, and where the evidence lives. The reasoning, and the options that were rejected, are in [ADR 0016](../decisions/0016-governance-and-release-gates.md).
+How this system is held to account: which frameworks it maps to, what "good enough to release" means, and where the evidence lives. The reasoning, and the options that were rejected, are in [ADR 0016](../decisions/0016-governance-and-release-gates.md), amended by [ADR 0017](../decisions/0017-eval-validity.md).
 
 ## Frameworks
 
@@ -28,6 +28,8 @@ Framework versions were checked on 2026-11-09.
 ## The release gates in one paragraph
 
 [`evals/gates.toml`](../../evals/gates.toml) holds 11 thresholds, set on 2026-11-09 before the gold set existed. They cover quality, safety, cost, latency, judge reliability and figure coverage. Every dev eval report shows a "Release gates" table as guidance. The **binding** evidence is the one-time held-out final run, plus the injection runs, the judge calibration and the database's figure coverage. `scripts/release_check.py` combines them and exits non-zero unless every gate passes. Missing evidence counts as "not measured", which blocks release just like a failure. Deployment will run this check and refuse to ship on a non-zero exit.
+
+**Thin evidence blocks too (ADR 0017).** The same file has an `[evidence]` table: at least 15 answerable held-out questions per corpus, 3 unanswerable ones, 25 hand grades, 12 direct attacks, and 5 indirect attacks whose poisoned text actually reached the generator. The injection runs must also have used the same models and settings as the final run. A gate that clears its threshold on less evidence than that doesn't count.
 
 **Known limitation:** calibration grades don't record which judge model or configuration they were graded against. `release_check.py` will accept any calibration file, so the owner must make sure it comes from the same judge as the final run.
 

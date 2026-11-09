@@ -21,6 +21,15 @@ from multimodal_doc_rag.types import FigureDescription, GeneratedAnswer, Passage
 DEFAULT_QUERY_TASK = (
     "Given a question about a document, retrieve passages from the document that answer it"
 )
+# Model-id prefixes of embedders trained with that instruction. Any other model (e.g.
+# text-embedding-3-small) gets the bare query: a prefix it never saw in training is just noise
+# in the text, which would handicap it in the embedder comparison (ADR 0011).
+INSTRUCTION_TRAINED_PREFIXES = ("qwen/qwen3-embedding",)
+
+
+def default_query_instruction(model: str) -> str | None:
+    """The query instruction `model` was trained with, or None if it was trained without one."""
+    return DEFAULT_QUERY_TASK if model.startswith(INSTRUCTION_TRAINED_PREFIXES) else None
 
 
 class OpenRouterEmbedder:
@@ -40,7 +49,12 @@ class OpenRouterEmbedder:
 
     @classmethod
     def from_settings(cls, settings: Settings, client: OpenRouterClient) -> Self:
-        return cls(client, settings.embedding_model, settings.embedding_dim)
+        return cls(
+            client,
+            settings.embedding_model,
+            settings.embedding_dim,
+            query_instruction=default_query_instruction(settings.embedding_model),
+        )
 
     @property
     def model_key(self) -> str:

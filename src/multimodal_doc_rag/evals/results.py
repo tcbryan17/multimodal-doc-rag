@@ -22,9 +22,13 @@ class RetrievedPassage(BaseModel):
     page_end_label: str | None
     score: float
     content: str
+    # True when this figure passage's PNG went to the generator (and so to the judge). The
+    # image itself is not stored in the report; calibration re-reads it from the database so
+    # the hand-grader sees it too.
+    image_sent: bool = False
 
     @classmethod
-    def from_passage(cls, p: Passage) -> "RetrievedPassage":
+    def from_passage(cls, p: Passage, *, image_sent: bool = False) -> "RetrievedPassage":
         return cls(
             chunk_id=p.chunk_id,
             doc=p.doc_key,
@@ -35,6 +39,7 @@ class RetrievedPassage(BaseModel):
             page_end_label=p.page_end.label,
             score=p.score,
             content=p.content,
+            image_sent=image_sent,
         )
 
 
@@ -98,6 +103,11 @@ class RunConfig(BaseModel):
     split: str
     generator_model: str
     generator_reasoning: bool = False  # hidden reasoning on/off (ADR 0015)
+    # ADR 0017. False = retrieval searched every document, like the product's default path;
+    # True = each question was restricted to its own corpus (a comparison, never binding).
+    corpus_filter: bool = False
+    # False = the generator answered from figure descriptions only (the ADR 0011 comparison).
+    figure_images: bool = True
     judge_model: str | None  # None = run with --no-judge
     embedding_model: str
     rerank_model: str | None  # None = reranking off
@@ -107,6 +117,7 @@ class RunConfig(BaseModel):
     budget_usd: float
     include_drafts: bool
     limit: int | None
+    question_type: str | None = None  # None = every type; else only fact / figure / concept
     index: dict[str, str | int | float]  # size of the database queried, chunk length stats
     database: str  # database NAME only, never credentials
 

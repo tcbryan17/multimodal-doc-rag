@@ -13,6 +13,8 @@ from multimodal_doc_rag.evals.calibration import (
     agreement,
     cohens_kappa,
     confusion,
+    export_figures,
+    figure_ids,
     grade_loop,
     interpret_kappa,
     load_entries,
@@ -137,6 +139,31 @@ def test_grading_view_never_shows_judge_verdicts() -> None:
     text = "\n".join(shown)
     assert "Q?" in text and "the answer" in text and "…" in text  # long passage is clipped
     assert "judge" not in text.lower() and "0.5" not in text
+
+
+def test_grader_is_shown_the_figure_images_the_judge_saw(tmp_path: Path) -> None:
+    """ADR 0017: judge and owner must grade the same evidence, images included."""
+    fig = ShownPassage(doc="d", pages="8-4", content="A chart.", figure_chunk_id=7)
+    e = entry("e1", judge=1.0).model_copy(
+        update={"passages": [ShownPassage(doc="d", pages="1", content="text"), fig]}
+    )
+    assert figure_ids([e, e]) == [7]
+    paths = export_figures([e], {7: b"PNG", 8: b"unused"}, tmp_path / "figs")
+    assert paths == {7: tmp_path / "figs" / "7.png"} and paths[7].read_bytes() == b"PNG"
+
+    shown: list[str] = []
+    show_entry(e, shown.append, "[1/1]", paths)
+    assert str(paths[7]) in "\n".join(shown)
+    shown.clear()
+    grade_loop([e], lambda _p: "q", shown.append, lambda _cur: None, paths)
+    assert str(paths[7]) in "\n".join(shown)  # the loop passes the paths through
+
+    # A missing image is an error, not a silent text-only grade.
+    with pytest.raises(CalibrationError, match="figure chunk"):
+        export_figures([e], {}, tmp_path / "figs")
+    shown.clear()
+    show_entry(e, shown.append, "[1/1]")
+    assert "NOT EXPORTED" in "\n".join(shown)
 
 
 def test_grade_loop_resumes_saves_and_reprompts() -> None:

@@ -159,6 +159,23 @@ def index_document(
     return document_id
 
 
+def count_missing_embeddings(conn: Conn, model_key: str) -> tuple[int, int]:
+    """(chunks with no vector for this model, their approximate embedding tokens).
+
+    Read-only: what `embed_missing` would do, for a cost estimate before spending. Tokens are
+    chars / 4 of the text that gets embedded (header + content), like `chunking.count_tokens`.
+    """
+    row = conn.execute(
+        "SELECT count(*), coalesce(sum(ceil("
+        "   (length(coalesce(c.context_header, '')) + 2 + length(c.content)) / 4.0)), 0)"
+        " FROM chunks c WHERE NOT EXISTS ("
+        "   SELECT 1 FROM embeddings e WHERE e.chunk_id = c.id AND e.model = %s)",
+        (model_key,),
+    ).fetchone()
+    assert row is not None  # an aggregate without GROUP BY always yields one row
+    return int(row[0]), int(row[1])
+
+
 def embed_missing(conn: Conn, embedder: Embedder, *, batch_size: int = 64) -> int:
     """Embed every chunk that has no row for this embedder's model; return how many.
 

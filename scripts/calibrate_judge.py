@@ -5,15 +5,22 @@
   uv run python scripts/calibrate_judge.py agreement --name <run>
 
 `sample` hides the judge's verdicts from the grading view; do not open the .jsonl in an
-editor while you grade. `agreement` writes evals/calibration/<name>.md for the eval report.
+editor while you grade. `grade` first exports the figure images the judge saw (read from the
+database, no model calls) to evals/calibration/figures/, so you grade the same evidence
+(ADR 0017). `agreement` writes evals/calibration/<name>.md for the eval report.
 """
 
 import argparse
 from pathlib import Path
 
+import psycopg
+
+from multimodal_doc_rag.config import settings
 from multimodal_doc_rag.evals.calibration import (
     CalibrationError,
     agreement,
+    export_figures,
+    figure_ids,
     grade_loop,
     load_entries,
     render_summary,
@@ -21,9 +28,11 @@ from multimodal_doc_rag.evals.calibration import (
     save_entries,
 )
 from multimodal_doc_rag.evals.results import EvalReport
+from multimodal_doc_rag.search import fetch_figure_pngs
 
 ROOT = Path(__file__).resolve().parent.parent
 CAL = ROOT / "evals" / "calibration"
+FIGURES = CAL / "figures"  # gitignored: local copies of images already in the database
 
 
 def main() -> int:
@@ -34,8 +43,10 @@ def main() -> int:
     s.add_argument("--n", type=int, default=30)
     s.add_argument("--seed", type=int, default=0)
     s.add_argument("--name", help="default: the report's file name")
-    for name in ("grade", "agreement"):
-        sub.add_parser(name).add_argument("--name", required=True)
+    g = sub.add_parser("grade")
+    g.add_argument("--name", required=True)
+    g.add_argument("--database-url", help="where the run's figures live (default: DATABASE_URL)")
+    sub.add_parser("agreement").add_argument("--name", required=True)
     a = p.parse_args()
 
     try:
@@ -50,7 +61,13 @@ def main() -> int:
         path = CAL / f"{a.name}.jsonl"
         entries = load_entries(path)
         if a.cmd == "grade":
-            n = grade_loop(entries, input, print, lambda cur: save_entries(path, cur))
+            paths: dict[int, Path] = {}
+            if ids := figure_ids(entries):
+                url = a.database_url or settings.database_url.get_secret_value()
+                with psycopg.connect(url) as conn:
+                    paths = export_figures(entries, fetch_figure_pngs(conn, ids), FIGURES)
+                print(f"exported {len(paths)} figure image(s) to {FIGURES.relative_to(ROOT)}/")
+            n = grade_loop(entries, input, print, lambda cur: save_entries(path, cur), paths)
             print(f"graded {n} this session")
             return 0
         report_md = render_summary(agreement(entries))

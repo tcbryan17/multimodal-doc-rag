@@ -1,6 +1,6 @@
 # 0011. Eval methodology
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by [0017](0017-eval-validity.md): the judge sees figure images, binding runs are unfiltered, comparison tooling)
 - **Date:** 2026-11-07
 
 ## Context

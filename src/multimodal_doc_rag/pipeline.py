@@ -2,7 +2,8 @@
 
 import re
 import time
-from dataclasses import dataclass, replace
+from collections.abc import Mapping
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 import psycopg
@@ -63,6 +64,10 @@ class PipelineRun:
     # is renumbered to match its citation list). The eval judge sees the passages numbered
     # the same way, so it grades this. None when no model was called.
     generated_text: str | None = None
+    # chunk_id -> PNG for exactly the figure images the generator was sent. The eval judge
+    # gets the same images (ADR 0017): it can't grade "is this claim supported?" for a value
+    # read off a chart unless it sees the chart too.
+    figures: Mapping[int, bytes] = field(default_factory=dict)
 
 
 class RagPipeline:
@@ -75,6 +80,7 @@ class RagPipeline:
         generator: Generator,
         candidates: int = 30,
         top_k: int = 5,
+        send_figures: bool = True,
     ) -> None:
         self._conn = conn
         self._embedder = embedder
@@ -82,6 +88,9 @@ class RagPipeline:
         self._generator = generator
         self._candidates = candidates
         self._top_k = top_k
+        # False only for the eval's "figure image vs description only" comparison (ADR 0011):
+        # the generator then answers from the vision description alone.
+        self._send_figures = send_figures
 
     def _rerank(self, question: str, passages: list[Passage]) -> tuple[list[Passage], str]:
         try:
@@ -122,10 +131,12 @@ class RagPipeline:
         passages, detail = self._rerank(request.question, candidates)
         mark("rerank", detail)
 
-        figures = fetch_figure_pngs(
-            self._conn, [p.chunk_id for p in passages if p.kind == "figure"]
+        figures = (
+            fetch_figure_pngs(self._conn, [p.chunk_id for p in passages if p.kind == "figure"])
+            if self._send_figures
+            else {}
         )
-        mark("figures", f"{len(figures)} images")
+        mark("figures", f"{len(figures)} images" + ("" if self._send_figures else " (withheld)"))
 
         if not passages:  # nothing retrieved: don't ask a model to answer from nothing
             mark("generate", "skipped: no passages")
@@ -147,4 +158,5 @@ class RagPipeline:
             passages=passages,
             cited_chunk_ids=cited,
             generated_text=answer.text,
+            figures=figures,
         )

@@ -186,6 +186,44 @@ def test_figure_passages_get_image_url_and_generator_gets_their_pngs(
         assert citation.image_url == expected
 
 
+def test_run_reports_the_figures_sent_and_can_withhold_them(
+    db_conn: Conn, mini_handbook_pdf: Path
+) -> None:
+    src = SourceInfo("mini-phak", Corpus.FAA, "Mini Handbook", "file://mini.pdf")
+    ingest_document(
+        db_conn,
+        HandbookPdfParser(),
+        mini_handbook_pdf,
+        src,
+        embedder=EMB,
+        describer=CaptionFigureDescriber(),
+    )
+    request = AskRequest(question="Lift versus angle of attack airspeed indicator")
+
+    # run() hands back exactly the images the generator saw, so the eval judge can be shown
+    # the same evidence (ADR 0017).
+    spy = SpyFiguresGenerator()
+    run = _pipeline(db_conn, spy, top_k=10).run(request)
+    assert run.figures and dict(run.figures) == spy.figures
+
+    # The "description only" comparison (ADR 0011): figure passages are still retrieved and
+    # cited, but no image goes to the generator, and the trace says so.
+    spy = SpyFiguresGenerator()
+    pipeline = RagPipeline(
+        db_conn,
+        embedder=EMB,
+        reranker=OverlapReranker(),
+        generator=spy,
+        top_k=10,
+        send_figures=False,
+    )
+    run = pipeline.run(request)
+    assert any(p.kind == "figure" for p in spy.passages)
+    assert spy.figures == {} and run.figures == {}
+    figures_step = next(t for t in run.response.trace if t.step == "figures")
+    assert figures_step.detail == "0 images (withheld)"
+
+
 def test_run_exposes_passages_and_validated_cited_ids(db_conn: Conn, tmp_path: Path) -> None:
     _ingest(db_conn, tmp_path, "a", Corpus.FAA, "# Ch\n\naltimeter pressure\n\nairspeed indicator")
     # 999999 is not one of the passages: run() must drop it, exactly as the citations do.

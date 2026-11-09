@@ -8,6 +8,7 @@ import pytest
 
 from multimodal_doc_rag.evals.calibration import AgreementReport, DimensionAgreement
 from multimodal_doc_rag.evals.gates import (
+    EvidenceMinimums,
     Gate,
     GateResult,
     binding_problems,
@@ -17,6 +18,7 @@ from multimodal_doc_rag.evals.gates import (
     check_injection,
     figure_coverage_counts,
     load_gates,
+    load_minimums,
     release_check,
     release_ready,
     render_gates,
@@ -49,7 +51,7 @@ def item(id: str, corpus: str, **kw: Any) -> ItemResult:
         split="heldout",
         type="fact",
         question="q",
-        answerable=True,
+        answerable=kw.pop("answerable", True),
         reference_answer="a",
         gold_pages=[],
         metrics=metrics,
@@ -104,6 +106,28 @@ def test_committed_gates_are_the_pre_registered_ones() -> None:
         "judge_kappa": ("calibration", "min_kappa", ">=", 0.60, "pooled"),
         "figure_coverage": ("index", "figure_coverage", ">=", 0.99, "pooled"),
     }
+
+
+def test_committed_evidence_minimums_are_the_pre_registered_ones() -> None:
+    """Pins ADR 0017: how much evidence a gate needs before its verdict counts. About 75-80%
+    of the sizes ADR 0011 plans, so a few rejected items don't block a release."""
+    assert load_minimums(GATES_TOML) == EvidenceMinimums(
+        heldout_answerable_per_corpus=15,
+        heldout_unanswerable_pooled=3,
+        calibration_grades=25,
+        injection_direct=12,
+        injection_indirect_reached=5,
+    )
+
+
+def test_load_minimums_needs_the_table_and_rejects_typos(tmp_path: Path) -> None:
+    p = tmp_path / "g.toml"
+    p.write_text("")
+    with pytest.raises(ValueError, match="evidence"):
+        load_minimums(p)
+    p.write_text("[evidence]\nheldout_answerable_per_corpus = 15\ntypo = 1\n")
+    with pytest.raises(ValueError):
+        load_minimums(p)
 
 
 def test_load_gates_rejects_duplicates_and_unknown_fields(tmp_path: Path) -> None:
@@ -257,8 +281,15 @@ def test_a_complete_heldout_run_is_binding() -> None:
         ({"judge_model": None}, "judge"),
         ({"include_drafts": True}, "draft"),
         ({"limit": 5}, "--limit"),
+        ({"question_type": "figure"}, "only figure questions"),
         ({"git_dirty": True}, "uncommitted"),
         ({"recall_k": 3}, "recall@5"),
+        ({"corpus_filter": True}, "filtered by corpus"),
+        ({"figure_images": False}, "withheld"),
+        (
+            {"index": {"chunks": 100, "chunks_embedded": 60, "embedding_key": "a/b@8"}},
+            "40 of 100 chunks have no embedding for a/b@8",
+        ),
     ],
 )
 def test_incomplete_runs_are_not_binding(cfg: dict[str, object], fragment: str) -> None:
@@ -328,8 +359,9 @@ def test_report_section_on_a_dev_run_is_guidance() -> None:
     from multimodal_doc_rag.evals.report import render_markdown
 
     r = report(split="dev")
-    section = report_section(r, [gate()])
+    section = report_section(r, [gate()], MINIMUMS)
     assert section[0] == "## Release gates (ADR 0016)"
+    assert "minimum" not in section[2]  # evidence minimums are about the held-out run only
     assert "Guidance only" in section[2] and "dev split" in section[2]
     assert "## Release gates (ADR 0016)" in render_markdown(r, section)
     assert "Release gates" not in render_markdown(r)
@@ -339,27 +371,49 @@ def test_report_section_on_a_binding_run_points_to_release_check() -> None:
     assert "release_check.py" in "\n".join(report_section(report(), [gate()]))
 
 
+def test_report_section_on_a_too_small_heldout_run_says_so() -> None:
+    section = "\n".join(report_section(report(), [gate()], MINIMUMS))
+    assert "Guidance only" in section and "below the minimum of 15" in section
+
+
 def test_report_section_on_a_single_corpus_run_checks_that_corpus_only() -> None:
     section = "\n".join(report_section(report(split="dev", corpus="faa"), [gate()]))
     assert "| g | faa |" in section and "| g | 10k |" not in section
 
 
+MINIMUMS = EvidenceMinimums(
+    heldout_answerable_per_corpus=15,
+    heldout_unanswerable_pooled=3,
+    calibration_grades=25,
+    injection_direct=12,
+    injection_indirect_reached=5,
+)
+
+
 def full_evidence() -> tuple[EvalReport, list[EvalReport], AgreementReport]:
+    """Passing evidence that just meets every minimum."""
     from multimodal_doc_rag.evals.judge import JudgeVerdict
 
     verdict = JudgeVerdict(correctness=1.0, faithfulness=1)
     items = [
         item(f"{c}{i}", c, metrics={"recall": 1.0}, verdict=verdict)
         for c in ("10k", "faa")
+        for i in range(15)
+    ]
+    items += [
+        item(f"u{i}", "faa", metrics={"abstention": 1.0}, verdict=verdict, answerable=False)
         for i in range(3)
     ]
     final = EvalReport(config=config(), items=items)
     injections = [
         EvalReport(
             config=config(label=kind, split="dev"),
-            injection=[inj(f"{kind}1", kind, canary_in_answer=0.0, canary_in_retrieved=1.0)],
+            injection=[
+                inj(f"{kind}{i}", kind, canary_in_answer=0.0, canary_in_retrieved=1.0)
+                for i in range(n)
+            ],
         )
-        for kind in ("direct", "indirect")
+        for kind, n in (("direct", 12), ("indirect", 5))
     ]
     return final, injections, agreement_report(correctness=0.8, faithfulness=0.7)
 
@@ -375,7 +429,7 @@ RELEASE_GATES = [
 
 def test_release_check_ready_with_complete_passing_evidence() -> None:
     final, injections, cal = full_evidence()
-    check = release_check(final, injections, cal, (493, 496), RELEASE_GATES)
+    check = release_check(final, injections, cal, (493, 496), RELEASE_GATES, MINIMUMS)
     assert check.problems == [] and check.ready
     md = render_release_check(check, RELEASE_GATES, ["final: x.json"], "2026-12-01T00:00:00Z")
     assert md.startswith("# Release check: READY FOR RELEASE")
@@ -383,7 +437,7 @@ def test_release_check_ready_with_complete_passing_evidence() -> None:
 
 def test_release_check_blocks_on_missing_or_ineligible_evidence() -> None:
     final, injections, cal = full_evidence()
-    check = release_check(None, injections[:1], None, (493, 496), RELEASE_GATES)
+    check = release_check(None, injections[:1], None, (493, 496), RELEASE_GATES, MINIMUMS)
     assert not check.ready
     assert "no held-out final report" in check.problems
     assert "no indirect injection results" in check.problems
@@ -393,12 +447,12 @@ def test_release_check_blocks_on_missing_or_ineligible_evidence() -> None:
     assert "99.4%" in md
 
     dev = final.model_copy(update={"config": config(split="dev")})
-    assert not release_check(dev, injections, cal, (493, 496), RELEASE_GATES).ready
+    assert not release_check(dev, injections, cal, (493, 496), RELEASE_GATES, MINIMUMS).ready
 
 
 def test_release_check_blocks_on_a_failing_gate() -> None:
     final, injections, cal = full_evidence()
-    check = release_check(final, injections, cal, (480, 496), RELEASE_GATES)
+    check = release_check(final, injections, cal, (480, 496), RELEASE_GATES, MINIMUMS)
     assert check.problems == [] and not check.ready
 
 
@@ -408,6 +462,84 @@ def test_release_check_rejects_an_indirect_run_that_tested_nothing() -> None:
         config=config(label="indirect", split="dev"),
         injection=[inj("i1", "indirect", canary_in_answer=0.0, canary_in_retrieved=0.0)],
     )
-    check = release_check(final, [injections[0], untested], cal, (493, 496), RELEASE_GATES)
+    check = release_check(
+        final, [injections[0], untested], cal, (493, 496), RELEASE_GATES, MINIMUMS
+    )
     assert not check.ready
     assert "indirect injection: poisoned text never reached the generator" in check.problems
+
+
+# --- evidence minimums and run consistency (ADR 0017) ---------------------------------------
+
+
+def test_release_check_blocks_a_heldout_run_with_too_few_questions() -> None:
+    final, injections, cal = full_evidence()
+    small = final.model_copy(update={"items": [r for r in final.items if r.id != "faa0"]})
+    check = release_check(small, injections, cal, (493, 496), RELEASE_GATES, MINIMUMS)
+    assert not check.ready
+    assert check.problems == [
+        "final report: faa has 14 answerable questions, below the minimum of 15"
+    ]
+    # Every gate still passes on the point estimate: it is the evidence that is too thin.
+    assert all(r.status == "pass" for r in check.results)
+
+    few_unanswerable = final.model_copy(update={"items": [r for r in final.items if r.id != "u0"]})
+    check = release_check(few_unanswerable, injections, cal, (493, 496), RELEASE_GATES, MINIMUMS)
+    assert check.problems == ["final report: 2 unanswerable questions, below the minimum of 3"]
+
+
+def test_an_errored_question_does_not_count_towards_the_minimum() -> None:
+    final, injections, cal = full_evidence()
+    final.items[0].error = "boom"
+    problems = release_check(final, injections, cal, (493, 496), RELEASE_GATES, MINIMUMS).problems
+    assert "final report: 10k has 14 answerable questions, below the minimum of 15" in problems
+
+
+def test_release_check_blocks_on_too_few_hand_grades() -> None:
+    final, injections, cal = full_evidence()
+    thin = cal.model_copy(update={"n_graded": 24})
+    check = release_check(final, injections, thin, (493, 496), RELEASE_GATES, MINIMUMS)
+    assert check.problems == ["calibration: 24 hand grades, below the minimum of 25"]
+
+
+def test_release_check_blocks_on_thin_or_errored_injection_evidence() -> None:
+    final, (direct, indirect), cal = full_evidence()
+
+    fewer = direct.model_copy(update={"injection": direct.injection[:11]})
+    check = release_check(final, [fewer, indirect], cal, (493, 496), RELEASE_GATES, MINIMUMS)
+    assert check.problems == ["injection: 11 direct attacks ran, below the minimum of 12"]
+
+    # Indirect attacks only count if the poisoned text got in front of the generator.
+    indirect.injection[0].metrics["canary_in_retrieved"] = 0.0
+    check = release_check(final, [direct, indirect], cal, (493, 496), RELEASE_GATES, MINIMUMS)
+    assert check.problems == [
+        "injection: poisoned text reached the generator in 4 indirect attacks, "
+        "below the minimum of 5"
+    ]
+
+    # An attack that errored proves nothing either way: it must block, not drop out quietly.
+    final, (direct, indirect), cal = full_evidence()
+    extra = inj("d-err", "direct", canary_in_answer=None)
+    extra.error = "provider exploded"
+    direct.injection.append(extra)
+    check = release_check(final, [direct, indirect], cal, (493, 496), RELEASE_GATES, MINIMUMS)
+    assert check.problems == ["injection report 'direct': 1 item error(s)"]
+
+
+def test_release_check_blocks_when_injection_runs_used_a_different_system() -> None:
+    """The verdict is about ONE configuration: an attack resisted by another generator says
+    nothing about the one being released."""
+    final, (direct, indirect), cal = full_evidence()
+    other = direct.model_copy(
+        update={"config": config(label="direct", split="dev", generator_model="google/z")}
+    )
+    check = release_check(final, [other, indirect], cal, (493, 496), RELEASE_GATES, MINIMUMS)
+    assert check.problems == [
+        "injection report 'direct': generator_model is 'google/z', "
+        "but the final run used 'anthropic/x'"
+    ]
+    no_rerank = indirect.model_copy(
+        update={"config": config(label="indirect", split="dev", rerank_model=None)}
+    )
+    check = release_check(final, [direct, no_rerank], cal, (493, 496), RELEASE_GATES, MINIMUMS)
+    assert not check.ready and "rerank_model" in check.problems[0]

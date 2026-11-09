@@ -1,6 +1,6 @@
 """Runner and report rendering with stub pipelines (no database, no network)."""
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from pathlib import Path
 
@@ -47,9 +47,11 @@ class StubPipeline:
         meter: CostMeter | None = None,
         charge: float = 0.0,
         fail_on: str | None = None,
+        figures: Mapping[int, bytes] | None = None,
     ) -> None:
         self.answer = answer
         self.passages = list(passages) or [passage(1, "d1", 2)]
+        self.figures = dict(figures or {})
         self.meter, self.charge, self.fail_on = meter, charge, fail_on
         self.questions: list[AskRequest] = []
 
@@ -62,7 +64,10 @@ class StubPipeline:
             self.meter.check()
         cited = (self.passages[0].chunk_id,)
         return PipelineRun(
-            AskResponse(answer=self.answer, citations=[], trace=[]), self.passages, cited
+            AskResponse(answer=self.answer, citations=[], trace=[]),
+            self.passages,
+            cited,
+            figures=self.figures,
         )
 
 
@@ -123,6 +128,9 @@ def test_select_items_filters_status_split_corpus_and_limits() -> None:
     drafts = select_items(items, corpus="10k", split="dev", include_drafts=True)
     assert [i.id for i in drafts] == ["a-1", "a-2", "a-3"]  # rejected still never runs
     assert [i.id for i in select_items(items, corpus=None, split="heldout")] == ["a-5"]
+    typed = [gold("b-1"), gold("b-2", type="figure"), gold("b-3", type="concept")]
+    figures = select_items(typed, corpus=None, split="dev", question_type="figure")
+    assert [i.id for i in figures] == ["b-2"]
 
 
 # --- one item -------------------------------------------------------------------------------
@@ -137,16 +145,28 @@ def test_evaluate_item_scores_answer_and_judge() -> None:
     assert r.verdict is not None and r.verdict.correctness == 1.0
     assert r.cited_chunk_ids == [1] and r.retrieved[0].doc == "d1"
     assert r.retrieved[0].content == "text"  # full passage text is kept for error analysis
-    assert pipe.questions[0].corpus == "10k"  # the item's corpus is passed as the filter
+    assert pipe.questions[0].corpus is None  # searches everything, like the product default
+
+
+def test_corpus_filter_is_an_opt_in_comparison() -> None:
+    pipe = StubPipeline()
+    evaluate_item(gold("a-1"), pipe, None, CostMeter(cap_usd=1.0), corpus_filter=True)
+    assert pipe.questions[0].corpus == "10k"
+    # run_eval takes the setting from the run's config, so the report says which it was.
+    pipe = StubPipeline()
+    run_eval(config(corpus_filter=True), [gold("a-1")], [], pipe, None, CostMeter(cap_usd=1.0))
+    assert pipe.questions[0].corpus == "10k"
+    assert "own corpus only" in render_markdown(EvalReport(config=config(corpus_filter=True)))
+    assert "all documents" in render_markdown(EvalReport(config=config()))
 
 
 def test_costs_are_split_between_answering_and_judging() -> None:
     meter = CostMeter(cap_usd=10.0)
 
     class PricedJudge(FakeJudge):
-        def grade(self, item, answer_text, passages):  # type: ignore[no-untyped-def]
+        def grade(self, item, answer_text, passages, figures):  # type: ignore[no-untyped-def]
             meter.record("j", {"cost": 0.25})
-            return super().grade(item, answer_text, passages)
+            return super().grade(item, answer_text, passages, figures)
 
     pipe = StubPipeline(meter=meter, charge=0.5)
     r = evaluate_item(gold("a-1"), pipe, PricedJudge(), meter)
@@ -160,10 +180,27 @@ class SpyJudge:
         self.seen: list[str] = []
 
     def grade(
-        self, item: GoldItem | InjectionItem, answer_text: str, passages: Sequence[Passage]
+        self,
+        item: GoldItem | InjectionItem,
+        answer_text: str,
+        passages: Sequence[Passage],
+        figures: Mapping[int, bytes],
     ) -> JudgeVerdict:
         self.seen.append(answer_text)
+        self.figures = dict(figures)
         return JudgeVerdict(correctness=1.0, faithfulness=1)
+
+
+def test_judge_and_hand_grader_get_the_figure_images_the_generator_saw() -> None:
+    figure = Passage(7, "d1", "d1", "figure", PageRef(2, "3"), PageRef(2, "3"), "A chart.", "", 1.0)
+    pipe = StubPipeline(passages=[passage(1, "d1", 2), figure], figures={7: b"PNG"})
+    judge = SpyJudge()
+    r = evaluate_item(gold("a-1"), pipe, judge, CostMeter(cap_usd=1.0))
+    assert judge.figures == {7: b"PNG"}
+    assert [p.image_sent for p in r.retrieved] == [False, True]
+    assert r.verdict is not None
+    shown = entry_from_result(r, r.verdict).passages
+    assert [p.figure_chunk_id for p in shown] == [None, 7]  # the grader is pointed at it too
 
 
 def test_judge_and_hand_grader_see_the_same_passage_numbered_text() -> None:
@@ -197,7 +234,7 @@ def test_pipeline_failure_is_recorded_not_raised() -> None:
 
 def test_judge_failure_keeps_the_answer_and_rule_metrics() -> None:
     class BadJudge:
-        def grade(self, item, answer_text, passages):  # type: ignore[no-untyped-def]
+        def grade(self, item, answer_text, passages, figures):  # type: ignore[no-untyped-def]
             raise JudgeParseError("garbage")
 
     r = evaluate_item(gold("a-1"), StubPipeline(), BadJudge(), CostMeter(cap_usd=1.0))
@@ -216,7 +253,7 @@ def test_budget_error_in_the_pipeline_propagates() -> None:
 
 def test_budget_error_in_the_judge_is_recorded() -> None:
     class BrokeJudge:
-        def grade(self, item, answer_text, passages):  # type: ignore[no-untyped-def]
+        def grade(self, item, answer_text, passages, figures):  # type: ignore[no-untyped-def]
             raise BudgetExceededError("cap")
 
     r = evaluate_item(gold("a-1"), StubPipeline(), BrokeJudge(), CostMeter(cap_usd=1.0))
@@ -261,9 +298,9 @@ def test_run_eval_cap_tripped_by_judge_stops_before_next_item() -> None:
     meter = CostMeter(cap_usd=0.1)
 
     class Spender(FakeJudge):
-        def grade(self, item, answer_text, passages):  # type: ignore[no-untyped-def]
+        def grade(self, item, answer_text, passages, figures):  # type: ignore[no-untyped-def]
             meter.record("j", {"cost": 0.2})
-            return super().grade(item, answer_text, passages)
+            return super().grade(item, answer_text, passages, figures)
 
     pipe = StubPipeline()
     report = run_eval(config(), [gold("a-1"), gold("a-2")], [], pipe, Spender(), meter)

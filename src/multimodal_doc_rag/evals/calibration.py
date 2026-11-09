@@ -7,12 +7,16 @@ them), then we compare. Two numbers per dimension:
 - Cohen's kappa: agreement beyond what chance alone would produce. Raw agreement flatters a
   judge when one grade dominates (if 90% of answers are correct, a judge that always says
   "correct" agrees 90% of the time and has learned nothing).
+
+Judge and owner must grade the SAME evidence. The judge is sent the figure images the
+generator saw (ADR 0017), so `grade` exports those PNGs to a local folder and shows the path
+next to each figure passage. Agreement measured on different evidence would mean nothing.
 """
 
 import json
 import random
 from collections import Counter
-from collections.abc import Callable, Hashable, Sequence
+from collections.abc import Callable, Hashable, Mapping, Sequence
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, ValidationError
@@ -40,6 +44,9 @@ class ShownPassage(BaseModel):
     doc: str
     pages: str
     content: str
+    # Set when the generator (and the judge) were sent this figure passage's image: the chunk
+    # id to fetch the same PNG by, for the hand-grader.
+    figure_chunk_id: int | None = None
 
 
 class CalibrationEntry(BaseModel):
@@ -85,6 +92,7 @@ def entry_from_result(r: ItemResult, verdict: JudgeVerdict) -> CalibrationEntry:
                     p.page_start_label, p.page_end_label, p.page_start_idx, p.page_end_idx
                 ),
                 content=p.content,
+                figure_chunk_id=p.chunk_id if p.image_sent else None,
             )
             for p in r.retrieved
         ],
@@ -144,7 +152,40 @@ def parse_faithfulness(text: str) -> int | None:
     return {"0": 0, "1": 1}.get(text.strip())
 
 
-def show_entry(e: CalibrationEntry, say: Say, position: str) -> None:
+def figure_ids(entries: Sequence[CalibrationEntry]) -> list[int]:
+    """Chunk ids of every figure image the judge saw for these entries (sorted, unique)."""
+    return sorted(
+        {p.figure_chunk_id for e in entries for p in e.passages if p.figure_chunk_id is not None}
+    )
+
+
+def export_figures(
+    entries: Sequence[CalibrationEntry], pngs: Mapping[int, bytes], directory: Path
+) -> dict[int, Path]:
+    """Write the figure images the judge saw to `directory/<chunk_id>.png` so the owner can
+    open them while grading. Raises if any is missing: grading without an image the judge had
+    would compare two different tasks."""
+    missing = [cid for cid in figure_ids(entries) if cid not in pngs]
+    if missing:
+        raise CalibrationError(
+            f"no image in the database for figure chunk(s) {missing}. Was the index "
+            "re-ingested since the run? Sample from a newer report, or point --database-url "
+            "at the database the run used."
+        )
+    directory.mkdir(parents=True, exist_ok=True)
+    paths: dict[int, Path] = {}
+    for cid in figure_ids(entries):
+        paths[cid] = directory / f"{cid}.png"
+        paths[cid].write_bytes(pngs[cid])
+    return paths
+
+
+def show_entry(
+    e: CalibrationEntry,
+    say: Say,
+    position: str,
+    figure_paths: Mapping[int, Path] | None = None,
+) -> None:
     """What the owner sees. Deliberately omits `judge`."""
     say("")
     say(f"=== {e.id} {position}")
@@ -155,6 +196,12 @@ def show_entry(e: CalibrationEntry, say: Say, position: str) -> None:
         text = " ".join(p.content.split())
         clipped = text if len(text) <= PASSAGE_CHARS else text[:PASSAGE_CHARS] + "…"
         say(f"[{n}] {p.doc} p.{p.pages}: {clipped}")
+        if p.figure_chunk_id is not None:
+            path = (figure_paths or {}).get(p.figure_chunk_id)
+            say(
+                f"    FIGURE IMAGE (the system and the judge saw it; open it before grading): "
+                f"{path if path is not None else 'NOT EXPORTED'}"
+            )
     say("--- the system's answer ---")
     say(e.answer)
     say("---")
@@ -165,6 +212,7 @@ def grade_loop(
     ask: Ask,
     say: Say,
     save: Callable[[Sequence[CalibrationEntry]], None],
+    figure_paths: Mapping[int, Path] | None = None,
 ) -> int:
     """Collect the owner's grades for entries not yet graded; saves after each. 'q' quits.
     Returns how many were graded this session."""
@@ -172,7 +220,7 @@ def grade_loop(
     todo = [e for e in current if e.human is None]
     graded = 0
     for n, entry in enumerate(todo, start=1):
-        show_entry(entry, say, f"[{n}/{len(todo)}]")
+        show_entry(entry, say, f"[{n}/{len(todo)}]", figure_paths)
         correctness: float | None = None
         while correctness is None:
             raw = ask("correctness 0 / 0.5 / 1 (q to quit) > ")
