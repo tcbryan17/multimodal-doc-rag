@@ -66,9 +66,26 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
 - [ ] **15. Eval harness.**
   - [x] Gold-set schema, metric functions (unit-tested), LLM judge, a runner with a cost cap that writes reports, drafting + review tools, injection sets, the eval-only index, judge calibration. See `evals/README.md`.
   - [x] The owner picks `JUDGE_MODEL`: `openai/gpt-6-luna` (ADR 0014).
+  - [x] **Governance first (ADR 0016):** the release gates are pre-registered in `evals/gates.toml` *before* any gold item or score exists. `evals/gates.py` checks them, every eval report shows them as guidance, and `scripts/release_check.py` gives the binding verdict. Also written: `docs/governance/data-card.md`.
+    - *Concept:* pre-registration. A threshold set after seeing the score describes the result; it doesn't test it.
   - [ ] The owner builds the gold set (after the ingest).
+  - [ ] Judged smoke run, then the dev baseline. Once the baseline exists, `gates.toml` is frozen.
+  - [ ] Injection runs (direct on `rag`, indirect on `rag_eval`) and judge calibration (about 30 hand grades).
+  - [ ] Eval comparisons on dev (ADR 0011), checked against the gate table.
 - [x] **16. Replay file.** Needs only the key and the ingest, not the gold set, so it comes before the eval. Save one real response as `replay/sample-run.json`. The test from step 2 then validates it.
   - [x] Tooling: `scripts/save_replay.py` (inlines figures as data URIs, writes `sample-run.meta.json` with the question).
   - [x] Recorded: "What is the standard temperature at 5,000 feet?", answered from the Standard Atmosphere table images. `scripts/export_site_replay.py` turns it into the portfolio site's replay events.
 
-Afterwards, as separate plans: the eval comparisons (ADR 0011), then deployment and the live demo.
+- [ ] **17. Governance alongside the eval** (ADR 0016), in `docs/governance/`:
+  - [ ] **Control matrix:** control → NIST AI RMF function / OWASP LLM 2026 risk → enforcing code → test or report → *implemented* or *planned*. Never mark a deployment control implemented before it exists.
+  - [ ] **Risk register:** hallucination, prompt injection (direct and indirect), figure misreading, stale filings, cost abuse, privacy of live queries, provider outage. Each with likelihood, impact, mitigation and status.
+  - *Concept:* evidence-backed controls. Every claim points to a test or a committed report.
+- [ ] **18. The held-out final run and the release check.**
+  - Run the held-out split once (`--i-know-this-is-heldout`), then `scripts/release_check.py` with the final, injection and calibration evidence. Commit the release-check report, pass or fail.
+  - Write the **system card**: intended and out-of-scope use, models, gate results with CIs, limitations.
+  - *Concept:* a release decision is a check that can fail, not a judgement call after the fact.
+- [ ] **19. Deployment** (the owner decides: Postgres host, app hosting).
+  - It ships only if `release_check.py` exits 0 (a required CI step).
+  - Live-ops governance: question-log policy (whether to log, retention, no personal data in logs), monitoring (cost per day, error and "I don't know" rates), incident response.
+  - Hardening: per-IP rate limits, input and output caps, a read-only DB role, a non-root container.
+  - The EU AI Act Art. 50 "answers are AI-generated" notice in the UI.

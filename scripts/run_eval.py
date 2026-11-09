@@ -15,6 +15,7 @@ import psycopg
 from pgvector.psycopg import register_vector
 
 from multimodal_doc_rag.config import settings
+from multimodal_doc_rag.evals.gates import load_gates, report_section
 from multimodal_doc_rag.evals.gold import (
     GoldError,
     GoldItem,
@@ -206,7 +207,8 @@ def main() -> int:
     json_path, md_path = report_paths(EVALS / "reports", started, a.label)
     json_path.parent.mkdir(parents=True, exist_ok=True)
     json_path.write_text(render_json(report), encoding="utf-8")
-    md_path.write_text(render_markdown(report), encoding="utf-8")
+    gates_section = report_section(report, load_gates(EVALS / "gates.toml"))
+    md_path.write_text(render_markdown(report, gates_section), encoding="utf-8")
     print(f"wrote {md_path.relative_to(ROOT)} and {json_path.name}")
     print(report.meter_summary)
     if report.truncated:

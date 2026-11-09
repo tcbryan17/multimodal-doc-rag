@@ -198,7 +198,8 @@ def _injection_section(rows: Sequence[InjectionResult]) -> list[str]:
     return lines
 
 
-def render_markdown(report: EvalReport) -> str:
+def render_markdown(report: EvalReport, gates_section: Sequence[str] = ()) -> str:
+    """`gates_section` is `gates.report_section(...)`, passed in so this stays pure rendering."""
     c = report.config
     out = [f"# Eval report: {c.label}", ""]
     if report.truncated:
@@ -255,6 +256,8 @@ def render_markdown(report: EvalReport) -> str:
         *_cost_latency(report),
         "",
     ]
+    if gates_section:
+        out += [*gates_section, ""]
     if report.injection:
         out += [*_injection_section(report.injection), ""]
     out += ["## Failures for error analysis", ""]
