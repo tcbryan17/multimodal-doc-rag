@@ -33,6 +33,11 @@ EXCERPT_CHARS = 1500
 MIN_CHUNK_CHARS = 300  # shorter chunks are headings and fragments: nothing to ask about
 UNANSWERABLE_SHARE = 0.10  # ADR 0011: about 10% of questions are unanswerable
 
+# Documents that never SEED a draft (they are still ingested and searched). The handbook index
+# is page-number lists and the front matter is a handful of chunks; sampling spreads evenly
+# across documents, so without this each would take a share of every draft run.
+DEFAULT_SKIP_DOCS: tuple[str, ...] = ("phak-index", "phak-front")
+
 
 class DraftParseError(Exception):
     """The model's reply wasn't a usable draft."""
@@ -42,7 +47,12 @@ class ChatClient(Protocol):
     """The slice of OpenRouterClient the drafter needs (so tests can pass a fake)."""
 
     def chat(
-        self, model: str, messages: list[dict[str, Any]], max_tokens: int, temperature: float = 0.0
+        self,
+        model: str,
+        messages: list[dict[str, Any]],
+        max_tokens: int,
+        temperature: float = 0.0,
+        reasoning: bool | None = None,
     ) -> ChatResult: ...
 
 
@@ -104,6 +114,22 @@ def fetch_candidate_chunks(
     return out
 
 
+def draftable_doc_keys(doc_keys: Sequence[str], skip: Sequence[str] | None = None) -> list[str]:
+    """The documents to draft from: `doc_keys` minus the skipped ones, order kept.
+
+    `skip=None` applies DEFAULT_SKIP_DOCS wherever they occur (they are FAA dev documents, so
+    a 10-K or held-out run skips nothing). An explicit list must name documents in `doc_keys`,
+    so a typo raises ValueError instead of silently skipping nothing; `[]` skips nothing."""
+    if skip is None:
+        skip_set = set(DEFAULT_SKIP_DOCS)
+    else:
+        unknown = sorted(set(skip) - set(doc_keys))
+        if unknown:
+            raise ValueError(f"--skip-docs names documents not in this corpus/split: {unknown}")
+        skip_set = set(skip)
+    return [k for k in doc_keys if k not in skip_set]
+
+
 def exclude_used(
     by_doc: Mapping[str, Sequence[SourceChunk]], existing: Sequence[GoldItem]
 ) -> dict[str, list[SourceChunk]]:
@@ -131,6 +157,23 @@ def sample_sources(
     rng = random.Random(seed)
     picked = stratified_sample({k: list(v) for k, v in by_doc.items() if v}, n, rng)
     return sorted(picked, key=lambda c: c.chunk_id)
+
+
+def split_sources(
+    picked: Sequence[SourceChunk], n_unanswerable: int, seed: int
+) -> tuple[list[SourceChunk], list[SourceChunk]]:
+    """(answerable, unanswerable) sources, the unanswerable ones chosen at random (seeded).
+
+    Not a slice of `picked`: that list is sorted by chunk id, so taking its tail would hand
+    every unanswerable slot to the documents ingested last, and those documents would get no
+    answerable questions at all. Both lists stay sorted by chunk id."""
+    if not 0 <= n_unanswerable <= len(picked):
+        raise ValueError("n_unanswerable must be between 0 and len(picked)")
+    rng = random.Random(f"unanswerable-{seed}")
+    chosen = set(rng.sample(range(len(picked)), n_unanswerable))
+    answerable = [c for i, c in enumerate(picked) if i not in chosen]
+    unanswerable = [c for i, c in enumerate(picked) if i in chosen]
+    return answerable, unanswerable
 
 
 def next_ids(existing: Sequence[GoldItem], corpus: str, split: str, count: int) -> list[str]:
@@ -164,7 +207,11 @@ Rules:
 in the question; a question that echoes the source is trivially easy to search for. Ask about \
 the idea in your own words.
 - The question must stand alone: a reader who has never seen the passage must understand it. \
-Never write "according to the passage", "in this section" or similar.
+Never write "according to the passage", "the text", "in this section" or similar.
+- NAME THE SUBJECT. The collection holds several companies' filings and a handbook, and is \
+searched as a whole, so "the company" is ambiguous. For a filing, name the company and fiscal \
+year (e.g. "In Microsoft's fiscal 2026 10-K, ..." or "What did Apple report ... in fiscal \
+2026?"). The handbook may be called "the FAA Pilot's Handbook".
 - Choose type "fact" (a specific figure, name, definition or rule) or "concept" (why or how \
 something works, a relationship, an explanation).
 - Only use what the passage states. Do not use outside knowledge.
@@ -276,7 +323,14 @@ def draft_items(
             else build_unanswerable_messages(chunk, corpus)
         )
         try:
-            reply = chat.chat(model, messages, max_tokens=max_tokens, temperature=0.7).text
+            # Reasoning off (as for answers, ADR 0015): hidden reasoning counts against
+            # max_tokens and can cut the JSON off, or leave the reply empty.
+            result = chat.chat(
+                model, messages, max_tokens=max_tokens, temperature=0.7, reasoning=False
+            )
+            if result.truncated:
+                raise DraftParseError(f"reply cut off at max_tokens={max_tokens}")
+            reply = result.text
             if answerable:
                 question, reference, qtype = parse_answerable(reply)
             else:

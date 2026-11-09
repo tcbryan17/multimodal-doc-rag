@@ -19,11 +19,13 @@ import psycopg
 from multimodal_doc_rag.config import settings
 from multimodal_doc_rag.evals.draft import (
     draft_items,
+    draftable_doc_keys,
     exclude_used,
     fetch_candidate_chunks,
     merge_drafts,
     plan_counts,
     sample_sources,
+    split_sources,
 )
 from multimodal_doc_rag.evals.gold import (
     CorpusName,
@@ -59,7 +61,15 @@ def cmd_draft(a: argparse.Namespace) -> int:
     existing = load_gold(path)
     doc_splits = _doc_splits()
     manifest = load_manifest(settings.data_dir)
-    keys = [e.doc_key for e in manifest if e.corpus.value == corpus and e.split == split]
+    all_keys = [e.doc_key for e in manifest if e.corpus.value == corpus and e.split == split]
+    skip = None if a.skip_docs is None else [k.strip() for k in a.skip_docs.split(",") if k]
+    try:
+        keys = draftable_doc_keys(all_keys, skip)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    if skipped := sorted(set(all_keys) - set(keys)):
+        print(f"not drafting from: {', '.join(skipped)} (still searched; see --skip-docs)")
     n_ans, n_unans = plan_counts(a.n)
     with psycopg.connect(settings.database_url.get_secret_value()) as conn:
         by_doc = exclude_used(fetch_candidate_chunks(conn, keys), existing)
@@ -67,8 +77,7 @@ def cmd_draft(a: argparse.Namespace) -> int:
         print(f"error: no ingested {corpus}/{split} chunks to draft from", file=sys.stderr)
         return 2
     picked = sample_sources(by_doc, n_ans + n_unans, a.seed)
-    # The first n_ans sampled chunks seed answerable questions, the rest unanswerable ones.
-    answerable, unanswerable = picked[:n_ans], picked[n_ans:]
+    answerable, unanswerable = split_sources(picked, n_unans, a.seed)
     meter = build_meter(settings, a.budget)
     client = OpenRouterClient.from_settings(meter=meter)
     try:
@@ -148,6 +157,11 @@ def main() -> int:
     d.add_argument("--n", type=int, default=20, help="drafts to write (~10%% unanswerable)")
     d.add_argument("--seed", type=int, default=0)
     d.add_argument("--model", help="default: GENERATION_MODEL")
+    d.add_argument(
+        "--skip-docs",
+        help="comma-separated doc keys never used as sources (default: phak-index,phak-front "
+        "where present; pass '' to skip none)",
+    )
     d.add_argument("--budget", type=float, default=settings.eval_budget_usd)
     r = sub.add_parser("review", help="verify / edit / reject drafts one at a time")
     r.add_argument("--corpus", required=True, choices=["10k", "faa"])
