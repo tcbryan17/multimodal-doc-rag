@@ -1,0 +1,26 @@
+{
+  "checks": [
+    {
+      "detail": "stored dim 1024, unit length. Provider honoured `dimensions`",
+      "name": "embeddings",
+      "status": "pass"
+    },
+    {
+      "detail": "valid indices/scores, best = doc 1",
+      "name": "rerank",
+      "status": "pass"
+    },
+    {
+      "detail": "phak-ch02 figure 2-5 (437x234px): parsed; informational=True, 1011 chars",
+      "name": "vision",
+      "status": "pass"
+    },
+    {
+      "detail": "embeddings: reported; rerank: reported; vision: reported (reported = OpenRouter's usage.cost; estimated = tokens x our price table; unpriced = flat pessimistic fallback)",
+      "name": "cost reporting",
+      "status": "info"
+    }
+  ],
+  "generated_at": "2026-11-09T15:45:24+00:00",
+  "meter_summary": "$0.0003 of $3.00 cap over 4 calls (4 reported, 0 estimated from tokens, 0 charged the flat fallback)"
+}

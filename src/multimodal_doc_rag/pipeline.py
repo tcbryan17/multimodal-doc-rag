@@ -7,6 +7,7 @@ from typing import Any
 
 import psycopg
 
+from multimodal_doc_rag.answer import renumber_markers
 from multimodal_doc_rag.contracts import AskRequest, AskResponse, Citation, TraceStep
 from multimodal_doc_rag.fakes import IDK
 from multimodal_doc_rag.models.cost import BudgetExceededError
@@ -58,6 +59,10 @@ class PipelineRun:
     response: AskResponse
     passages: list[Passage]  # what the generator saw, best first (after reranking)
     cited_chunk_ids: tuple[int, ...]  # validated: always a subset of `passages`
+    # The generator's own text, whose [n] markers number `passages` (the response's answer
+    # is renumbered to match its citation list). The eval judge sees the passages numbered
+    # the same way, so it grades this. None when no model was called.
+    generated_text: str | None = None
 
 
 class RagPipeline:
@@ -134,7 +139,12 @@ class RagPipeline:
         citations = [_citation(by_id[cid]) for cid in cited]
         mark("generate", f"{len(citations)} citations")
         return PipelineRun(
-            AskResponse(answer=answer.text, citations=citations, trace=trace),
+            AskResponse(
+                answer=renumber_markers(answer.text, passages, cited),
+                citations=citations,
+                trace=trace,
+            ),
             passages=passages,
             cited_chunk_ids=cited,
+            generated_text=answer.text,
         )

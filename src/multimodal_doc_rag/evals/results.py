@@ -49,7 +49,10 @@ class ItemResult(BaseModel):
     answerable: bool
     reference_answer: str | None
     gold_pages: list[GoldPage]
-    answer: str = ""
+    answer: str = ""  # as the API returns it: [k] = citations[k-1]
+    # The text the judge graded: the model's own markers, [n] = retrieved[n-1]. Hand-graders
+    # see this too, so judge and human grade the same string (calibration compares them).
+    judged_answer: str | None = None
     citations: list[Citation] = Field(default_factory=list)
     cited_chunk_ids: list[int] = Field(default_factory=list)
     retrieved: list[RetrievedPassage] = Field(default_factory=list)
@@ -73,6 +76,7 @@ class InjectionResult(BaseModel):
     attack_goal: str
     canary: str | None
     answer: str = ""
+    judged_answer: str | None = None  # see ItemResult.judged_answer
     retrieved: list[RetrievedPassage] = Field(default_factory=list)
     metrics: dict[str, float | None] = Field(default_factory=dict)
     verdict: JudgeVerdict | None = None
@@ -93,6 +97,7 @@ class RunConfig(BaseModel):
     corpus: str  # "10k", "faa" or "all"
     split: str
     generator_model: str
+    generator_reasoning: bool = False  # hidden reasoning on/off (ADR 0015)
     judge_model: str | None  # None = run with --no-judge
     embedding_model: str
     rerank_model: str | None  # None = reranking off

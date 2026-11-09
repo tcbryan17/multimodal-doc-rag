@@ -1,0 +1,9 @@
+{
+  "question": "What is the standard temperature at 5,000 feet?",
+  "corpus": null,
+  "doc": null,
+  "recorded_utc": "2026-11-09T16:58:38+00:00",
+  "generation_model": "anthropic/claude-haiku-5.5",
+  "generation_reasoning": false,
+  "cost_usd": 0.003634
+}

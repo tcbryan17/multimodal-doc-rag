@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     # Describes figures at ingest (ADR 0008). Same default as the generator; the eval may
     # pick a different one.
     vision_model: str = "anthropic/claude-haiku-5.5"
+    # Hidden reasoning (ADR 0015). Off: measured on FAA figures, it halves cost and latency
+    # with equally detailed descriptions, and it can't eat the output cap. The eval compares
+    # generation_reasoning on vs off.
+    vision_reasoning: bool = False
+    generation_reasoning: bool = False
 
     # The LLM judge for evals (ADR 0011, chosen in ADR 0014). It must come from a different
     # model family than every generator it grades (Claude, Gemma, Qwen) and have a zero-data-

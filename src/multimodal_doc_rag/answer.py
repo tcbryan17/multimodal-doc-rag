@@ -96,3 +96,29 @@ def parse_citations(text: str, passages: Sequence[Passage]) -> tuple[int, ...]:
             if 1 <= n <= len(passages):
                 seen.setdefault(passages[n - 1].chunk_id)
     return tuple(seen)
+
+
+# A marker plus the single space before it, so a removed marker doesn't leave "text ." behind.
+_SPACED_MARKER = re.compile(r"( ?)" + _MARKER.pattern)
+
+
+def renumber_markers(text: str, passages: Sequence[Passage], cited: Sequence[int]) -> str:
+    """Rewrite passage-numbered markers so `[k]` means the k-th entry of the citation list.
+
+    The model numbers sources by their position in the prompt ([4] = the 4th passage), but a
+    reader sees citations listed in first-appearance order, so "[4]" next to a list of three
+    citations means nothing to them. Numbers that don't map to a citation are dropped, and a
+    marker left with none is removed.
+    """
+    position = {chunk_id: k for k, chunk_id in enumerate(cited, start=1)}
+
+    def replace(match: re.Match[str]) -> str:
+        nums: list[int] = []
+        for num in match.group(2).split(","):
+            n = int(num)
+            k = position.get(passages[n - 1].chunk_id) if 1 <= n <= len(passages) else None
+            if k is not None and k not in nums:
+                nums.append(k)
+        return f"{match.group(1)}[{', '.join(map(str, nums))}]" if nums else ""
+
+    return _SPACED_MARKER.sub(replace, text)

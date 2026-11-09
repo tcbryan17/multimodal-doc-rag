@@ -46,3 +46,4 @@ What this makes easier or harder later, and what would make us revisit it.
 | [0012](0012-testing-strategy-and-ci.md) | Testing strategy and CI | Accepted |
 | [0013](0013-corpus-specifics.md) | Corpus specifics | Accepted |
 | [0014](0014-judge-model.md) | The eval judge model: GPT-6 Luna | Accepted |
+| [0015](0015-reasoning-off-and-output-caps.md) | Hidden reasoning off for figure descriptions and answers; truncation detected | Accepted |

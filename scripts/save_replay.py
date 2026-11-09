@@ -7,7 +7,9 @@ the static portfolio site can show them without a backend.
 """
 
 import argparse
+import json
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 import psycopg
@@ -22,6 +24,8 @@ from multimodal_doc_rag.replay import figure_chunk_ids, inline_figures
 from multimodal_doc_rag.search import fetch_figure_pngs
 
 REPLAY_PATH = Path("replay/sample-run.json")
+# The /ask response has no room for the question (the contract is fixed), so it goes beside it.
+META_PATH = Path("replay/sample-run.meta.json")
 CAP_USD = 0.10
 
 
@@ -61,6 +65,16 @@ def main() -> int:
     REPLAY_PATH.parent.mkdir(parents=True, exist_ok=True)
     # exclude_none matches the API's response_model_exclude_none=True output.
     REPLAY_PATH.write_text(response.model_dump_json(indent=2, exclude_none=True) + "\n")
+    meta = {
+        "question": args.question,
+        "corpus": args.corpus,
+        "doc": args.doc,
+        "recorded_utc": datetime.now(UTC).isoformat(timespec="seconds"),
+        "generation_model": settings.generation_model,
+        "generation_reasoning": settings.generation_reasoning,
+        "cost_usd": round(meter.spent_usd, 6),
+    }
+    META_PATH.write_text(json.dumps(meta, indent=2) + "\n")
     print(f"saved {REPLAY_PATH} ({len(response.citations)} citations); {meter.summary()}")
     return 0
 

@@ -223,7 +223,10 @@ def render_markdown(report: EvalReport) -> str:
         ("started (UTC)", c.started_utc),
         ("git commit", f"{c.git_commit}{' (uncommitted changes)' if c.git_dirty else ''}"),
         ("corpus / split", f"{c.corpus} / {c.split}"),
-        ("generator", c.generator_model),
+        (
+            "generator",
+            f"{c.generator_model} (reasoning {'on' if c.generator_reasoning else 'off'})",
+        ),
         ("judge", c.judge_model or "none (--no-judge: rule metrics only)"),
         ("embedder", c.embedding_model),
         ("reranker", c.rerank_model or "off"),

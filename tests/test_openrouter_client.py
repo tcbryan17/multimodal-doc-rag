@@ -138,6 +138,27 @@ def test_chat_result_with_usage() -> None:
     assert (res.text, res.prompt_tokens, res.completion_tokens, res.cost) == ("hi", 3, 1, 0.001)
 
 
+def test_chat_reasoning_switch_is_sent_only_when_set() -> None:
+    client, rec = make(ok_handler)
+    client.chat("m", [], max_tokens=5)
+    assert "reasoning" not in rec.body()  # None: the model's own default
+    client.chat("m", [], max_tokens=5, reasoning=False)
+    assert rec.body()["reasoning"] == {"enabled": False}
+    assert rec.body()["provider"]["zdr"] is True  # privacy fields still ride along
+
+
+def test_chat_reports_finish_reason_and_truncation() -> None:
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        choice = {"message": {"content": '{"cut'}, "finish_reason": "length"}
+        return httpx2.Response(200, json={"choices": [choice]})
+
+    client, _ = make(handler)
+    res = client.chat("m", [], max_tokens=5)
+    assert res.finish_reason == "length" and res.truncated
+    ok, _ = make(ok_handler)
+    assert not ok.chat("m", [], max_tokens=5).truncated
+
+
 def test_retry_on_429_then_success() -> None:
     calls = {"n": 0}
 

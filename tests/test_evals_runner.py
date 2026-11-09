@@ -1,11 +1,13 @@
 """Runner and report rendering with stub pipelines (no database, no network)."""
 
 from collections.abc import Sequence
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
 from multimodal_doc_rag.contracts import AskRequest, AskResponse
+from multimodal_doc_rag.evals.calibration import entry_from_result
 from multimodal_doc_rag.evals.gold import GoldItem, GoldPage, InjectionItem
 from multimodal_doc_rag.evals.judge import FakeJudge, JudgeParseError, JudgeVerdict
 from multimodal_doc_rag.evals.report import (
@@ -151,6 +153,35 @@ def test_costs_are_split_between_answering_and_judging() -> None:
     assert r.cost_usd == pytest.approx(0.5)
     assert r.judge_cost_usd == pytest.approx(0.25)
     assert r.latency_ms >= 0
+
+
+class SpyJudge:
+    def __init__(self) -> None:
+        self.seen: list[str] = []
+
+    def grade(
+        self, item: GoldItem | InjectionItem, answer_text: str, passages: Sequence[Passage]
+    ) -> JudgeVerdict:
+        self.seen.append(answer_text)
+        return JudgeVerdict(correctness=1.0, faithfulness=1)
+
+
+def test_judge_and_hand_grader_see_the_same_passage_numbered_text() -> None:
+    class RenumberedPipeline(StubPipeline):
+        def run(self, request: AskRequest) -> PipelineRun:
+            # The API answer says [1] (citation 1); the model wrote [2] (passage 2).
+            return replace(
+                super().run(request),
+                response=AskResponse(answer="Revenue [1].", citations=[], trace=[]),
+                generated_text="Revenue [2].",
+            )
+
+    judge = SpyJudge()
+    r = evaluate_item(gold("a-1"), RenumberedPipeline(), judge, CostMeter(cap_usd=1.0))
+    assert judge.seen == ["Revenue [2]."]  # numbered like the passages the judge is shown
+    assert r.answer == "Revenue [1]." and r.judged_answer == "Revenue [2]."
+    assert r.verdict is not None
+    assert entry_from_result(r, r.verdict).answer == judge.seen[0]  # calibration: same string
 
 
 def test_no_judge_leaves_verdict_empty() -> None:

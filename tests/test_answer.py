@@ -1,6 +1,11 @@
 """Pure tests for prompt building and citation parsing."""
 
-from multimodal_doc_rag.answer import SYSTEM_PROMPT, build_messages, parse_citations
+from multimodal_doc_rag.answer import (
+    SYSTEM_PROMPT,
+    build_messages,
+    parse_citations,
+    renumber_markers,
+)
 from multimodal_doc_rag.fakes import IDK
 from multimodal_doc_rag.models.openrouter import image_part
 from multimodal_doc_rag.types import PageRef, Passage
@@ -70,6 +75,21 @@ def test_citation_list_and_adjacent_forms() -> None:
     assert parse_citations("x [1, 3]", ps) == (10, 30)
     assert parse_citations("x [1][3]", ps) == (10, 30)
     assert parse_citations("x [ 2 ,1 ]", ps) == (20, 10)
+
+
+def test_markers_renumbered_to_citation_list_order() -> None:
+    ps = [_p(10), _p(20), _p(30), _p(40)]
+    text = "White arc [4][3]. Green arc [4][1]. Both [3, 1]."
+    cited = parse_citations(text, ps)  # (40, 30, 10)
+    assert renumber_markers(text, ps, cited) == "White arc [1][2]. Green arc [1][3]. Both [2, 3]."
+
+
+def test_renumbering_drops_markers_that_cite_nothing() -> None:
+    ps = [_p(10), _p(20)]
+    cited = parse_citations("A [2] and [9].", ps)  # [9] is out of range
+    assert renumber_markers("A [2] and [9].", ps, cited) == "A [1] and."
+    assert renumber_markers("Mixed [2, 9].", ps, cited) == "Mixed [1]."
+    assert renumber_markers("No markers here.", ps, ()) == "No markers here."
 
 
 def test_out_of_range_markers_are_dropped() -> None:

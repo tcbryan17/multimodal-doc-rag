@@ -12,9 +12,21 @@ from pgvector.psycopg import register_vector
 from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict, make_conninfo
 
+from multimodal_doc_rag.config import settings
 from multimodal_doc_rag.db.migrate import migrate
 
 DEFAULT_TEST_URL = "postgresql://rag:rag-dev-only@localhost:5433/rag_test"
+
+
+@pytest.fixture(autouse=True)
+def _no_openrouter_key_outside_live_tests(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Only `live` tests may spend money. Once a real key sits in .env, the app's `settings`
+    singleton would otherwise hand it to any test that reaches a real client (e.g. an
+    un-overridden `/ask`), silently making paid network calls in a normal `pytest` run."""
+    if request.node.get_closest_marker("live") is None:
+        monkeypatch.setattr(settings, "openrouter_api_key", None)
 
 
 @pytest.fixture(scope="session")

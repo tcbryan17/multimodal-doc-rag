@@ -70,7 +70,7 @@ def main() -> int:
                 conn,
                 pdf,
                 embedder=OpenRouterEmbedder.from_settings(settings, client),
-                describer=OpenRouterFigureDescriber(client, settings.vision_model),
+                describer=OpenRouterFigureDescriber.from_settings(settings, client),
             )
             conn.commit()  # one document, one atomic commit (never touches the real index)
     finally:

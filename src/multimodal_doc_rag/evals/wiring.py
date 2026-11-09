@@ -71,6 +71,7 @@ def build_components(
     candidates: int,
     budget_usd: float,
     use_judge: bool,
+    generator_reasoning: bool = False,
     client: OpenRouterClient | None = None,
 ) -> EvalComponents:
     """One client (hence one meter) behind the embedder, reranker, generator and judge, so the
@@ -94,7 +95,9 @@ def build_components(
         reranker=OpenRouterReranker(client, settings.rerank_model)
         if rerank
         else PassThroughReranker(),
-        generator=OpenRouterGenerator(client, generator_model, MAX_ANSWER_TOKENS),
+        generator=OpenRouterGenerator(
+            client, generator_model, MAX_ANSWER_TOKENS, reasoning=generator_reasoning
+        ),
         candidates=candidates,
         top_k=top_k,
     )

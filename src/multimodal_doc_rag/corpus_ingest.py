@@ -439,6 +439,7 @@ def run_preflight(
     rerank_model: str,
     vision_model: str,
     sample: FigureSample | None,
+    vision_reasoning: bool | None = False,
     now: Callable[[], datetime] = lambda: datetime.now(UTC),
 ) -> PreflightReport:
     """One call of each kind. A BudgetExceededError propagates: it is not a check result."""
@@ -533,7 +534,8 @@ def run_preflight(
         f = sample.figure
         label = f"{sample.doc_key} figure {f.number or '(unnumbered)'} ({f.width}x{f.height}px)"
         try:
-            result = OpenRouterFigureDescriber(client, vision_model).describe(f.png, f.caption, "")
+            describer = OpenRouterFigureDescriber(client, vision_model, reasoning=vision_reasoning)
+            result = describer.describe(f.png, f.caption, "")
             checks.append(
                 PreflightCheck(
                     "vision",
