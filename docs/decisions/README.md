@@ -45,3 +45,4 @@ What this makes easier or harder later, and what would make us revisit it.
 | [0011](0011-eval-methodology.md) | Eval methodology | Accepted |
 | [0012](0012-testing-strategy-and-ci.md) | Testing strategy and CI | Accepted |
 | [0013](0013-corpus-specifics.md) | Corpus specifics | Accepted |
+| [0014](0014-judge-model.md) | The eval judge model: GPT-6 Luna | Accepted |

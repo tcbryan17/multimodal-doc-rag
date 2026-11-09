@@ -65,8 +65,9 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
   - [ ] The owner adds the OpenRouter key; run the preflight, then the ingest.
 - [ ] **15. Eval harness.**
   - [x] Gold-set schema, metric functions (unit-tested), LLM judge, a runner with a cost cap that writes reports, drafting + review tools, injection sets, the eval-only index, judge calibration. See `evals/README.md`.
-  - [ ] The owner picks `JUDGE_MODEL`, then builds the gold set.
-- [ ] **16. Replay file.** Save one real response as `replay/sample-run.json`. The test from step 2 then validates it.
+  - [x] The owner picks `JUDGE_MODEL`: `openai/gpt-6-luna` (ADR 0014).
+  - [ ] The owner builds the gold set (after the ingest).
+- [ ] **16. Replay file.** Needs only the key and the ingest, not the gold set, so it comes before the eval. Save one real response as `replay/sample-run.json`. The test from step 2 then validates it.
   - [x] Tooling: `scripts/save_replay.py` (inlines figures as data URIs).
 
 Afterwards, as separate plans: the eval comparisons (ADR 0011), then deployment and the live demo.

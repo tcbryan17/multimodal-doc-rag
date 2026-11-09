@@ -56,11 +56,11 @@ def check_judge_config(judge_model: str | None, generator_model: str) -> str:
     """Return the judge model id, or raise JudgeConfigError saying exactly why not."""
     if not judge_model or not judge_model.strip():
         raise JudgeConfigError(
-            "JUDGE_MODEL is not set, and that is deliberate: there is no default. The judge "
-            "must be a different model family from the generator it grades (models favour "
-            "their own family's answers), so the right choice depends on the generator "
-            "(Claude, Gemma and Qwen are all candidates), and it must have a zero-data-"
-            "retention endpoint (ADR 0009). Set JUDGE_MODEL in .env, or run with --no-judge."
+            "JUDGE_MODEL is blank, so there is no judge. The judge must be a different "
+            "model family from the generator it grades (models favour their own family's "
+            "answers) and must have a zero-data-retention endpoint (ADR 0009). ADR 0014 "
+            "picks openai/gpt-6-luna: remove the blank JUDGE_MODEL= line from .env to use it, "
+            "set another model, or run with --no-judge."
         )
     judge_model = judge_model.strip()
     if model_family(judge_model) == model_family(generator_model):
@@ -210,6 +210,11 @@ def parse_verdict(text: str) -> JudgeVerdict:
             injection_followed=followed,
             rationale=rationale if isinstance(rationale, str) else "",
         )
+    if not text.strip():
+        raise JudgeParseError(
+            "judge reply was empty (a reasoning model may have spent its whole max_tokens "
+            "budget reasoning)"
+        )
     raise JudgeParseError(f"no valid verdict JSON in judge reply: {text[:120]!r}")
 
 
@@ -219,7 +224,9 @@ class OpenRouterJudge:
         client: OpenRouterClient,
         judge_model: str | None,
         generator_model: str,
-        max_tokens: int = 500,
+        # Generous because reasoning models (gpt-6-luna, ADR 0014) spend hidden reasoning
+        # tokens out of this same budget; too low a cap leaves nothing for the verdict.
+        max_tokens: int = 2000,
     ) -> None:
         self._client = client
         self._model = check_judge_config(judge_model, generator_model)

@@ -39,11 +39,11 @@ class Settings(BaseSettings):
     # pick a different one.
     vision_model: str = "anthropic/claude-haiku-5.5"
 
-    # The LLM judge for evals (ADR 0011). Deliberately no default: it must come from a
-    # different model family than every generator it grades (Claude, Gemma, Qwen), and must
-    # have a zero-data-retention endpoint. The owner chooses it; the eval runner refuses to
-    # judge until it's set.
-    judge_model: str | None = None
+    # The LLM judge for evals (ADR 0011, chosen in ADR 0014). It must come from a different
+    # model family than every generator it grades (Claude, Gemma, Qwen) and have a zero-data-
+    # retention endpoint. The eval runner refuses a same-family judge, and a blank
+    # JUDGE_MODEL= in .env unsets it (the runner then explains why it won't judge).
+    judge_model: str | None = "openai/gpt-6-luna"
 
     # Spending caps in USD, enforced by models/cost.py. Keep them below the key's own credit
     # limit, so our cap trips first with a clear message.
@@ -64,6 +64,8 @@ class Settings(BaseSettings):
             "openai/gpt-5.4-mini": (0.85, 5.00),
             "openai/gpt-5-mini": (0.30, 2.25),
             "deepseek/deepseek-v4-flash": (0.15, 0.30),
+            # The chosen judge (ADR 0014), checked 2026-11-09.
+            "openai/gpt-6-luna": (0.10, 0.50),
         }
     )
 
