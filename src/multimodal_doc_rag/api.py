@@ -70,7 +70,9 @@ def model_provider_error(_: Request, exc: OpenRouterError) -> JSONResponse:
     return JSONResponse(status_code=502, content={"detail": "model provider unavailable"})
 
 
-MAX_ANSWER_TOKENS = 600  # output cap: also a cost guard for the live demo
+# Output cap, also a cost guard for the live demo. Raised from 600 (ADR 0015): with hidden
+# reasoning on, the reasoning alone could use up 600. Reasoning is off by default.
+MAX_ANSWER_TOKENS = 1200
 
 
 def _require_api_key() -> None:
@@ -97,7 +99,12 @@ def build_pipeline(conn: psycopg.Connection[Any], client: OpenRouterClient) -> R
         conn,
         embedder=OpenRouterEmbedder.from_settings(settings, client),
         reranker=OpenRouterReranker(client, settings.rerank_model),
-        generator=OpenRouterGenerator(client, settings.generation_model, MAX_ANSWER_TOKENS),
+        generator=OpenRouterGenerator(
+            client,
+            settings.generation_model,
+            MAX_ANSWER_TOKENS,
+            reasoning=settings.generation_reasoning,
+        ),
     )
 
 

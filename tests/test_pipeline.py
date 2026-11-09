@@ -7,6 +7,7 @@ from typing import Any
 import psycopg
 import pytest
 
+from multimodal_doc_rag.answer import parse_citations
 from multimodal_doc_rag.contracts import AskRequest
 from multimodal_doc_rag.fakes import (
     IDK,
@@ -209,3 +210,25 @@ def test_run_with_no_passages(db_conn: Conn) -> None:
     run = _pipeline(db_conn).run(AskRequest(question="anything at all"))
     assert run.passages == [] and run.cited_chunk_ids == ()
     assert run.response.answer == IDK
+
+
+class MarkerGenerator:
+    """Cites the 2nd passage first, as a real model writes markers: by prompt position."""
+
+    def generate(
+        self, question: str, passages: Sequence[Passage], figures: Mapping[int, bytes]
+    ) -> GeneratedAnswer:
+        text = "Second source [2]. First source [1]."
+        return GeneratedAnswer(text, parse_citations(text, passages))
+
+
+def test_answer_markers_match_the_citation_list(db_conn: Conn, tmp_path: Path) -> None:
+    _ingest(db_conn, tmp_path, "a", Corpus.FAA, "# Ch\n\naltimeter pressure setting")
+    _ingest(db_conn, tmp_path, "b", Corpus.FAA, "# Ch\n\naltimeter pressure check")
+    run = _pipeline(db_conn, MarkerGenerator()).run(AskRequest(question="altimeter pressure"))
+    assert len(run.passages) >= 2
+    # [2] is cited first, so it becomes citation 1 in the list the reader sees.
+    assert run.response.answer == "Second source [1]. First source [2]."
+    assert run.cited_chunk_ids == (run.passages[1].chunk_id, run.passages[0].chunk_id)
+    # The judge keeps the model's own numbering, which matches the passages it is shown.
+    assert run.generated_text == "Second source [2]. First source [1]."

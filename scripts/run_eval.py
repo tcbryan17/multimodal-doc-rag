@@ -53,6 +53,12 @@ def main() -> int:
     p.add_argument("--limit", type=int, help="only the first N questions (by id)")
     p.add_argument("--generator", default=settings.generation_model)
     p.add_argument("--no-rerank", action="store_true")
+    p.add_argument(
+        "--reasoning",
+        action=argparse.BooleanOptionalAction,
+        default=settings.generation_reasoning,
+        help="generator hidden reasoning on/off (ADR 0015; default GENERATION_REASONING)",
+    )
     p.add_argument("--top-k", type=int, default=5, help="passages given to the generator")
     p.add_argument("--recall-k", type=int, default=5, help="k for recall@k (<= --top-k)")
     p.add_argument("--budget", type=float, default=settings.eval_budget_usd, help="USD cap")
@@ -154,6 +160,7 @@ def main() -> int:
                 candidates=CANDIDATES,
                 budget_usd=a.budget,
                 use_judge=not a.no_judge,
+                generator_reasoning=a.reasoning,
             )
         except JudgeConfigError as exc:
             print(f"error: {exc}", file=sys.stderr)
@@ -169,6 +176,7 @@ def main() -> int:
             corpus=a.corpus or "all",
             split=a.split,
             generator_model=a.generator,
+            generator_reasoning=a.reasoning,
             judge_model=settings.judge_model if not a.no_judge else None,
             embedding_model=settings.embedding_model,
             rerank_model=None if a.no_rerank else settings.rerank_model,

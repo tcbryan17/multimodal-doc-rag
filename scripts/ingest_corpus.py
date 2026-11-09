@@ -124,7 +124,7 @@ def main() -> int:
     meter = _meter(args.budget)
     client = OpenRouterClient.from_settings(meter=meter)
     embedder = OpenRouterEmbedder.from_settings(settings, client)
-    describer = OpenRouterFigureDescriber(client, settings.vision_model)
+    describer = OpenRouterFigureDescriber.from_settings(settings, client)
     try:
         if args.retry_failures:
             conn = _connect()
@@ -148,6 +148,7 @@ def main() -> int:
                 embedding_dim=settings.embedding_dim,
                 rerank_model=settings.rerank_model,
                 vision_model=settings.vision_model,
+                vision_reasoning=settings.vision_reasoning,
                 sample=sample,
             )
             _save(pre, datetime.now(UTC))

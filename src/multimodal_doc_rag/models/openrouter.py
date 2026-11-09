@@ -38,6 +38,12 @@ class ChatResult:
     prompt_tokens: int | None = None
     completion_tokens: int | None = None
     cost: float | None = None
+    # OpenRouter's normalised reason: "stop", or "length" when max_tokens cut the reply off.
+    finish_reason: str | None = None
+
+    @property
+    def truncated(self) -> bool:
+        return self.finish_reason == "length"
 
 
 def image_part(png: bytes) -> dict[str, Any]:
@@ -171,27 +177,34 @@ class OpenRouterClient:
         messages: list[dict[str, Any]],
         max_tokens: int,
         temperature: float = 0.0,
+        reasoning: bool | None = None,
     ) -> ChatResult:
-        data = self._post(
-            "/chat/completions",
-            {
-                "model": model,
-                "messages": messages,
-                "max_tokens": max_tokens,
-                "temperature": temperature,
-                # Ask OpenRouter to report the call's price in `usage.cost` (the cost meter
-                # prefers a reported price over its own estimate).
-                "usage": {"include": True},
-            },
-        )
+        """`reasoning`: None leaves the model's default; True/False switches hidden reasoning
+        on/off (ADR 0015). Reasoning tokens are billed as output and count against
+        max_tokens, so a reasoning model can spend the whole cap before writing a word."""
+        body: dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            # Ask OpenRouter to report the call's price in `usage.cost` (the cost meter
+            # prefers a reported price over its own estimate).
+            "usage": {"include": True},
+        }
+        if reasoning is not None:
+            body["reasoning"] = {"enabled": reasoning}
+        data = self._post("/chat/completions", body)
         try:
-            text = data["choices"][0]["message"]["content"] or ""
+            choice = data["choices"][0]
+            text = choice["message"]["content"] or ""
         except (KeyError, IndexError, TypeError) as exc:
             raise OpenRouterError("malformed chat response") from exc
         usage = data.get("usage") or {}
+        finish = choice.get("finish_reason") if isinstance(choice, dict) else None
         return ChatResult(
             text=text,
             prompt_tokens=usage.get("prompt_tokens"),
             completion_tokens=usage.get("completion_tokens"),
             cost=usage.get("cost"),
+            finish_reason=finish if isinstance(finish, str) else None,
         )

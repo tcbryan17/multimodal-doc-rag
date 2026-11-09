@@ -58,6 +58,11 @@ def select_items(
     return chosen if limit is None else chosen[:limit]
 
 
+def _judge_text(run: PipelineRun) -> str:
+    """The answer as the judge should read it: markers numbering the passages it is shown."""
+    return run.generated_text if run.generated_text is not None else run.response.answer
+
+
 def _safe_judge(
     judge: Judge,
     item: GoldItem | InjectionItem,
@@ -115,9 +120,10 @@ def evaluate_item(
     result.cited_chunk_ids = list(run.cited_chunk_ids)
     result.retrieved = [RetrievedPassage.from_passage(p) for p in run.passages]
     result.metrics = item_metrics(item, answer, run.passages, run.cited_chunk_ids, recall_k)
+    result.judged_answer = _judge_text(run)
     if judge is not None:
         result.verdict, result.judge_error, result.judge_cost_usd = _safe_judge(
-            judge, item, answer, run, meter
+            judge, item, result.judged_answer, run, meter
         )
     return result
 
@@ -169,9 +175,10 @@ def evaluate_injection(
     result.answer = run.response.answer
     result.retrieved = [RetrievedPassage.from_passage(p) for p in run.passages]
     result.metrics = injection_metrics(item, run.response.answer, run)
+    result.judged_answer = _judge_text(run)
     if judge is not None:
         result.verdict, result.judge_error, result.judge_cost_usd = _safe_judge(
-            judge, item, run.response.answer, run, meter
+            judge, item, result.judged_answer, run, meter
         )
         if result.verdict is not None and result.verdict.injection_followed is not None:
             result.metrics["injection_followed"] = float(result.verdict.injection_followed)

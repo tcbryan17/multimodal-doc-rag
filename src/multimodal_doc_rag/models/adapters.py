@@ -135,27 +135,62 @@ def _parse_description(text: str) -> FigureDescription:
 
 
 class OpenRouterFigureDescriber:
-    def __init__(self, client: OpenRouterClient, model: str, max_tokens: int = 700) -> None:
+    # 3,000 leaves wide headroom: with reasoning off, the densest FAA charts measured ~950
+    # output tokens. At 700 with the model's default reasoning, 28% of figures were cut off
+    # (ADR 0015). The cap is also a cost guard: at most ~$0.0015 per figure on Haiku 5.5.
+    def __init__(
+        self,
+        client: OpenRouterClient,
+        model: str,
+        max_tokens: int = 3000,
+        reasoning: bool | None = False,
+    ) -> None:
         self._client = client
         self._model = model
         self._max_tokens = max_tokens
+        self._reasoning = reasoning
+
+    @classmethod
+    def from_settings(cls, settings: Settings, client: OpenRouterClient) -> Self:
+        return cls(client, settings.vision_model, reasoning=settings.vision_reasoning)
 
     def describe(self, png: bytes, caption: str, context: str) -> FigureDescription:
         prompt = DESCRIBE_PROMPT.format(caption=caption or "(none)", context=context or "(none)")
         messages = [
             {"role": "user", "content": [{"type": "text", "text": prompt}, image_part(png)]}
         ]
-        result = self._client.chat(self._model, messages, max_tokens=self._max_tokens)
+        result = self._client.chat(
+            self._model, messages, max_tokens=self._max_tokens, reasoning=self._reasoning
+        )
+        if result.truncated:
+            # Name the cause: a cut-off reply otherwise surfaces as "no valid JSON".
+            raise FigureDescriptionError(
+                f"reply hit the max_tokens cap ({self._max_tokens}) before the JSON closed "
+                f"({result.completion_tokens} output tokens, {len(result.text)} chars visible)"
+            )
+        if result.finish_reason == "error":
+            # The provider failed mid-reply (seen on Bedrock for a few text-heavy graphics).
+            raise FigureDescriptionError(
+                f"the provider ended the reply with an error after {result.completion_tokens} "
+                "output tokens (partial reply discarded)"
+            )
         return _parse_description(result.text)
 
 
 class OpenRouterGenerator:
     """Answers from the given passages only; citations are validated, not trusted."""
 
-    def __init__(self, client: OpenRouterClient, model: str, max_tokens: int = 600) -> None:
+    def __init__(
+        self,
+        client: OpenRouterClient,
+        model: str,
+        max_tokens: int = 1200,
+        reasoning: bool | None = False,
+    ) -> None:
         self._client = client
         self._model = model
         self._max_tokens = max_tokens
+        self._reasoning = reasoning
 
     def generate(
         self, question: str, passages: Sequence[Passage], figures: Mapping[int, bytes]
@@ -164,7 +199,9 @@ class OpenRouterGenerator:
             # Nothing to ground an answer in: don't spend a call (or invite a guess).
             return GeneratedAnswer(text=IDK, cited_chunk_ids=())
         messages = build_messages(question, passages, figures)
-        result = self._client.chat(self._model, messages, max_tokens=self._max_tokens)
+        result = self._client.chat(
+            self._model, messages, max_tokens=self._max_tokens, reasoning=self._reasoning
+        )
         return GeneratedAnswer(
             text=result.text, cited_chunk_ids=parse_citations(result.text, passages)
         )

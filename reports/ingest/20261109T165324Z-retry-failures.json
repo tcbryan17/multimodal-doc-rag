@@ -1,0 +1,702 @@
+{
+  "budget_exceeded": false,
+  "generated_at": "2026-11-09T16:53:24+00:00",
+  "meter_summary": "$0.0579 of $3.00 cap over 274 calls (274 reported, 0 estimated from tokens, 0 charged the flat fallback)",
+  "results": [
+    {
+      "detail": "",
+      "item_ref": "phak-ch01#chunk4",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch01#chunk16",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch01#chunk30",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch01#chunk45",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch01#chunk47",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch01#chunk50",
+      "status": "resolved"
+    },
+    {
+      "detail": "OpenRouterError: request to /embeddings timed out",
+      "item_ref": "phak-ch01#chunk51",
+      "status": "still-failing"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch01#chunk54",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch01#chunk62",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch01#chunk95",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch02#chunk3",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch02#chunk11",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch02#chunk19",
+      "status": "resolved"
+    },
+    {
+      "detail": "FigureDescriptionError: no valid figure JSON in model reply: '{\"informational\": true, \"description\": \"Figure 2-7, \\'The PAVE checklist.\\' A four-panel infographic l'",
+      "item_ref": "phak-ch02#chunk28",
+      "status": "still-failing"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch02#chunk56",
+      "status": "resolved"
+    },
+    {
+      "detail": "FigureDescriptionError: no valid figure JSON in model reply: '{\"informational\": true, \"description\": \"Figure 2-12 is a text-based table/checklist graphic titled \\\\'",
+      "item_ref": "phak-ch02#chunk57",
+      "status": "still-failing"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch02#chunk59",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch02#chunk62",
+      "status": "resolved"
+    },
+    {
+      "detail": "FigureDescriptionError: no valid figure JSON in model reply: '{\"informational\": true, \"description\": \"A table-style infographic titled \\\\\"Operational Pitfalls\\\\\" (r'",
+      "item_ref": "phak-ch02#chunk76",
+      "status": "still-failing"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch02#chunk81",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch02#chunk89",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch02#chunk95",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch02#chunk102",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch03#chunk15",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch03#chunk28",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch03#chunk54",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch03#chunk59",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch03#chunk60",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch03#chunk61",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch04#chunk10",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch04#chunk35",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch05#chunk12",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch05#chunk108",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch05#chunk113",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch05#chunk115",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch05#chunk118",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch05#chunk179",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch06#chunk20",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch06#chunk50",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch06#chunk67",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch07#chunk19",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch07#chunk30",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch07#chunk55",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch07#chunk144",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch07#chunk165",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch07#chunk171",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch07#chunk174",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch07#chunk184",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch08#chunk16",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch08#chunk48",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch08#chunk54",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch08#chunk59",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch08#chunk65",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch08#chunk101",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch08#chunk105",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch08#chunk130",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch09#chunk10",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch09#chunk13",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch09#chunk17",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch09#chunk23",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch09#chunk29",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch09#chunk32",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch09#chunk57",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch10#chunk30",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch10#chunk31",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch10#chunk32",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch10#chunk34",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch10#chunk41",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk6",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk10",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk14",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk51",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk53",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk55",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk74",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk79",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk83",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk88",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk89",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk90",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk93",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk97",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk100",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk106",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk109",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk117",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch11#chunk118",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch12#chunk77",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch12#chunk83",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch12#chunk89",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk18",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk35",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk46",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk53",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk57",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk58",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk60",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk65",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk67",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk73",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk77",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk78",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk85",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk86",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch13#chunk87",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch14#chunk6",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch14#chunk14",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch14#chunk35",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch14#chunk55",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch14#chunk62",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch14#chunk117",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch14#chunk125",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch14#chunk143",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch14#chunk152",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch14#chunk173",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch14#chunk176",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch14#chunk183",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch14#chunk184",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch15#chunk12",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch15#chunk18",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch15#chunk22",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch15#chunk23",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch15#chunk27",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch15#chunk38",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch16#chunk3",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch16#chunk7",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch16#chunk11",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch16#chunk55",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch16#chunk74",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch16#chunk81",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch16#chunk82",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch16#chunk86",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch16#chunk103",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch16#chunk124",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch17#chunk49",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch17#chunk63",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch17#chunk71",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch17#chunk76",
+      "status": "resolved"
+    },
+    {
+      "detail": "",
+      "item_ref": "phak-ch17#chunk130",
+      "status": "resolved"
+    }
+  ]
+}

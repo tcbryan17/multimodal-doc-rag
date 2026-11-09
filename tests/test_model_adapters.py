@@ -57,8 +57,9 @@ def embed_handler(vec_len: int) -> Handler:
     return handler
 
 
-def chat_handler(text: str) -> Handler:
-    return lambda req: httpx2.Response(200, json={"choices": [{"message": {"content": text}}]})
+def chat_handler(text: str, finish_reason: str = "stop") -> Handler:
+    choice = {"message": {"content": text}, "finish_reason": finish_reason}
+    return lambda req: httpx2.Response(200, json={"choices": [choice]})
 
 
 # --- embedder ---------------------------------------------------------------------------
@@ -182,6 +183,23 @@ def test_describer_garbage_raises(reply: str) -> None:
         describe(reply)
 
 
+def test_describer_turns_reasoning_off_by_default() -> None:
+    _, seen = describe(CLEAN)
+    assert body(seen[0])["reasoning"] == {"enabled": False}  # ADR 0015
+
+
+def test_describer_names_a_truncated_reply() -> None:
+    client, _ = make_client(chat_handler('{"informational": true, "descr', "length"))
+    with pytest.raises(FigureDescriptionError, match="max_tokens cap"):
+        OpenRouterFigureDescriber(client, "v").describe(PNG, "Figure 1", "ctx")
+
+
+def test_describer_names_a_provider_error_mid_reply() -> None:
+    client, _ = make_client(chat_handler('{"informational": true, "descr', "error"))
+    with pytest.raises(FigureDescriptionError, match="provider ended the reply with an error"):
+        OpenRouterFigureDescriber(client, "v").describe(PNG, "Figure 1", "ctx")
+
+
 # ---- OpenRouterGenerator -------------------------------------------------------------
 
 
@@ -198,6 +216,7 @@ def test_generator_sends_delimited_sources_and_image_and_parses_citations() -> N
     assert answer.cited_chunk_ids == (102,)
     sent = body(seen[0])
     assert sent["max_tokens"] == 100
+    assert sent["reasoning"] == {"enabled": False}  # ADR 0015
     assert sent["provider"] == PRIVACY_PROVIDER
     assert sent["messages"][0]["role"] == "system"
     parts = sent["messages"][1]["content"]

@@ -76,7 +76,8 @@ def entry_from_result(r: ItemResult, verdict: JudgeVerdict) -> CalibrationEntry:
         question=r.question,
         answerable=r.answerable,
         reference_answer=r.reference_answer,
-        answer=r.answer,
+        # The judged text, whose [n] markers match the passage numbering shown below.
+        answer=r.judged_answer if r.judged_answer is not None else r.answer,
         passages=[
             ShownPassage(
                 doc=p.doc,

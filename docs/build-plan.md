@@ -59,15 +59,16 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
   - Store figures and serve them at `GET /figures/{id}.png`.
   - Add `image_url` to citations.
   - Send figure images to the generator.
-- [ ] **14. Real ingest** of both corpora (a manual run). Review the ingest report.
+- [x] **14. Real ingest** of both corpora (a manual run). Review the ingest report.
   - [x] Tooling: `scripts/ingest_corpus.py` (dry run + cost estimate, preflight canary, `--replace`, `--retry-failures`, reports in `reports/ingest/`), and a fail-closed spending cap (`models/cost.py`).
   - [x] Parsers validated on the real corpus without model calls (see the dry-run report).
-  - [ ] The owner adds the OpenRouter key; run the preflight, then the ingest.
+  - [x] The owner adds the OpenRouter key; run the preflight, then the ingest. 25 documents; 139 of 496 figures first degraded (hidden reasoning used up the output cap, ADR 0015); after the fix and `--retry-failures`, 493 are described and 3 stay caption-only (provider errors mid-reply). Total spend about $0.25.
 - [ ] **15. Eval harness.**
   - [x] Gold-set schema, metric functions (unit-tested), LLM judge, a runner with a cost cap that writes reports, drafting + review tools, injection sets, the eval-only index, judge calibration. See `evals/README.md`.
   - [x] The owner picks `JUDGE_MODEL`: `openai/gpt-6-luna` (ADR 0014).
   - [ ] The owner builds the gold set (after the ingest).
-- [ ] **16. Replay file.** Needs only the key and the ingest, not the gold set, so it comes before the eval. Save one real response as `replay/sample-run.json`. The test from step 2 then validates it.
-  - [x] Tooling: `scripts/save_replay.py` (inlines figures as data URIs).
+- [x] **16. Replay file.** Needs only the key and the ingest, not the gold set, so it comes before the eval. Save one real response as `replay/sample-run.json`. The test from step 2 then validates it.
+  - [x] Tooling: `scripts/save_replay.py` (inlines figures as data URIs, writes `sample-run.meta.json` with the question).
+  - [x] Recorded: "What is the standard temperature at 5,000 feet?", answered from the Standard Atmosphere table images. `scripts/export_site_replay.py` turns it into the portfolio site's replay events.
 
 Afterwards, as separate plans: the eval comparisons (ADR 0011), then deployment and the live demo.

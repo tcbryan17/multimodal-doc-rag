@@ -38,6 +38,7 @@ uv run python scripts/run_eval.py --corpus faa --limit 5 --no-judge --label smok
 uv run python scripts/run_eval.py --corpus faa --limit 5 --label judge-smoke
 uv run python scripts/run_eval.py --label baseline
 uv run python scripts/run_eval.py --label rerank-off --no-rerank        # a comparison
+uv run python scripts/run_eval.py --label reasoning-on --reasoning      # ADR 0015 comparison
 
 # 4. Injection tests
 uv run python scripts/draft_gold.py review-injection --kind direct      # verify my drafts
