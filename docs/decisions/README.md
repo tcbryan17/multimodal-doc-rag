@@ -49,3 +49,4 @@ What this makes easier or harder later, and what would make us revisit it.
 | [0015](0015-reasoning-off-and-output-caps.md) | Hidden reasoning off for figure descriptions and answers; truncation detected | Accepted |
 | [0016](0016-governance-and-release-gates.md) | Governance: NIST AI RMF + OWASP mapping, pre-registered release gates | Accepted (amended by 0017) |
 | [0017](0017-eval-validity.md) | Eval validity: the judge sees figure images, binding runs are unfiltered, evidence minimums | Accepted |
+| [0018](0018-gold-set-drafting.md) | Drafting the gold set: source documents, figure share, drafter model, sampling fixes | Accepted |

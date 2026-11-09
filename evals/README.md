@@ -24,10 +24,15 @@ uv run python scripts/draft_gold.py draft --corpus faa --split dev --n 60
 uv run python scripts/draft_gold.py draft --corpus 10k --split dev --n 60
 
 # 2. Review EVERY draft: [v]erify, [e]dit, [r]eject, [s]kip. Saved after each decision.
+#    Checklist below ("Reviewing a draft").
 uv run python scripts/draft_gold.py review --corpus faa
 uv run python scripts/draft_gold.py review --corpus 10k
-#    Write the figure questions yourself (the model skips figures on purpose):
+#    Write the figure questions yourself (the model skips figures on purpose). FAA dev
+#    has 12 of them (ADR 0018). Write 3 first: the figure smoke run in step 3 needs them.
 uv run python scripts/draft_gold.py add --corpus faa --type figure
+#    Top up after rejections: draft N more. Chunks that already seeded a draft are never
+#    reused, and the handbook index and front matter are never used as sources (--skip-docs).
+uv run python scripts/draft_gold.py draft --corpus faa --split dev --n 5 --seed 1
 #    Repeat drafting with --split heldout for the held-out questions (20 per corpus).
 
 # 3. Run the eval (dev split). Smoke test first, cheap and judge-free:
@@ -92,6 +97,38 @@ runner refuses a same-family judge. `--no-judge` skips judging.
 
 Every run is capped by `--budget` (default `EVAL_BUDGET_USD`). If the cap trips, the run
 stops and still writes a partial report that says it was cut short.
+
+## Reviewing a draft
+
+Recall and citation accuracy are only as good as the gold pages, so most of the review is about
+pages, not wording.
+
+- **Trim the gold pages.** The drafter lists every page its source chunk spans. Keep only
+  the pages where the answer actually is.
+- **Add every other page that also answers it.** 10-K figures repeat across MD&A, the
+  financial statements and the notes; handbook concepts repeat between the glossary and a
+  chapter. A missing page turns a correct retrieval into a recorded miss.
+- **Gold pages are typed as `doc:page_idx:label`, and `page_idx` is NOT the printed label.**
+  `page_idx` is the 0-based position in the file, and metrics compare by it. Microsoft's printed
+  page 80 is idx 79; J&J's printed 43 is idx 47. Nothing checks that the two agree, so look the
+  index up:
+  `docker compose exec -T db psql -U rag -d rag -c "SELECT DISTINCT page_idx_start FROM chunks c JOIN documents d ON d.id=c.document_id WHERE d.doc_key='msft-10k-2026' AND c.page_label_start='80'"`
+- **If a held-out document also answers a dev question**, rewrite the question so only the dev
+  document fits, or reject it. A held-out page can't be a gold page on a dev item (verify
+  refuses it), and retrieval could fairly return it and be scored a miss.
+- **The question must name its subject.** The company and fiscal year for a 10-K ("In
+  Microsoft's fiscal 2026 10-K, ..."), never "the company" or "the text". Retrieval searches
+  every document.
+- **Check that the reference answer is right and complete** against the source text shown
+  under the draft, including exact figures and units.
+- **Reject or rewrite questions that echo the passage's wording.** They make keyword search
+  look better than it is.
+- **Check that unanswerable questions really are unanswerable**, against the whole collection
+  (both corpora, held-out documents included), not just the passage they came from. Ask
+  yourself whether a careful system could give a defensible partial answer. If it could,
+  rewrite the question or reject it.
+- **Change `type` when the draft's label is wrong.** "fact" is a figure, name or rule; "concept"
+  is a why or how.
 
 ## Metrics, in plain language
 

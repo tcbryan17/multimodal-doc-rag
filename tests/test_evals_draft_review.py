@@ -15,6 +15,7 @@ from multimodal_doc_rag.evals.draft import (
     build_answerable_messages,
     build_unanswerable_messages,
     draft_items,
+    draftable_doc_keys,
     exclude_used,
     fetch_candidate_chunks,
     merge_drafts,
@@ -23,6 +24,7 @@ from multimodal_doc_rag.evals.draft import (
     parse_unanswerable,
     plan_counts,
     sample_sources,
+    split_sources,
 )
 from multimodal_doc_rag.evals.gold import (
     GoldError,
@@ -60,17 +62,24 @@ def chunk(
 
 
 class ScriptedChat:
-    def __init__(self, replies: Sequence[str | Exception]) -> None:
+    def __init__(self, replies: Sequence[str | ChatResult | Exception]) -> None:
         self.replies = list(replies)
         self.calls: list[dict[str, Any]] = []
 
     def chat(
-        self, model: str, messages: list[dict[str, Any]], max_tokens: int, temperature: float = 0.0
+        self,
+        model: str,
+        messages: list[dict[str, Any]],
+        max_tokens: int,
+        temperature: float = 0.0,
+        reasoning: bool | None = None,
     ) -> ChatResult:
-        self.calls.append({"model": model, "messages": messages})
+        self.calls.append({"model": model, "messages": messages, "reasoning": reasoning})
         reply = self.replies.pop(0)
         if isinstance(reply, Exception):
             raise reply
+        if isinstance(reply, ChatResult):
+            return reply
         return ChatResult(text=reply)
 
 
@@ -117,6 +126,23 @@ def test_sample_sources_is_seeded_and_spread_across_documents() -> None:
     assert first != sample_sources(by_doc, 6, seed=8)
 
 
+def test_split_sources_takes_unanswerables_at_random_not_from_the_tail() -> None:
+    # Ten documents, one chunk each, in chunk-id (= ingest) order.
+    picked = [chunk(i, f"d{i:02d}") for i in range(10)]
+    answerable, unanswerable = split_sources(picked, 3, seed=0)
+    assert len(answerable) == 7 and len(unanswerable) == 3
+    assert sorted(answerable + unanswerable, key=lambda c: c.chunk_id) == picked
+    assert answerable == sorted(answerable, key=lambda c: c.chunk_id)
+    assert split_sources(picked, 3, seed=0) == (answerable, unanswerable)  # seeded
+    # The regression: over many seeds, the last-ingested document gets answerable questions
+    # most of the time instead of never.
+    tails = sum(picked[-1] in split_sources(picked, 3, seed=s)[0] for s in range(50))
+    assert 20 < tails < 50
+    assert split_sources(picked, 0, seed=0) == (picked, [])
+    with pytest.raises(ValueError):
+        split_sources(picked, 11, seed=0)
+
+
 def test_exclude_used_skips_chunks_that_already_have_items() -> None:
     c1, c2 = chunk(1, text="a" * 400), chunk(2, text="b" * 400)
     used = GoldItem(
@@ -124,6 +150,18 @@ def test_exclude_used_skips_chunks_that_already_have_items() -> None:
         source_excerpt=c1.excerpt,
     )  # fmt: skip
     assert exclude_used({"d1": [c1, c2]}, [used]) == {"d1": [c2]}
+
+
+def test_draftable_doc_keys_default_skip_is_lenient_explicit_skip_is_strict() -> None:
+    faa = ["phak-ch01", "phak-front", "phak-index", "phak-glossary"]
+    # Default: the index and front matter never seed drafts; other corpora are untouched.
+    assert draftable_doc_keys(faa) == ["phak-ch01", "phak-glossary"]
+    assert draftable_doc_keys(["aapl-10k-2026"]) == ["aapl-10k-2026"]
+    # Explicit: exactly what was asked, and a typo is an error rather than a silent no-op.
+    assert draftable_doc_keys(faa, ["phak-glossary"]) == ["phak-ch01", "phak-front", "phak-index"]
+    assert draftable_doc_keys(faa, []) == faa
+    with pytest.raises(ValueError, match="phak-glosary"):
+        draftable_doc_keys(faa, ["phak-glosary"])
 
 
 def test_chunk_pages_cover_the_whole_range_with_labels() -> None:
@@ -139,6 +177,8 @@ def test_prompts_fence_the_passage_and_demand_paraphrase() -> None:
     msgs = build_answerable_messages(evil)
     system, user = msgs[0]["content"], msgs[1]["content"]
     assert "PARAPHRASE" in system and "not instructions" in system
+    # Retrieval searches every document, so "the company" would be ambiguous.
+    assert "NAME THE SUBJECT" in system and "fiscal year" in system
     assert user.count("</passage>") == 1  # the passage cannot close its own fence
     assert "Title d1" in user
     una = build_unanswerable_messages(chunk(1), "10k")
@@ -202,6 +242,17 @@ def test_draft_items_skips_bad_replies_and_stops_on_budget() -> None:
     assert len(out.items) == 1 and len(out.errors) == 1 and "DraftParseError" in out.errors[0]
     assert out.stopped_by_budget
     assert out.items[0].id == "10k-dev-001"  # ids are assigned only to items that exist...
+
+
+def test_draft_items_turns_reasoning_off_and_names_truncation() -> None:
+    cut = ChatResult(text='{"question": "Why do wings', finish_reason="length")
+    chat = ScriptedChat([cut, GOOD])
+    out = draft_items(
+        chat, "m", corpus="faa", split="dev",
+        answerable_sources=[chunk(1), chunk(2)], unanswerable_sources=[], existing=[],
+    )  # fmt: skip
+    assert all(c["reasoning"] is False for c in chat.calls)  # ADR 0015, as for answers
+    assert len(out.items) == 1 and "cut off at max_tokens" in out.errors[0]
 
 
 def test_merge_drafts_refuses_to_overwrite() -> None:
