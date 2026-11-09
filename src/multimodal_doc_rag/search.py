@@ -88,6 +88,23 @@ def vector_search_query(dim: int, filters: sql.Composable) -> sql.Composed:
     ).format(dim=sql.Literal(dim), joins=joins, filters=filters)
 
 
+def has_vector_index(conn: Conn, model_key: str) -> bool:
+    """Is there a partial HNSW index for this embedding model key (see the migration)?
+
+    Without one, `vector_search` still returns the right rows, by scanning every vector for
+    the model. That is fine for a comparison run over a few thousand chunks, but a model that
+    is going to serve `/ask` needs its own index, added in a new migration.
+    """
+    # The index's WHERE clause is stored as `(model = '<key>'::text)`, so look for the
+    # quoted key. strpos, not LIKE: a key may contain `_` or `%`, which LIKE treats as wildcards.
+    row = conn.execute(
+        "SELECT 1 FROM pg_indexes WHERE tablename = 'embeddings'"
+        " AND indexdef LIKE '%%USING hnsw%%' AND strpos(indexdef, %s) > 0 LIMIT 1",
+        (f"'{model_key}'",),
+    ).fetchone()
+    return row is not None
+
+
 def vector_search(
     conn: Conn,
     query_vec: Sequence[float],

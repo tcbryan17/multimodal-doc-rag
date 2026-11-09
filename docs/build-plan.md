@@ -68,10 +68,12 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
   - [x] The owner picks `JUDGE_MODEL`: `openai/gpt-6-luna` (ADR 0014).
   - [x] **Governance first (ADR 0016):** the release gates are pre-registered in `evals/gates.toml` *before* any gold item or score exists. `evals/gates.py` checks them, every eval report shows them as guidance, and `scripts/release_check.py` gives the binding verdict. Also written: `docs/governance/data-card.md`.
     - *Concept:* pre-registration. A threshold set after seeing the score describes the result; it doesn't test it.
+  - [x] **Eval validity (ADR 0017),** before the gold set: the judge is sent the figure images the generator saw (and the hand-grader is shown them); binding runs search every document; evidence minimums in `gates.toml`; injection runs must match the final run's system; tooling for the embedder, chunk-size and figure-image comparisons (`scripts/embed_missing.py`, `scripts/make_chunk_index.py`, `run_eval.py --no-figure-images`).
+    - *Concept:* construct validity. A metric can be computed correctly and still not measure what its name says.
   - [ ] The owner builds the gold set (after the ingest).
   - [ ] Judged smoke run, then the dev baseline. Once the baseline exists, `gates.toml` is frozen.
   - [ ] Injection runs (direct on `rag`, indirect on `rag_eval`) and judge calibration (about 30 hand grades).
-  - [ ] Eval comparisons on dev (ADR 0011), checked against the gate table.
+  - [ ] Eval comparisons on dev (ADR 0011), checked against the gate table. The LLM-written context header comparison is deferred (ADR 0017).
 - [x] **16. Replay file.** Needs only the key and the ingest, not the gold set, so it comes before the eval. Save one real response as `replay/sample-run.json`. The test from step 2 then validates it.
   - [x] Tooling: `scripts/save_replay.py` (inlines figures as data URIs, writes `sample-run.meta.json` with the question).
   - [x] Recorded: "What is the standard temperature at 5,000 feet?", answered from the Standard Atmosphere table images. `scripts/export_site_replay.py` turns it into the portfolio site's replay events.

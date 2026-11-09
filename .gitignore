@@ -20,3 +20,6 @@ data/
 
 # Private notes (local only, never pushed)
 private/
+
+# Figure images exported for hand-grading (copies of what is already in the database)
+evals/calibration/figures/

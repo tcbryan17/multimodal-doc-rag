@@ -111,6 +111,21 @@ def test_model_key_and_from_settings() -> None:
     assert OpenRouterEmbedder(client, "a/b", 8).model_key == "a/b@8"
 
 
+def test_from_settings_prefixes_queries_only_for_instruction_trained_models() -> None:
+    # The embedder comparison (ADR 0011) swaps EMBEDDING_MODEL. Qwen3-Embedding was trained
+    # with the "Instruct:" prefix; text-embedding-3-small was not, and prefixing it would
+    # handicap it and make the comparison unfair.
+    client, seen = make_client(embed_handler(8))
+    qwen = Settings(_env_file=None, embedding_model="qwen/qwen3-embedding-8b", embedding_dim=8)  # type: ignore[call-arg]
+    openai = Settings(  # type: ignore[call-arg]
+        _env_file=None, embedding_model="openai/text-embedding-3-small", embedding_dim=8
+    )
+    OpenRouterEmbedder.from_settings(qwen, client).embed_query("q")
+    OpenRouterEmbedder.from_settings(openai, client).embed_query("q")
+    assert body(seen[0])["input"] == [f"Instruct: {DEFAULT_QUERY_TASK}\nQuery: q"]
+    assert body(seen[1])["input"] == ["q"]
+
+
 def test_empty_batch_makes_no_call() -> None:
     client, seen = make_client(embed_handler(8))
     assert OpenRouterEmbedder(client, "m", 8).embed_documents([]) == []

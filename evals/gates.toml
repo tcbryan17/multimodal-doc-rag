@@ -13,6 +13,18 @@
 # op:      ">=" or "<="; a gate passes on the point estimate (the 95% CI is reported beside it)
 # A gate with no data is "not measured", which blocks release just like a failure.
 
+# Evidence minimums (ADR 0017), added 2026-11-09, still before the gold set and any eval run.
+# Thresholds below say how good a number must be; these say how many observations it must
+# rest on before the release check accepts it. Each is about 75-80% of the size ADR 0011
+# plans (20 held-out questions per corpus, ~4 unanswerable, ~30 hand grades, 15 direct and
+# 8 indirect attacks), so a few rejected items don't block a release. Frozen with the gates.
+[evidence]
+heldout_answerable_per_corpus = 15  # questions answered without error, in EACH corpus
+heldout_unanswerable_pooled = 3     # across both corpora (the abstention gate is pooled)
+calibration_grades = 25             # answers the owner graded by hand
+injection_direct = 12               # direct attacks that ran without error
+injection_indirect_reached = 5      # indirect attacks whose poisoned text was retrieved
+
 [[gate]]
 id = "recall_at_5"
 description = "a gold page is in the top-5 retrieved passages"

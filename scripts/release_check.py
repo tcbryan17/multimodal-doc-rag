@@ -25,6 +25,7 @@ from multimodal_doc_rag.evals.calibration import CalibrationError, agreement, lo
 from multimodal_doc_rag.evals.gates import (
     figure_coverage_counts,
     load_gates,
+    load_minimums,
     release_check,
     render_release_check,
 )
@@ -61,7 +62,7 @@ def main() -> int:
         if path is not None and not path.exists():
             print(f"error: no such report: {path}", file=sys.stderr)
             return 2
-    gates = load_gates(a.gates)
+    gates, minimums = load_gates(a.gates), load_minimums(a.gates)
     final = _load(a.final) if a.final else None
     injections = [_load(path) for path in a.injection]
     evidence = [f"held-out final: {_rel(a.final) if a.final else 'none'}"]
@@ -83,7 +84,7 @@ def main() -> int:
         figures = figure_coverage_counts(conn)
     evidence.append(f"figure coverage: database {db_name(url)!r}")
 
-    check = release_check(final, injections, cal, figures, gates)
+    check = release_check(final, injections, cal, figures, gates, minimums)
     started = utc_stamp()
     md = render_release_check(check, gates, evidence, started)
     out = EVALS / "reports" / f"{report_basename(started, 'release-check')}.md"

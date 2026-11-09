@@ -231,8 +231,21 @@ def render_markdown(report: EvalReport, gates_section: Sequence[str] = ()) -> st
         ("judge", c.judge_model or "none (--no-judge: rule metrics only)"),
         ("embedder", c.embedding_model),
         ("reranker", c.rerank_model or "off"),
+        (
+            "retrieval scope",
+            "each question's own corpus only (--corpus-filter: a comparison)"
+            if c.corpus_filter
+            else "all documents (the product default)",
+        ),
+        (
+            "figure images",
+            "sent to the generator and the judge"
+            if c.figure_images
+            else "withheld (--no-figure-images: descriptions only)",
+        ),
         ("top_k / recall_k / candidates", f"{c.top_k} / {c.recall_k} / {c.candidates}"),
         ("limit", str(c.limit) if c.limit is not None else "none"),
+        ("question types", c.question_type or "all"),
         ("database", c.database),
         ("index", ", ".join(f"{k}={v}" for k, v in c.index.items())),
         ("cost cap", f"${c.budget_usd:.2f}"),

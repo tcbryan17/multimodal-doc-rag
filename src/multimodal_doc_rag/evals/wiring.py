@@ -72,6 +72,7 @@ def build_components(
     budget_usd: float,
     use_judge: bool,
     generator_reasoning: bool = False,
+    figure_images: bool = True,
     client: OpenRouterClient | None = None,
 ) -> EvalComponents:
     """One client (hence one meter) behind the embedder, reranker, generator and judge, so the
@@ -100,5 +101,6 @@ def build_components(
         ),
         candidates=candidates,
         top_k=top_k,
+        send_figures=figure_images,
     )
     return EvalComponents(pipeline=pipeline, judge=judge, meter=meter, client=client)

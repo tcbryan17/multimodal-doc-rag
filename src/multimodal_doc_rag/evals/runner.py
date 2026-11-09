@@ -46,14 +46,19 @@ def select_items(
     split: str,
     include_drafts: bool = False,
     limit: int | None = None,
+    question_type: str | None = None,
 ) -> list[GoldItem]:
     """Items for a run: the right corpus and split, and verified (rejected never; drafts only
-    when asked, for smoke tests). Ordered by id so `--limit` is reproducible."""
+    when asked, for smoke tests). Ordered by id so `--limit` is reproducible. `question_type`
+    narrows to fact, figure or concept questions (a smoke test of one kind; never binding)."""
     allowed = {"verified", "draft"} if include_drafts else {"verified"}
     chosen = [
         i
         for i in sorted(items, key=lambda i: i.id)
-        if i.split == split and i.status in allowed and (corpus is None or i.corpus == corpus)
+        if i.split == split
+        and i.status in allowed
+        and (corpus is None or i.corpus == corpus)
+        and (question_type is None or i.type == question_type)
     ]
     return chosen if limit is None else chosen[:limit]
 
@@ -73,12 +78,18 @@ def _safe_judge(
     """Grade, never raising except to nothing: returns (verdict, error, cost)."""
     before = meter.spent_usd
     try:
-        verdict = judge.grade(item, answer, run.passages)
+        verdict = judge.grade(item, answer, run.passages, run.figures)
     except BudgetExceededError:
         return None, "judge skipped: spending cap reached", meter.spent_usd - before
     except Exception as exc:  # noqa: BLE001 - one bad judge reply must not lose the answer
         return None, f"{type(exc).__name__}: {exc}", meter.spent_usd - before
     return verdict, None, meter.spent_usd - before
+
+
+def _retrieved(run: PipelineRun) -> list[RetrievedPassage]:
+    return [
+        RetrievedPassage.from_passage(p, image_sent=p.chunk_id in run.figures) for p in run.passages
+    ]
 
 
 def evaluate_item(
@@ -87,8 +98,16 @@ def evaluate_item(
     judge: Judge | None,
     meter: CostMeter,
     recall_k: int = 5,
+    *,
+    corpus_filter: bool = False,
 ) -> ItemResult:
-    """Answer one gold question and score it. Raises only BudgetExceededError."""
+    """Answer one gold question and score it. Raises only BudgetExceededError.
+
+    `corpus_filter=False` (the default, and the only binding setting, ADR 0017) searches
+    every document, because that is what the product does unless a user picks a filter: a
+    10-K question has to beat the FAA chunks too. True restricts retrieval to the item's own
+    corpus, as a comparison.
+    """
     result = ItemResult(
         id=item.id,
         corpus=item.corpus,
@@ -102,9 +121,9 @@ def evaluate_item(
     spent_before = meter.spent_usd
     started = time.perf_counter()
     try:
-        # Filter by the item's corpus: the real product lets users search everything, but a
-        # corpus filter keeps the two corpora from competing in each other's retrieval.
-        run = pipeline.run(AskRequest(question=item.question, corpus=item.corpus))
+        run = pipeline.run(
+            AskRequest(question=item.question, corpus=item.corpus if corpus_filter else None)
+        )
     except BudgetExceededError:
         raise
     except Exception as exc:  # noqa: BLE001 - recorded, and the run goes on
@@ -118,7 +137,7 @@ def evaluate_item(
     result.answer = answer
     result.citations = run.response.citations
     result.cited_chunk_ids = list(run.cited_chunk_ids)
-    result.retrieved = [RetrievedPassage.from_passage(p) for p in run.passages]
+    result.retrieved = _retrieved(run)
     result.metrics = item_metrics(item, answer, run.passages, run.cited_chunk_ids, recall_k)
     result.judged_answer = _judge_text(run)
     if judge is not None:
@@ -173,7 +192,7 @@ def evaluate_injection(
     result.latency_ms = (time.perf_counter() - started) * 1000
     result.cost_usd = meter.spent_usd - spent_before
     result.answer = run.response.answer
-    result.retrieved = [RetrievedPassage.from_passage(p) for p in run.passages]
+    result.retrieved = _retrieved(run)
     result.metrics = injection_metrics(item, run.response.answer, run)
     result.judged_answer = _judge_text(run)
     if judge is not None:
@@ -200,7 +219,16 @@ def run_eval(
         for n, item in enumerate(items, start=1):
             meter.check()  # also catches a cap tripped by the previous item's judge call
             progress(f"[{n}/{len(items)}] {item.id}")
-            report.items.append(evaluate_item(item, pipeline, judge, meter, config.recall_k))
+            report.items.append(
+                evaluate_item(
+                    item,
+                    pipeline,
+                    judge,
+                    meter,
+                    config.recall_k,
+                    corpus_filter=config.corpus_filter,
+                )
+            )
         for n, inj in enumerate(injection_items, start=1):
             meter.check()
             progress(f"[injection {n}/{len(injection_items)}] {inj.id}")
@@ -279,6 +307,8 @@ class RunOptions:
     include_drafts: bool = False
     rerank: bool = True
     generator: str = ""
+    corpus_filter: bool = False
+    figure_images: bool = True
 
 
 def validate_options(o: RunOptions) -> list[str]:
@@ -312,6 +342,16 @@ def validate_options(o: RunOptions) -> list[str]:
         warnings.append("including UNVERIFIED draft questions: smoke test only, not for quoting.")
     if not o.judge:
         warnings.append("--no-judge: correctness and faithfulness will not be scored.")
+    if o.corpus_filter:
+        warnings.append(
+            "--corpus-filter: retrieval is restricted to each question's corpus. A comparison "
+            "only; the binding run searches everything (ADR 0017)."
+        )
+    if not o.figure_images:
+        warnings.append(
+            "--no-figure-images: the generator answers from figure descriptions only. A "
+            "comparison only (ADR 0011)."
+        )
     return warnings
 
 
