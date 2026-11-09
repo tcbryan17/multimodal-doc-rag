@@ -14,8 +14,8 @@ paid model calls, produce scores, and run when something changes. The code is in
 
 ## Workflow
 
-Prerequisites: an `OPENROUTER_API_KEY` in `.env` (project-only key, low credit limit), the
-corpus fetched and ingested, and `JUDGE_MODEL` set (see below).
+Prerequisites: an `OPENROUTER_API_KEY` in `.env` (project-only key, $5 credit limit), the
+corpus fetched and ingested. The judge defaults to `openai/gpt-6-luna` (see below).
 
 ```bash
 # 1. Draft a gold set: a model writes questions from sampled pages (seeded, reproducible)
@@ -31,6 +31,11 @@ uv run python scripts/draft_gold.py add --corpus faa --type figure
 
 # 3. Run the eval (dev split). Smoke test first, cheap and judge-free:
 uv run python scripts/run_eval.py --corpus faa --limit 5 --no-judge --label smoke
+#    Then a judged smoke run, before any full run. Check the report for: zero judge errors,
+#    and a judge cost of roughly $0.0005 per item. Empty judge replies mean the reasoning
+#    model spent its output cap (OpenRouterJudge max_tokens); a rejected request may mean
+#    the endpoint refused `temperature` (ADR 0014).
+uv run python scripts/run_eval.py --corpus faa --limit 5 --label judge-smoke
 uv run python scripts/run_eval.py --label baseline
 uv run python scripts/run_eval.py --label rerank-off --no-rerank        # a comparison
 
@@ -50,9 +55,9 @@ uv run python scripts/calibrate_judge.py agreement --name <run>
 uv run python scripts/run_eval.py --split heldout --i-know-this-is-heldout --label final
 ```
 
-`JUDGE_MODEL` has no default on purpose. Pick a model from a **different family** than the
-generator being graded (Claude, Gemma and Qwen are the candidates) that has a zero-data-
-retention endpoint. The runner refuses a same-family judge. `--no-judge` skips judging.
+`JUDGE_MODEL` defaults to `openai/gpt-6-luna` (ADR 0014): a **different family** from every
+generator being compared (Claude, Gemma and Qwen), with a zero-data-retention endpoint. The
+runner refuses a same-family judge. `--no-judge` skips judging.
 
 Every run is capped by `--budget` (default `EVAL_BUDGET_USD`). If the cap trips, the run
 stops and still writes a partial report that says it was cut short.

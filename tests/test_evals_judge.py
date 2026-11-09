@@ -7,6 +7,7 @@ import httpx2
 import pytest
 from pydantic import SecretStr
 
+from multimodal_doc_rag.config import Settings
 from multimodal_doc_rag.evals.gold import GoldItem, GoldPage, InjectionItem
 from multimodal_doc_rag.evals.judge import (
     FakeJudge,
@@ -44,8 +45,8 @@ def test_model_family() -> None:
     assert model_family("Qwen/qwen3.6-35b-a3b") == "qwen"
 
 
-def test_no_default_judge_model_has_an_explanatory_error() -> None:
-    with pytest.raises(JudgeConfigError, match="no default") as exc:
+def test_blank_judge_model_has_an_explanatory_error() -> None:
+    with pytest.raises(JudgeConfigError, match="no judge") as exc:
         check_judge_config(None, "anthropic/claude-haiku-5.5")
     assert "different model family" in str(exc.value)
     with pytest.raises(JudgeConfigError):
@@ -147,6 +148,25 @@ def test_parse_verdict_accepts(
 def test_parse_verdict_rejects_garbage(reply: str) -> None:
     with pytest.raises(JudgeParseError):
         parse_verdict(reply)
+
+
+def test_empty_reply_says_reasoning_may_have_used_the_budget() -> None:
+    with pytest.raises(JudgeParseError, match="reasoning"):
+        parse_verdict("  ")
+
+
+GENERATORS = ["anthropic/claude-haiku-5.5", "google/gemma-4-26b-a4b-it", "qwen/qwen3.6-35b-a3b"]
+
+
+@pytest.mark.parametrize("generator", GENERATORS)
+def test_default_judge_is_outside_every_compared_generator_family(generator: str) -> None:
+    judge = Settings(_env_file=None).judge_model  # type: ignore[call-arg]
+    assert check_judge_config(judge, generator) == "openai/gpt-6-luna"  # ADR 0014
+
+
+def test_default_judge_has_a_fallback_price() -> None:
+    s = Settings(_env_file=None)  # type: ignore[call-arg]
+    assert s.judge_model in s.model_prices
 
 
 def test_fake_judge_rules() -> None:

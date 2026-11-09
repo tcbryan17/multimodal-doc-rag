@@ -54,7 +54,7 @@ Before calling work done, run pytest, mypy, and ruff check. All of them pass rig
 - If the repo folder is moved or renamed, `.venv` breaks because it stores absolute paths. Delete `.venv` and run `uv sync`.
 
 ## Current status (update as things change)
-**Done:** decision records 0001–0013; build-plan steps 0–13: every pipeline stage, end-to-end `/ask` tests (text and figures), both parsers validated on the real corpus, fetch scripts; plus the step 14–16 tooling (see Build plan).
+**Done:** decision records 0001–0014; build-plan steps 0–13: every pipeline stage, end-to-end `/ask` tests (text and figures), both parsers validated on the real corpus, fetch scripts; plus the step 14–16 tooling (see Build plan).
 
 **Decided** (read the ADR before working in its area; details and rejected options are in `docs/decisions/`):
 - 0001: our own retrieval pipeline, with no LangChain or LlamaIndex.
@@ -69,7 +69,8 @@ Before calling work done, run pytest, mypy, and ruff check. All of them pass rig
 - 0010: psycopg 3 with raw SQL; numbered SQL migrations; an `embeddings` table keyed by model; RRF hybrid search; figures stored as `bytea`.
 - 0011: evals run outside pytest; 60 dev + 20 held-out questions per corpus; an LLM judge calibrated against human grades; injection sets.
 - 0012: a walking skeleton; contract tests over fake and real implementations; db tests in a rolled-back transaction; GitHub Actions + pre-commit.
+- 0014: the eval judge is **`openai/gpt-6-luna`** (outside the Claude/Gemma/Qwen generator families, ZDR via Azure; a reasoning model, so the judge's output cap is 2,000 tokens).
 
-**Build plan:** `docs/build-plan.md` lists the ordered, test-first steps. Tick each one off as it lands. Steps 0–13 are done. The tooling for steps 14–16 is built and tested with fakes: corpus ingest (`scripts/ingest_corpus.py`), the eval harness (`src/multimodal_doc_rag/evals/`, CLIs in `scripts/`, data and workflow in `evals/`), and the replay writer (`scripts/save_replay.py`). Every model-calling run goes through a `CostMeter` cap (`models/cost.py`). **Waiting on the owner:** the OpenRouter key (project-only, low credit limit, ZDR-only account setting) and the choice of `JUDGE_MODEL`. Core types live in `types.py`, seams in `protocols.py`, fakes in `fakes.py`, contract suites in `tests/contracts/`.
+**Build plan:** `docs/build-plan.md` lists the ordered, test-first steps. Tick each one off as it lands. Steps 0–13 are done. The tooling for steps 14–16 is built and tested with fakes: corpus ingest (`scripts/ingest_corpus.py`), the eval harness (`src/multimodal_doc_rag/evals/`, CLIs in `scripts/`, data and workflow in `evals/`), and the replay writer (`scripts/save_replay.py`). Every model-calling run goes through a `CostMeter` cap (`models/cost.py`). **Waiting on the owner:** the OpenRouter key (project-only, **$5 credit limit** so our $3/$2 caps trip first, ZDR-only account setting). After the key: preflight, ingest, one live `/ask` and the replay file (step 16), then the gold set and evals. After the eval, the owner decides deployment. Core types live in `types.py`, seams in `protocols.py`, fakes in `fakes.py`, contract suites in `tests/contracts/`.
 
 **Still open:** deployment (production Postgres host, app hosting, hardening: per-IP rate limits, input and output caps, a read-only DB role, a non-root container). This is deliberately deferred until after the eval, and it's the owner's decision.
