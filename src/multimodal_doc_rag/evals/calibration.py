@@ -60,6 +60,11 @@ class CalibrationEntry(BaseModel):
     reference_answer: str | None
     answer: str
     passages: list[ShownPassage]
+    # Which judge produced `judge` below, copied from the sampled run's config. The release
+    # check refuses grades whose fingerprint differs from the final run's: a kappa measured
+    # against one prompt or model says nothing about another. None = unknown, which blocks.
+    judge_model: str | None = None
+    judge_fingerprint: str | None = None
     human: Grade | None = None  # filled in by `grade`
     # Kept LAST and never displayed by `grade`. It lives in the same file only for
     # convenience; do not open the file in an editor while you are grading.
@@ -75,8 +80,15 @@ def _pages(start_label: str | None, end_label: str | None, start_idx: int, end_i
     return s if s == e else f"{s}-{e}"
 
 
-def entry_from_result(r: ItemResult, verdict: JudgeVerdict) -> CalibrationEntry:
+def entry_from_result(
+    r: ItemResult,
+    verdict: JudgeVerdict,
+    judge_model: str | None = None,
+    judge_fingerprint: str | None = None,
+) -> CalibrationEntry:
     return CalibrationEntry(
+        judge_model=judge_model,
+        judge_fingerprint=judge_fingerprint,
         id=r.id,
         corpus=r.corpus,
         type=r.type,
@@ -112,8 +124,11 @@ def sample_entries(report: EvalReport, n: int, seed: int = 0) -> list[Calibratio
             "the report has no judged items to sample (was it a --no-judge run?)"
         )
     picked = stratified_sample(strata, n, random.Random(seed))
+    c = report.config
     return [
-        entry_from_result(r, r.verdict) for r in sorted(picked, key=lambda r: r.id) if r.verdict
+        entry_from_result(r, r.verdict, c.judge_model, c.judge_fingerprint)
+        for r in sorted(picked, key=lambda r: r.id)
+        if r.verdict
     ]
 
 
@@ -285,12 +300,22 @@ class DimensionAgreement(BaseModel):
 class AgreementReport(BaseModel):
     n_graded: int
     dimensions: dict[str, DimensionAgreement]
+    # The judge these grades calibrate (None = not recorded). See CalibrationEntry.
+    judge_model: str | None = None
+    judge_fingerprint: str | None = None
 
 
 def agreement(entries: Sequence[CalibrationEntry]) -> AgreementReport:
     graded = [e for e in entries if e.human is not None]
     if not graded:
         raise CalibrationError("no human grades yet; run `calibrate_judge.py grade` first")
+    judges = {(e.judge_model, e.judge_fingerprint) for e in graded}
+    if len(judges) > 1:
+        raise CalibrationError(
+            f"the grades mix verdicts from {len(judges)} judge configurations "
+            f"{sorted(judges, key=str)}; one calibration file must calibrate one judge"
+        )
+    ((judge_model, judge_fp),) = judges
     dims: dict[str, DimensionAgreement] = {}
     for dim in DIMENSIONS:
         judge = [getattr(e.judge, dim) for e in graded]
@@ -302,7 +327,12 @@ def agreement(entries: Sequence[CalibrationEntry]) -> AgreementReport:
             kappa=cohens_kappa(judge, human),
             confusion=[(f"{j:g}", f"{h:g}", c) for (j, h), c in pairs],
         )
-    return AgreementReport(n_graded=len(graded), dimensions=dims)
+    return AgreementReport(
+        n_graded=len(graded),
+        dimensions=dims,
+        judge_model=judge_model,
+        judge_fingerprint=judge_fp,
+    )
 
 
 def interpret_kappa(kappa: float | None) -> str:
@@ -318,7 +348,9 @@ def interpret_kappa(kappa: float | None) -> str:
 
 def render_summary(report: AgreementReport, judge_model: str | None = None) -> str:
     lines = ["## Judge calibration", ""]
-    who = f" (judge: {judge_model})" if judge_model else ""
+    judge_model = judge_model or report.judge_model
+    fp = f", fingerprint {report.judge_fingerprint}" if report.judge_fingerprint else ""
+    who = f" (judge: {judge_model}{fp})" if judge_model else ""
     lines.append(
         f"The owner hand-graded {report.n_graded} answers without seeing the judge's verdicts{who}."
     )

@@ -20,10 +20,13 @@ from multimodal_doc_rag.evals.report import (
 )
 from multimodal_doc_rag.evals.results import EvalReport, RunConfig
 from multimodal_doc_rag.evals.runner import (
+    OptionsError,
+    RunOptions,
     evaluate_injection,
     evaluate_item,
     run_eval,
     select_items,
+    validate_options,
 )
 from multimodal_doc_rag.fakes import IDK
 from multimodal_doc_rag.models.cost import BudgetExceededError, CostMeter
@@ -404,3 +407,12 @@ def test_failures_groups() -> None:
 
 def test_verdict_type_is_exported() -> None:
     assert JudgeVerdict(correctness=1.0, faithfulness=1).injection_followed is None
+
+
+def test_heldout_needs_an_explicit_acknowledgement() -> None:
+    """Held-out is scored once (ADR 0011): a run must say on purpose that it is the one."""
+    with pytest.raises(OptionsError, match="i-know-this-is-heldout"):
+        validate_options(RunOptions(split="heldout"))
+    warnings = validate_options(RunOptions(split="heldout", i_know_this_is_heldout=True))
+    assert any("HELD-OUT" in w for w in warnings)
+    assert not any("HELD-OUT" in w for w in validate_options(RunOptions()))

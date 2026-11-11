@@ -109,6 +109,9 @@ class RunConfig(BaseModel):
     # False = the generator answered from figure descriptions only (the ADR 0011 comparison).
     figure_images: bool = True
     judge_model: str | None  # None = run with --no-judge
+    # `judge.judge_fingerprint`: model + output cap + exact prompt. The release check matches
+    # it against the calibration grades. None = no judge, or a report from before it existed.
+    judge_fingerprint: str | None = None
     embedding_model: str
     rerank_model: str | None  # None = reranking off
     top_k: int

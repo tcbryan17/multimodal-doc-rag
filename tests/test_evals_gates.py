@@ -69,6 +69,7 @@ def config(**kw: object) -> RunConfig:
         "split": "heldout",
         "generator_model": "anthropic/x",
         "judge_model": "openai/y",
+        "judge_fingerprint": "fp-y",
         "embedding_model": "qwen/e",
         "rerank_model": "qwen/r",
         "top_k": 5,
@@ -236,7 +237,9 @@ def agreement_report(**kappas: float | None) -> AgreementReport:
     dims = {
         name: DimensionAgreement(n=30, raw=0.9, kappa=k, confusion=[]) for name, k in kappas.items()
     }
-    return AgreementReport(n_graded=30, dimensions=dims)
+    return AgreementReport(
+        n_graded=30, dimensions=dims, judge_model="openai/y", judge_fingerprint="fp-y"
+    )
 
 
 KAPPA_GATE = gate(id="k", source="calibration", metric="min_kappa", threshold=0.6, scope="pooled")
@@ -543,3 +546,27 @@ def test_release_check_blocks_when_injection_runs_used_a_different_system() -> N
     )
     check = release_check(final, [direct, no_rerank], cal, (493, 496), RELEASE_GATES, MINIMUMS)
     assert not check.ready and "rerank_model" in check.problems[0]
+
+
+def test_release_check_blocks_when_calibration_graded_a_different_judge() -> None:
+    """Kappa vouches for ONE judge configuration. Grades of another prompt or model say
+    nothing about the judge that scored the final run."""
+    final, injections, cal = full_evidence()
+    other = cal.model_copy(update={"judge_fingerprint": "fp-old"})
+    check = release_check(final, injections, other, (493, 496), RELEASE_GATES, MINIMUMS)
+    assert not check.ready
+    assert check.problems == [
+        "calibration: graded against judge openai/y (fp-old), but the final run used "
+        "openai/y (fp-y)"
+    ]
+
+    unknown = cal.model_copy(update={"judge_fingerprint": None})
+    check = release_check(final, injections, unknown, (493, 496), RELEASE_GATES, MINIMUMS)
+    assert not check.ready
+    assert len(check.problems) == 1 and "don't record which judge" in check.problems[0]
+
+    # A final run that didn't record its fingerprint can't be matched either.
+    old_final = final.model_copy(update={"config": config(judge_fingerprint=None)})
+    check = release_check(old_final, injections, cal, (493, 496), RELEASE_GATES, MINIMUMS)
+    assert not check.ready
+    assert "but the final run used openai/y (not recorded)" in check.problems[-1]

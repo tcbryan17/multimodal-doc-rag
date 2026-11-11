@@ -17,6 +17,7 @@ description would mark a value read correctly off the chart as "unsupported", so
 images are attached to the judge's prompt, each right after its passage.
 """
 
+import hashlib
 import json
 import re
 from collections.abc import Mapping, Sequence
@@ -24,9 +25,9 @@ from typing import Any, Protocol
 
 from pydantic import BaseModel, ConfigDict
 
-from multimodal_doc_rag.evals.gold import GoldItem, InjectionItem
+from multimodal_doc_rag.evals.gold import GoldItem, GoldPage, InjectionItem
 from multimodal_doc_rag.models.openrouter import OpenRouterClient, image_part
-from multimodal_doc_rag.types import Passage
+from multimodal_doc_rag.types import PageRef, Passage
 
 
 class JudgeConfigError(RuntimeError):
@@ -261,15 +262,69 @@ def parse_verdict(text: str) -> JudgeVerdict:
     raise JudgeParseError(f"no valid verdict JSON in judge reply: {text[:120]!r}")
 
 
+# Generous because reasoning models (gpt-6-luna, ADR 0014) spend hidden reasoning tokens out
+# of this same budget; too low a cap leaves nothing for the verdict.
+JUDGE_MAX_TOKENS = 2000
+
+# A fixed probe, rendered through the real prompt builder by `judge_fingerprint`. It covers
+# every branch of the prompt: a reference answer, an unanswerable item, an injection item and
+# a figure image. Changing it changes every fingerprint, so leave it alone.
+_PROBE_PASSAGE = Passage(
+    chunk_id=1,
+    doc_key="probe",
+    doc_title="Probe",
+    kind="figure",
+    page_start=PageRef(0, "1"),
+    page_end=PageRef(0, "1"),
+    content="probe passage",
+    context_header="",
+    score=1.0,
+)
+_PROBE_ITEMS: tuple[GoldItem | InjectionItem, ...] = (
+    GoldItem(
+        id="probe-1", corpus="faa", split="dev", type="fact", question="probe?",
+        answerable=True, reference_answer="probe answer",
+        gold_pages=[GoldPage(doc="probe", page_idx=0)],
+    ),
+    GoldItem(id="probe-2", corpus="faa", split="dev", type="fact", question="probe?",
+             answerable=False),
+    InjectionItem(id="probe-3", kind="direct", question="probe?", attack_goal="probe goal",
+                  canary="PROBE"),
+)  # fmt: skip
+
+
+def judge_fingerprint(model: str, max_tokens: int = JUDGE_MAX_TOKENS) -> str:
+    """A short hash naming one judge configuration (ADR 0019): the model, its output cap,
+    and the exact prompt it is sent.
+
+    The calibration grades say how far THIS judge can be trusted. If the prompt or the model
+    changes between calibration and the final run, the kappa describes a different grader,
+    so the release check compares fingerprints (and blocks when they differ).
+
+    The prompt part is captured by rendering a fixed probe through `build_judge_messages`, so
+    a change to the system prompt OR to how the user message is laid out both show up. The
+    git commit can't serve: unrelated commits land between calibration and the final run.
+
+    Not covered: other request settings passed to `client.chat` (none today besides
+    `max_tokens`). If the judge call ever gains `reasoning` or `temperature`, add them here.
+    """
+    messages = [
+        build_judge_messages(item, "probe answer [1]", [_PROBE_PASSAGE], {1: b"probe-png"})
+        for item in _PROBE_ITEMS
+    ]
+    blob = json.dumps(
+        {"model": model, "max_tokens": max_tokens, "messages": messages}, sort_keys=True
+    )
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:12]
+
+
 class OpenRouterJudge:
     def __init__(
         self,
         client: OpenRouterClient,
         judge_model: str | None,
         generator_model: str,
-        # Generous because reasoning models (gpt-6-luna, ADR 0014) spend hidden reasoning
-        # tokens out of this same budget; too low a cap leaves nothing for the verdict.
-        max_tokens: int = 2000,
+        max_tokens: int = JUDGE_MAX_TOKENS,
     ) -> None:
         self._client = client
         self._model = check_judge_config(judge_model, generator_model)
@@ -278,6 +333,10 @@ class OpenRouterJudge:
     @property
     def model(self) -> str:
         return self._model
+
+    @property
+    def fingerprint(self) -> str:
+        return judge_fingerprint(self._model, self._max_tokens)
 
     def grade(
         self,

@@ -1,6 +1,6 @@
 # 0016. Governance: NIST AI RMF + OWASP mapping, pre-registered release gates
 
-- **Status:** Accepted (amended by [0017](0017-eval-validity.md): evidence minimums and run consistency; thresholds unchanged)
+- **Status:** Accepted (amended by [0017](0017-eval-validity.md): evidence minimums and run consistency; thresholds unchanged. Amended by [0019](0019-calibration-tied-to-judge.md): calibration grades must come from the final run's judge)
 - **Date:** 2026-11-09
 
 ## Context
