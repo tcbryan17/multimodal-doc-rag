@@ -228,7 +228,12 @@ def render_markdown(report: EvalReport, gates_section: Sequence[str] = ()) -> st
             "generator",
             f"{c.generator_model} (reasoning {'on' if c.generator_reasoning else 'off'})",
         ),
-        ("judge", c.judge_model or "none (--no-judge: rule metrics only)"),
+        (
+            "judge",
+            f"{c.judge_model} (fingerprint {c.judge_fingerprint or 'not recorded'})"
+            if c.judge_model
+            else "none (--no-judge: rule metrics only)",
+        ),
         ("embedder", c.embedding_model),
         ("reranker", c.rerank_model or "off"),
         (

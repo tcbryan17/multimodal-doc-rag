@@ -102,6 +102,7 @@ def report_of(items: Sequence[ItemResult]) -> EvalReport:
     cfg = RunConfig(
         label="t", started_utc="2026-11-07T00:00:00Z", git_commit="x", git_dirty=False,
         corpus="all", split="dev", generator_model="a/b", judge_model="c/d",
+        judge_fingerprint="fp-cd",
         embedding_model="e", rerank_model=None, top_k=5, recall_k=5, candidates=30,
         budget_usd=1.0, include_drafts=False, limit=None, index={}, database="rag_test",
     )  # fmt: skip
@@ -119,6 +120,8 @@ def test_sample_entries_is_seeded_stratified_and_skips_unjudged() -> None:
     assert len(a) == 6 and {e.corpus for e in a} == {"faa", "10k"}
     assert "skip" not in {e.id for e in a} and "err" not in {e.id for e in a}
     assert a[0].passages[0].pages == "8-1-2"  # start label "8-1", end idx 1 -> "2"
+    # Each entry records the judge that produced its verdict, for the release check.
+    assert {(e.judge_model, e.judge_fingerprint) for e in a} == {("c/d", "fp-cd")}
     with pytest.raises(CalibrationError, match="no-judge"):
         sample_entries(report_of([result("x", None)]), 3)
 
@@ -204,3 +207,18 @@ def test_agreement_needs_grades_and_missing_file_is_a_clear_error(tmp_path: Path
         agreement([entry("a", 1.0)])
     with pytest.raises(CalibrationError, match="sample"):
         load_entries(tmp_path / "nope.jsonl")
+
+
+def test_agreement_carries_the_judge_and_refuses_a_mix(tmp_path: Path) -> None:
+    graded = [
+        entry(i, 1.0, 1.0).model_copy(update={"judge_model": "o/j", "judge_fingerprint": "fp1"})
+        for i in "ab"
+    ]
+    rep = agreement(graded)
+    assert (rep.judge_model, rep.judge_fingerprint) == ("o/j", "fp1")
+    assert "judge: o/j, fingerprint fp1" in render_summary(rep)
+    mixed = [graded[0], graded[1].model_copy(update={"judge_fingerprint": "fp2"})]
+    with pytest.raises(CalibrationError, match="one calibration file must calibrate one judge"):
+        agreement(mixed)
+    # Old files without the fields still load; the release check then blocks on them.
+    assert agreement([entry("a", 1.0, 1.0)]).judge_fingerprint is None

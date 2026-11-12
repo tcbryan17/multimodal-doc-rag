@@ -45,7 +45,7 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
   - Record one trace step per stage.
   - **End-to-end test:** ingest the fixture, call `/ask`, and get a citation with the right page label. This completes the skeleton.
   - *Concept:* grounding, and checking citations rather than trusting them.
-- [x] **10. The OpenRouter client and real adapters.** *(The live calls have never run: no key yet.)*
+- [x] **10. The OpenRouter client and real adapters.** *(Live calls first ran in step 14, once the key existed.)*
   - Embeddings (truncated and re-normalised), rerank with a fallback, and chat with images.
   - `MockTransport` tests check that every request sends `zdr: true` and `data_collection: "deny"`, plus errors and fallbacks.
   - Add an opt-in `live` smoke test.
@@ -79,8 +79,8 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
   - [x] Recorded: "What is the standard temperature at 5,000 feet?", answered from the Standard Atmosphere table images. `scripts/export_site_replay.py` turns it into the portfolio site's replay events.
 
 - [ ] **17. Governance alongside the eval** (ADR 0016), in `docs/governance/`:
-  - [ ] **Control matrix:** control → NIST AI RMF function / OWASP LLM 2026 risk → enforcing code → test or report → *implemented* or *planned*. Never mark a deployment control implemented before it exists.
-  - [ ] **Risk register:** hallucination, prompt injection (direct and indirect), figure misreading, stale filings, cost abuse, privacy of live queries, provider outage. Each with likelihood, impact, mitigation and status.
+  - [ ] **Control matrix** (drafted 2026-11-11 in `docs/governance/control-matrix.md`; owner review, then evidence from the eval runs): control → NIST AI RMF function / OWASP LLM 2026 risk → enforcing code → test or report → *implemented* or *planned*. Never mark a deployment control implemented before it exists.
+  - [ ] **Risk register** (drafted 2026-11-11 in `docs/governance/risk-register.md`; owner review, then re-rate after the eval): hallucination, prompt injection (direct and indirect), figure misreading, stale filings, cost abuse, privacy of live queries, provider outage. Each with likelihood, impact, mitigation and status.
   - *Concept:* evidence-backed controls. Every claim points to a test or a committed report.
 - [ ] **18. The held-out final run and the release check.**
   - Run the held-out split once (`--i-know-this-is-heldout`), then `scripts/release_check.py` with the final, injection and calibration evidence. Commit the release-check report, pass or fail.

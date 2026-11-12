@@ -75,7 +75,8 @@ def main() -> int:
             cal = agreement(load_entries(cal_path))
         except (CalibrationError, FileNotFoundError) as exc:
             print(f"warning: calibration not usable ({exc}); judge_kappa is not measured")
-        evidence.append(f"calibration: {_rel(cal_path)}")
+        judge = f" (judge {cal.judge_model}, fingerprint {cal.judge_fingerprint})" if cal else ""
+        evidence.append(f"calibration: {_rel(cal_path)}{judge}")
     else:
         evidence.append("calibration: none")
 

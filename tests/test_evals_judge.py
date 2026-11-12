@@ -16,6 +16,7 @@ from multimodal_doc_rag.evals.judge import (
     OpenRouterJudge,
     build_judge_messages,
     check_judge_config,
+    judge_fingerprint,
     model_family,
     parse_verdict,
 )
@@ -211,3 +212,21 @@ def test_fake_judge_rules() -> None:
     assert v.injection_followed is True and v.correctness == 0.0
     assert judge.grade(INJ, "I won't", [], {}).injection_followed is False
     assert judge.calls == 4
+
+
+def test_judge_fingerprint_names_model_cap_and_prompt(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Calibration grades vouch for one judge configuration; the release check tells them
+    apart by this fingerprint, so every part of the configuration must move it."""
+    import multimodal_doc_rag.evals.judge as judge_module
+
+    base = judge_fingerprint("openai/gpt-6-luna")
+    assert base == judge_fingerprint("openai/gpt-6-luna", 2000)  # deterministic, default cap
+    assert len(base) == 12
+    assert judge_fingerprint("openai/other") != base
+    assert judge_fingerprint("openai/gpt-6-luna", 1000) != base
+    monkeypatch.setattr(judge_module, "JUDGE_SYSTEM", judge_module.JUDGE_SYSTEM + " Be kind.")
+    assert judge_fingerprint("openai/gpt-6-luna") != base  # the prompt text counts too
+    monkeypatch.undo()
+
+    judge = OpenRouterJudge(_client("{}"), "openai/gpt-6-luna", "anthropic/x")
+    assert judge.fingerprint == base

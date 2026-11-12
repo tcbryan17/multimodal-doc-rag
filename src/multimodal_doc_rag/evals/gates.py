@@ -18,6 +18,9 @@ Rules that make the gates mean something:
   blocked even if every point estimate clears its threshold.
 - **One system (ADR 0017).** The injection runs must have used the same models and settings
   as the final run, or their result is about a different system.
+- **One judge (ADR 0019).** The calibration grades must come from the judge that scored
+  the final run (model, output cap and prompt, compared by fingerprint), or the kappa
+  vouches for a different grader.
 """
 
 import tomllib
@@ -352,6 +355,34 @@ def injection_problems(
     return problems
 
 
+def calibration_problems(
+    report: AgreementReport | None, final: EvalReport | None, minimums: EvidenceMinimums
+) -> list[str]:
+    """Why the calibration grades can't vouch for the final run's judge (empty list = they
+    can). Kappa says how far ONE judge configuration agrees with the owner; it carries over
+    to the final run only if that run used the same model, output cap and prompt."""
+    if report is None:
+        return []  # the kappa gate itself reports "not measured"
+    problems: list[str] = []
+    if report.n_graded < minimums.calibration_grades:
+        problems.append(
+            f"calibration: {report.n_graded} hand grades, below the minimum of "
+            f"{minimums.calibration_grades}"
+        )
+    if report.judge_fingerprint is None:
+        problems.append(
+            "calibration: the grades don't record which judge produced them; sample them "
+            "again from a run that records its judge fingerprint"
+        )
+    elif final is not None and report.judge_fingerprint != final.config.judge_fingerprint:
+        theirs = f"{report.judge_model} ({report.judge_fingerprint})"
+        ours = f"{final.config.judge_model} ({final.config.judge_fingerprint or 'not recorded'})"
+        problems.append(
+            f"calibration: graded against judge {theirs}, but the final run used {ours}"
+        )
+    return problems
+
+
 def release_ready(results: Sequence[GateResult], gates: Sequence[Gate]) -> bool:
     """True only if every gate has at least one result and every result passed."""
     if not gates:
@@ -431,11 +462,7 @@ def release_check(
     problems += injection_problems(injection_reports, final, minimums)
     rows = [r for rep in injection_reports for r in rep.injection]
     results += check_injection(rows, gates)
-    if agreement is not None and agreement.n_graded < minimums.calibration_grades:
-        problems.append(
-            f"calibration: {agreement.n_graded} hand grades, below the minimum of "
-            f"{minimums.calibration_grades}"
-        )
+    problems += calibration_problems(agreement, final, minimums)
     results += check_calibration(agreement, gates)
     results += check_index(*figures, gates)
     ready = not problems and release_ready(results, gates)

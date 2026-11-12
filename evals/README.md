@@ -75,6 +75,9 @@ uv run python scripts/run_eval.py --injection --eval-index --label indirect-inje
 uv run python scripts/calibrate_judge.py sample --report evals/reports/<run>.json --n 30
 uv run python scripts/calibrate_judge.py grade --name <run>
 uv run python scripts/calibrate_judge.py agreement --name <run>
+#    The grades record the judge's fingerprint (model + output cap + prompt). The release
+#    check refuses them if the final run's judge differs, so calibrate against the judge
+#    you will release with, and re-calibrate if its prompt changes (ADR 0019).
 
 # 6. At the very end, once: the held-out split, then the release decision (ADR 0016)
 uv run python scripts/run_eval.py --split heldout --i-know-this-is-heldout --label final

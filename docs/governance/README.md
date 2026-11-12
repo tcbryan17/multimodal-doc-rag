@@ -20,8 +20,8 @@ Framework versions were checked on 2026-11-09.
 |---|---|---|
 | [Release gates](../../evals/gates.toml) | What counts as good enough? Pre-registered before any eval ran. | **Done** (frozen once the first dev baseline exists) |
 | [Data card](data-card.md) | Where the data came from, its rights, and what leaves the machine | **Done** |
-| Control matrix | Control → framework item → code that enforces it → test or report that proves it → implemented or planned | Planned, alongside the eval |
-| Risk register | What could go wrong, how likely, the mitigation, and its status | Planned, alongside the eval |
+| [Control matrix](control-matrix.md) | Control → framework item → code that enforces it → test or report that proves it → implemented or planned | **Draft** (2026-11-11), for owner review; evidence fills in with the eval |
+| [Risk register](risk-register.md) | What could go wrong, how likely, the mitigation, and its status | **Draft** (2026-11-11), for owner review; ratings revisited after the eval |
 | System card | Intended and out-of-scope use, models, gate results, limitations | Planned, after the held-out run |
 | Live operations | Query-log retention, monitoring, incident response | Part of the deployment decision |
 
@@ -31,7 +31,7 @@ Framework versions were checked on 2026-11-09.
 
 **Thin evidence blocks too (ADR 0017).** The same file has an `[evidence]` table: at least 15 answerable held-out questions per corpus, 3 unanswerable ones, 25 hand grades, 12 direct attacks, and 5 indirect attacks whose poisoned text actually reached the generator. The injection runs must also have used the same models and settings as the final run. A gate that clears its threshold on less evidence than that doesn't count.
 
-**Known limitation:** calibration grades don't record which judge model or configuration they were graded against. `release_check.py` will accept any calibration file, so the owner must make sure it comes from the same judge as the final run.
+**The calibration must be of the same judge ([ADR 0019](../decisions/0019-calibration-tied-to-judge.md)).** Each eval report records a judge *fingerprint*: a short hash of the judge model, its output cap and the exact prompt it is sent. `calibrate_judge.py sample` copies it into the grade file. `release_check.py` blocks when the grades' fingerprint differs from the final run's, or wasn't recorded: a kappa measured against one prompt or model says nothing about another. So if the judge prompt changes after calibration, re-calibrate.
 
 ```bash
 uv run python scripts/release_check.py --final evals/reports/<final>.json \

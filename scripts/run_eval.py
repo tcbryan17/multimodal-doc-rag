@@ -226,6 +226,7 @@ def main() -> int:
             corpus_filter=a.corpus_filter,
             figure_images=not a.no_figure_images,
             judge_model=settings.judge_model if not a.no_judge else None,
+            judge_fingerprint=parts.judge_fingerprint,
             embedding_model=settings.embedding_model,
             rerank_model=None if a.no_rerank else settings.rerank_model,
             top_k=a.top_k,

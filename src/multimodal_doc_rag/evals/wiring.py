@@ -59,6 +59,7 @@ class EvalComponents:
     judge: Judge | None
     meter: CostMeter
     client: OpenRouterClient
+    judge_fingerprint: str | None = None  # for RunConfig; None when there is no judge
 
 
 def build_components(
@@ -88,8 +89,10 @@ def build_components(
     client = client or OpenRouterClient.from_settings(meter=meter)
     client.meter = meter
     judge: Judge | None = None
+    fingerprint: str | None = None
     if use_judge:
-        judge = OpenRouterJudge(client, settings.judge_model, generator_model)
+        real_judge = OpenRouterJudge(client, settings.judge_model, generator_model)
+        judge, fingerprint = real_judge, real_judge.fingerprint
     pipeline = RagPipeline(
         conn,
         embedder=OpenRouterEmbedder.from_settings(settings, client),
@@ -103,4 +106,6 @@ def build_components(
         top_k=top_k,
         send_figures=figure_images,
     )
-    return EvalComponents(pipeline=pipeline, judge=judge, meter=meter, client=client)
+    return EvalComponents(
+        pipeline=pipeline, judge=judge, meter=meter, client=client, judge_fingerprint=fingerprint
+    )

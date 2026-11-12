@@ -1,6 +1,6 @@
 # 0011. Eval methodology
 
-- **Status:** Accepted (amended by [0017](0017-eval-validity.md): the judge sees figure images, binding runs are unfiltered, comparison tooling)
+- **Status:** Accepted (amended by [0017](0017-eval-validity.md): the judge sees figure images, binding runs are unfiltered, comparison tooling. Amended by [0019](0019-calibration-tied-to-judge.md): calibration is tied to one judge configuration)
 - **Date:** 2026-11-07
 
 ## Context
