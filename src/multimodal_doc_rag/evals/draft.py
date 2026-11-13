@@ -8,6 +8,11 @@ Two things keep drafts honest:
 - the model is told to paraphrase, never copy the source's wording. A question that echoes
   the page makes keyword search trivially succeed and tells us nothing;
 - every draft keeps the source text it came from, so the reviewer can check it at a glance.
+
+Where the questions come from (ADR 0018): every chunk is equally likely, so a document gets
+questions in proportion to its size, and every document gets at least one when there are
+enough to go round. Navigation documents (front matter, the back-of-book index) are never
+drafted from. They stay in the index, where they compete in retrieval like any other text.
 """
 
 import json
@@ -25,13 +30,20 @@ from multimodal_doc_rag.evals.gold import (
     GoldPage,
     SplitName,
 )
-from multimodal_doc_rag.evals.metrics import stratified_sample
 from multimodal_doc_rag.models.cost import BudgetExceededError
 from multimodal_doc_rag.models.openrouter import ChatResult
 
 EXCERPT_CHARS = 1500
 MIN_CHUNK_CHARS = 300  # shorter chunks are headings and fragments: nothing to ask about
 UNANSWERABLE_SHARE = 0.10  # ADR 0011: about 10% of questions are unanswerable
+
+# Documents that only point at other pages: questions drafted from them would be about page
+# numbers and headings, not content (ADR 0018). The owner can still write one by hand.
+NAVIGATION_DOCS = frozenset({"phak-front", "phak-index"})
+
+# Marks an item drafted from a table chunk, so the review and `count` can tally table
+# questions (the 10-K's hardest case) without a schema change. Write it in hand-added items too.
+TABLE_NOTE = "source: table"
 
 
 class DraftParseError(Exception):
@@ -112,25 +124,64 @@ def exclude_used(
     return {k: [c for c in v if c.excerpt not in used] for k, v in by_doc.items()}
 
 
-def plan_counts(total: int) -> tuple[int, int]:
+def plan_counts(total: int, unanswerable: int | None = None) -> tuple[int, int]:
     """(answerable, unanswerable) for `total` drafts: ~10% unanswerable, at least one once
-    there are 5 or more to draft."""
+    there are 5 or more to draft. `unanswerable` overrides the share (ADR 0018: review
+    rejects more unanswerable drafts than others, so topping up may need more of them)."""
     if total < 1:
         raise ValueError("total must be >= 1")
-    unanswerable = round(total * UNANSWERABLE_SHARE)
+    if unanswerable is not None:
+        if not 0 <= unanswerable <= total:
+            raise ValueError("unanswerable must be between 0 and total")
+        return total - unanswerable, unanswerable
+    n_unans = round(total * UNANSWERABLE_SHARE)
     if total >= 5:
-        unanswerable = max(1, unanswerable)
-    return total - unanswerable, unanswerable
+        n_unans = max(1, n_unans)
+    return total - n_unans, n_unans
+
+
+def drop_navigation(by_doc: Mapping[str, Sequence[SourceChunk]]) -> dict[str, list[SourceChunk]]:
+    return {k: list(v) for k, v in by_doc.items() if k not in NAVIGATION_DOCS}
+
+
+def only_kind(
+    by_doc: Mapping[str, Sequence[SourceChunk]], kind: str
+) -> dict[str, list[SourceChunk]]:
+    """Keep chunks of one kind ("table" or "text"), to top up one category of the mix."""
+    return {k: [c for c in v if c.kind == kind] for k, v in by_doc.items()}
 
 
 def sample_sources(
     by_doc: Mapping[str, Sequence[SourceChunk]], n: int, seed: int
 ) -> list[SourceChunk]:
-    """Seeded and stratified: spread evenly across documents before taking a second chunk
-    from any one, then sorted by chunk id so the draft order is stable."""
+    """Seeded, proportional to size, with every document covered (ADR 0018).
+
+    When n is at least the number of documents, each document first gives one random chunk;
+    the rest are a simple random sample of all remaining chunks. So every chunk is equally
+    likely after the first round, and a document's expected share is proportional to its
+    chunk count: Ch. 5 of the handbook gets about six times as many questions as Ch. 4.
+    (When n is smaller, it is a plain random sample of all chunks.) Sorted by chunk id so
+    the draft order is stable."""
     rng = random.Random(seed)
-    picked = stratified_sample({k: list(v) for k, v in by_doc.items() if v}, n, rng)
+    pools = {k: rng.sample(list(v), len(v)) for k, v in sorted(by_doc.items()) if v}
+    picked: list[SourceChunk] = []
+    if n >= len(pools):
+        picked = [pool.pop() for pool in pools.values()]
+    rest = [c for pool in pools.values() for c in pool]
+    picked += rng.sample(rest, min(n - len(picked), len(rest)))
     return sorted(picked, key=lambda c: c.chunk_id)
+
+
+def split_unanswerable(
+    picked: Sequence[SourceChunk], n_unans: int, seed: int
+) -> tuple[list[SourceChunk], list[SourceChunk]]:
+    """(answerable, unanswerable) sources, chosen at random. Taking the unanswerable seeds
+    from the end of the id-sorted sample would draw them all from the last-ingested
+    document (ADR 0018)."""
+    order = random.Random(seed).sample(list(picked), len(picked))
+    unanswerable = sorted(order[:n_unans], key=lambda c: c.chunk_id)
+    answerable = sorted(order[n_unans:], key=lambda c: c.chunk_id)
+    return answerable, unanswerable
 
 
 def next_ids(existing: Sequence[GoldItem], corpus: str, split: str, count: int) -> list[str]:
@@ -185,6 +236,10 @@ documents do not report, a topic adjacent to the passage's subject that the docu
 discuss. The question must stand alone, be specific, and not be answerable by general \
 knowledge alone.
 
+The system searches EVERY document below, so a question about any of them is answerable and \
+not what we want. The complete collection:
+{collection}
+
 Reply with ONLY one JSON object, no other text:
 {{"question": "..."}}
 """
@@ -204,9 +259,15 @@ def build_answerable_messages(chunk: SourceChunk) -> list[dict[str, Any]]:
     ]
 
 
-def build_unanswerable_messages(chunk: SourceChunk, corpus: str) -> list[dict[str, Any]]:
+def build_unanswerable_messages(
+    chunk: SourceChunk, corpus: str, collection: Sequence[str] = ()
+) -> list[dict[str, Any]]:
+    """`collection` is every document title in the index, both corpora: retrieval searches
+    all of them (ADR 0017), so "a company the collection doesn't cover" must not be Costco."""
+    listed = "\n".join(f"- {t}" for t in collection) or "- (not given)"
+    system = UNANSWERABLE_SYSTEM.format(blurb=CORPUS_BLURB[corpus], collection=listed)
     return [
-        {"role": "system", "content": UNANSWERABLE_SYSTEM.format(blurb=CORPUS_BLURB[corpus])},
+        {"role": "system", "content": system},
         {"role": "user", "content": _passage_block(chunk)},
     ]
 
@@ -262,6 +323,7 @@ def draft_items(
     answerable_sources: Sequence[SourceChunk],
     unanswerable_sources: Sequence[SourceChunk],
     existing: Sequence[GoldItem],
+    collection: Sequence[str] = (),
     max_tokens: int = 400,
 ) -> DraftOutcome:
     """Ask the model for one draft per source chunk. A bad reply skips that source; running
@@ -273,7 +335,7 @@ def draft_items(
         messages = (
             build_answerable_messages(chunk)
             if answerable
-            else build_unanswerable_messages(chunk, corpus)
+            else build_unanswerable_messages(chunk, corpus, collection)
         )
         try:
             reply = chat.chat(model, messages, max_tokens=max_tokens, temperature=0.7).text
@@ -299,13 +361,17 @@ def draft_items(
                 gold_pages=chunk.pages if answerable else [],
                 status="draft",
                 origin="llm_draft",
-                notes=""
-                if answerable
-                else "Unanswerable draft: check that the documents really don't answer it.",
+                notes=_draft_note(chunk, answerable),
                 source_excerpt=chunk.excerpt,
             )
         )
     return outcome
+
+
+def _draft_note(chunk: SourceChunk, answerable: bool) -> str:
+    if not answerable:
+        return "Unanswerable draft: check that the documents really don't answer it."
+    return TABLE_NOTE if chunk.kind == "table" else ""
 
 
 def merge_drafts(existing: Sequence[GoldItem], new: Sequence[GoldItem]) -> list[GoldItem]:
@@ -315,3 +381,30 @@ def merge_drafts(existing: Sequence[GoldItem], new: Sequence[GoldItem]) -> list[
     if clash:
         raise GoldError(f"refusing to overwrite existing ids: {clash}")
     return [*existing, *new]
+
+
+def item_category(item: GoldItem) -> str:
+    """The category the mix targets count (ADR 0018): unanswerable, figure, concept, or a fact
+    split by where it came from (a table, or prose)."""
+    if not item.answerable:
+        return "unanswerable"
+    if item.type == "fact":
+        return "fact (table)" if TABLE_NOTE in item.notes else "fact (prose)"
+    return item.type
+
+
+CATEGORIES = ("unanswerable", "figure", "fact (table)", "fact (prose)", "concept")
+
+
+def mix_counts(items: Sequence[GoldItem]) -> dict[tuple[str, str], tuple[int, int]]:
+    """(split, category) -> (verified, drafts awaiting review), every pair listed; rejected
+    items are left out. Splits in dev, heldout order."""
+    out = {(sp, cat): (0, 0) for sp in ("dev", "heldout") for cat in CATEGORIES}
+    for i in items:
+        if i.status == "rejected":
+            continue
+        verified, drafts = out[(i.split, item_category(i))]
+        out[(i.split, item_category(i))] = (
+            (verified + 1, drafts) if i.status == "verified" else (verified, drafts + 1)
+        )
+    return out

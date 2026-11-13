@@ -19,16 +19,19 @@ Prerequisites: an `OPENROUTER_API_KEY` in `.env` (project-only key, $5 credit li
 corpus fetched and ingested. The judge defaults to `openai/gpt-6-luna` (see below).
 
 ```bash
-# 1. Draft a gold set: a model writes questions from sampled pages (seeded, reproducible)
-uv run python scripts/draft_gold.py draft --corpus faa --split dev --n 60
-uv run python scripts/draft_gold.py draft --corpus 10k --split dev --n 60
+# 1. Draft a gold set: a model writes questions from sampled pages (seeded, reproducible).
+#    The question mix, the exact draft commands and the review rules are in gold/README.md
+#    (ADR 0018). Held-out first, before any dev eval runs. For example:
+uv run python scripts/draft_gold.py draft --corpus faa --split heldout --n 20 --unanswerable 4
+uv run python scripts/draft_gold.py draft --corpus faa --split dev --n 60 --unanswerable 9
 
 # 2. Review EVERY draft: [v]erify, [e]dit, [r]eject, [s]kip. Saved after each decision.
 uv run python scripts/draft_gold.py review --corpus faa
 uv run python scripts/draft_gold.py review --corpus 10k
 #    Write the figure questions yourself (the model skips figures on purpose):
 uv run python scripts/draft_gold.py add --corpus faa --type figure
-#    Repeat drafting with --split heldout for the held-out questions (20 per corpus).
+#    Progress against the targets:
+uv run python scripts/draft_gold.py count --corpus faa
 
 # 3. Run the eval (dev split). Smoke test first, cheap and judge-free:
 uv run python scripts/run_eval.py --corpus faa --limit 5 --no-judge --label smoke

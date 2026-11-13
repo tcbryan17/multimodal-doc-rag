@@ -3,7 +3,10 @@
   uv run python scripts/draft_gold.py draft --corpus faa --split dev --n 20
   uv run python scripts/draft_gold.py review --corpus faa
   uv run python scripts/draft_gold.py add --corpus faa --type figure        (you write it)
+  uv run python scripts/draft_gold.py count --corpus faa                    (progress vs targets)
   uv run python scripts/draft_gold.py review-injection --kind direct
+
+Targets for the question mix are in evals/gold/README.md (ADR 0018).
 
 `draft` calls a model (capped by --budget) and appends status=draft items to
 evals/gold/<corpus>.jsonl. Nothing counts in an eval until you verify it.
@@ -18,12 +21,18 @@ import psycopg
 
 from multimodal_doc_rag.config import settings
 from multimodal_doc_rag.evals.draft import (
+    NAVIGATION_DOCS,
+    TABLE_NOTE,
     draft_items,
+    drop_navigation,
     exclude_used,
     fetch_candidate_chunks,
     merge_drafts,
+    mix_counts,
+    only_kind,
     plan_counts,
     sample_sources,
+    split_unanswerable,
 )
 from multimodal_doc_rag.evals.gold import (
     CorpusName,
@@ -60,15 +69,18 @@ def cmd_draft(a: argparse.Namespace) -> int:
     doc_splits = _doc_splits()
     manifest = load_manifest(settings.data_dir)
     keys = [e.doc_key for e in manifest if e.corpus.value == corpus and e.split == split]
-    n_ans, n_unans = plan_counts(a.n)
+    n_ans, n_unans = plan_counts(a.n, a.unanswerable)
     with psycopg.connect(settings.database_url.get_secret_value()) as conn:
-        by_doc = exclude_used(fetch_candidate_chunks(conn, keys), existing)
+        by_doc = drop_navigation(exclude_used(fetch_candidate_chunks(conn, keys), existing))
+    if a.kind != "any":
+        by_doc = only_kind(by_doc, a.kind)
     if not any(by_doc.values()):
         print(f"error: no ingested {corpus}/{split} chunks to draft from", file=sys.stderr)
         return 2
     picked = sample_sources(by_doc, n_ans + n_unans, a.seed)
-    # The first n_ans sampled chunks seed answerable questions, the rest unanswerable ones.
-    answerable, unanswerable = picked[:n_ans], picked[n_ans:]
+    answerable, unanswerable = split_unanswerable(picked, n_unans, a.seed)
+    # Every title in the index, both corpora: retrieval searches all of them (ADR 0017).
+    collection = [e.title for e in manifest]
     meter = build_meter(settings, a.budget)
     client = OpenRouterClient.from_settings(meter=meter)
     try:
@@ -80,6 +92,7 @@ def cmd_draft(a: argparse.Namespace) -> int:
             answerable_sources=answerable,
             unanswerable_sources=unanswerable,
             existing=existing,
+            collection=collection,
         )
     finally:
         client.close()
@@ -90,7 +103,18 @@ def cmd_draft(a: argparse.Namespace) -> int:
     if outcome.stopped_by_budget:
         print("stopped early: spending cap reached", file=sys.stderr)
     print(f"added {len(outcome.items)} drafts to {path.relative_to(ROOT)}; {meter.summary()}")
+    print(f"never drafted from (navigation): {', '.join(sorted(NAVIGATION_DOCS))}")
     print(f"next: uv run python scripts/draft_gold.py review --corpus {corpus}")
+    return 0
+
+
+def cmd_count(a: argparse.Namespace) -> int:
+    items = load_gold(GOLD / f"{a.corpus}.jsonl")
+    print(f"{a.corpus}: verified items (drafts still to review in brackets)")
+    print(f"{'split':<9}{'category':<16}{'verified':>9}{'drafts':>8}")
+    for (split, category), (verified, drafts) in mix_counts(items).items():
+        print(f"{split:<9}{category:<16}{verified:>9}{f'({drafts})':>8}")
+    print("targets: evals/gold/README.md")
     return 0
 
 
@@ -121,6 +145,7 @@ def cmd_add(a: argparse.Namespace) -> int:
             question=question,
             reference_answer=reference,
             pages=pages,
+            notes=TABLE_NOTE if a.table else "",
         )
         check_splits([item], _doc_splits())
     except (ValueError, GoldError) as exc:
@@ -146,6 +171,15 @@ def main() -> int:
     d.add_argument("--corpus", required=True, choices=["10k", "faa"])
     d.add_argument("--split", default="dev", choices=["dev", "heldout"])
     d.add_argument("--n", type=int, default=20, help="drafts to write (~10%% unanswerable)")
+    d.add_argument(
+        "--unanswerable", type=int, help="how many of the n are unanswerable (default ~10%%)"
+    )
+    d.add_argument(
+        "--kind",
+        default="any",
+        choices=["any", "table", "text"],
+        help="draft only from table or text chunks (to top up one category)",
+    )
     d.add_argument("--seed", type=int, default=0)
     d.add_argument("--model", help="default: GENERATION_MODEL")
     d.add_argument("--budget", type=float, default=settings.eval_budget_usd)
@@ -155,6 +189,9 @@ def main() -> int:
     add.add_argument("--corpus", required=True, choices=["10k", "faa"])
     add.add_argument("--split", default="dev", choices=["dev", "heldout"])
     add.add_argument("--type", default="figure", choices=["fact", "figure", "concept"])
+    add.add_argument("--table", action="store_true", help=f"answered from a table ({TABLE_NOTE})")
+    c = sub.add_parser("count", help="verified items per split and category, vs the targets")
+    c.add_argument("--corpus", required=True, choices=["10k", "faa"])
     ri = sub.add_parser("review-injection", help="verify or reject the injection questions")
     ri.add_argument("--kind", required=True, choices=["direct", "indirect"])
     a = p.parse_args()
@@ -162,6 +199,7 @@ def main() -> int:
         "draft": cmd_draft,
         "review": cmd_review,
         "add": cmd_add,
+        "count": cmd_count,
         "review-injection": cmd_review_injection,
     }
     return int(handlers[a.cmd](a))

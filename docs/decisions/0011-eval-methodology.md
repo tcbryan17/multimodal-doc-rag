@@ -1,6 +1,6 @@
 # 0011. Eval methodology
 
-- **Status:** Accepted (amended by [0017](0017-eval-validity.md): the judge sees figure images, binding runs are unfiltered, comparison tooling)
+- **Status:** Accepted (amended by [0017](0017-eval-validity.md): the judge sees figure images, binding runs are unfiltered, comparison tooling; and by [0018](0018-gold-set-composition.md): the question mix and how drafts are sampled)
 - **Date:** 2026-11-07
 
 ## Context

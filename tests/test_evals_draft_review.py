@@ -10,19 +10,26 @@ import psycopg
 import pytest
 
 from multimodal_doc_rag.evals.draft import (
+    NAVIGATION_DOCS,
+    TABLE_NOTE,
     DraftParseError,
     SourceChunk,
     build_answerable_messages,
     build_unanswerable_messages,
     draft_items,
+    drop_navigation,
     exclude_used,
     fetch_candidate_chunks,
+    item_category,
     merge_drafts,
+    mix_counts,
     next_ids,
+    only_kind,
     parse_answerable,
     parse_unanswerable,
     plan_counts,
     sample_sources,
+    split_unanswerable,
 )
 from multimodal_doc_rag.evals.gold import (
     GoldError,
@@ -52,10 +59,15 @@ from multimodal_doc_rag.types import Corpus, SourceInfo
 
 
 def chunk(
-    cid: int, doc: str = "d1", start: int = 3, end: int = 3, text: str = "x" * 400
+    cid: int,
+    doc: str = "d1",
+    start: int = 3,
+    end: int = 3,
+    text: str = "x" * 400,
+    kind: str = "text",
 ) -> SourceChunk:
     return SourceChunk(
-        cid, doc, f"Title {doc}", ("Ch", "Sec"), "text", start, end, f"L{start}", f"L{end}", text
+        cid, doc, f"Title {doc}", ("Ch", "Sec"), kind, start, end, f"L{start}", f"L{end}", text
     )
 
 
@@ -86,6 +98,10 @@ def test_plan_counts_is_about_ten_percent_unanswerable() -> None:
     assert plan_counts(60) == (54, 6)
     assert plan_counts(5) == (4, 1)  # at least one once there are five
     assert plan_counts(3) == (3, 0)
+    assert plan_counts(20, unanswerable=5) == (15, 5)  # explicit override, e.g. a top-up
+    assert plan_counts(4, unanswerable=0) == (4, 0)
+    with pytest.raises(ValueError):
+        plan_counts(4, unanswerable=5)
     with pytest.raises(ValueError):
         plan_counts(0)
 
@@ -115,6 +131,54 @@ def test_sample_sources_is_seeded_and_spread_across_documents() -> None:
     assert {c.doc_key for c in first} == {"a", "b", "c"}  # every document represented
     assert first == sorted(first, key=lambda c: c.chunk_id)
     assert first != sample_sources(by_doc, 6, seed=8)
+    assert len({c.chunk_id for c in first}) == 6  # no chunk twice
+
+
+def test_sample_sources_is_proportional_to_document_size() -> None:
+    # ADR 0018: after one chunk per document, every chunk is equally likely, so a document
+    # six times larger gets about six times the questions (equal shares was the old rule).
+    by_doc = {
+        "big": [chunk(i, "big") for i in range(600)],
+        "small": [chunk(i, "small") for i in range(1000, 1100)],
+    }
+    totals = Counter(c.doc_key for seed in range(40) for c in sample_sources(by_doc, 15, seed=seed))
+    share_big = totals["big"] / (totals["big"] + totals["small"])
+    assert 0.78 < share_big < 0.90  # expected (1 + 13 * 6/7) / 15 = 0.81
+
+
+def test_sample_sources_smaller_than_document_count_and_bigger_than_pool() -> None:
+    starts = {"a": 0, "b": 10, "c": 20}
+    by_doc = {k: [chunk(i, k) for i in range(base, base + 3)] for k, base in starts.items()}
+    assert len(sample_sources(by_doc, 2, seed=1)) == 2  # plain random sample, no crash
+    assert len(sample_sources(by_doc, 50, seed=1)) == 9  # everything, once
+    assert sample_sources({"a": []}, 3, seed=1) == []
+
+
+def test_drop_navigation_removes_front_matter_and_index() -> None:
+    by_doc = {k: [chunk(1, k)] for k in ["phak-front", "phak-index", "phak-ch05", "phak-glossary"]}
+    assert set(drop_navigation(by_doc)) == {"phak-ch05", "phak-glossary"}
+    assert {"phak-front", "phak-index"} == NAVIGATION_DOCS
+
+
+def test_only_kind_keeps_one_chunk_kind() -> None:
+    by_doc = {"a": [chunk(1, "a", kind="table"), chunk(2, "a")], "b": [chunk(3, "b")]}
+    assert only_kind(by_doc, "table") == {"a": [chunk(1, "a", kind="table")], "b": []}
+
+
+def test_split_unanswerable_draws_from_the_whole_sample() -> None:
+    # The old rule took the last n by chunk id, i.e. always the last-ingested document.
+    picked = [chunk(i, "aapl") for i in range(10)] + [chunk(i, "msft") for i in range(100, 110)]
+    seen_docs: set[str] = set()
+    for seed in range(20):
+        ans, unans = split_unanswerable(picked, 2, seed)
+        assert len(ans) == 18 and len(unans) == 2
+        assert {c.chunk_id for c in ans} | {c.chunk_id for c in unans} == {
+            c.chunk_id for c in picked
+        }
+        assert ans == sorted(ans, key=lambda c: c.chunk_id)
+        seen_docs |= {c.doc_key for c in unans}
+    assert seen_docs == {"aapl", "msft"}
+    assert split_unanswerable(picked, 2, 3) == split_unanswerable(picked, 2, 3)
 
 
 def test_exclude_used_skips_chunks_that_already_have_items() -> None:
@@ -143,6 +207,14 @@ def test_prompts_fence_the_passage_and_demand_paraphrase() -> None:
     assert "Title d1" in user
     una = build_unanswerable_messages(chunk(1), "10k")
     assert "10-K" in una[0]["content"] and "does NOT answer" in una[0]["content"]
+
+
+def test_unanswerable_prompt_lists_the_whole_collection() -> None:
+    # Retrieval searches every document, held-out ones included (ADR 0017): the drafter must
+    # know Costco is in there, or "a company the collection doesn't cover" may be Costco.
+    titles = ["Apple Inc. 10-K 2026", "Costco Wholesale 10-K 2026"]
+    system = build_unanswerable_messages(chunk(1), "10k", titles)[0]["content"]
+    assert "- Costco Wholesale 10-K 2026" in system and "EVERY document" in system
 
 
 def test_parse_answerable() -> None:
@@ -202,6 +274,47 @@ def test_draft_items_skips_bad_replies_and_stops_on_budget() -> None:
     assert len(out.items) == 1 and len(out.errors) == 1 and "DraftParseError" in out.errors[0]
     assert out.stopped_by_budget
     assert out.items[0].id == "10k-dev-001"  # ids are assigned only to items that exist...
+
+
+def test_draft_items_tags_table_sources_and_passes_the_collection() -> None:
+    chat = ScriptedChat([GOOD, GOOD, GOOD_UNANS])
+    out = draft_items(
+        chat, "m", corpus="10k", split="dev",
+        answerable_sources=[chunk(1, kind="table"), chunk(2)], unanswerable_sources=[chunk(3)],
+        existing=[], collection=["Costco Wholesale 10-K"],
+    )  # fmt: skip
+    table, prose, unans = out.items
+    assert table.notes == TABLE_NOTE and prose.notes == "" and "check" in unans.notes
+    assert "Costco Wholesale 10-K" in chat.calls[2]["messages"][0]["content"]
+
+
+def test_mix_counts_tallies_categories_per_split() -> None:
+    def it(n: int, **kw: Any) -> GoldItem:
+        base: dict[str, Any] = dict(
+            id=f"x{n}", corpus="10k", split="dev", type="fact", question="q", answerable=True,
+            reference_answer="a", gold_pages=[GoldPage(doc="d", page_idx=1)], status="verified",
+        )  # fmt: skip
+        return GoldItem(**(base | kw))
+
+    items = [
+        it(1, notes=TABLE_NOTE),
+        it(2),
+        it(3, type="concept", status="draft"),
+        it(4, answerable=False, reference_answer=None, gold_pages=[]),
+        it(5, split="heldout", type="figure"),
+        it(6, status="rejected"),
+    ]
+    assert [item_category(i) for i in items[:5]] == [
+        "fact (table)", "fact (prose)", "concept", "unanswerable", "figure",
+    ]  # fmt: skip
+    got = mix_counts(items)
+    assert got[("dev", "fact (table)")] == (1, 0)
+    assert got[("dev", "fact (prose)")] == (1, 0)  # the rejected one is not counted
+    assert got[("dev", "concept")] == (0, 1)
+    assert got[("dev", "unanswerable")] == (1, 0)
+    assert got[("heldout", "figure")] == (1, 0)
+    assert got[("heldout", "concept")] == (0, 0)  # every pair listed, even when empty
+    assert len(got) == 10
 
 
 def test_merge_drafts_refuses_to_overwrite() -> None:

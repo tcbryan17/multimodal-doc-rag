@@ -42,10 +42,11 @@ What this makes easier or harder later, and what would make us revisit it.
 | [0008](0008-image-handling.md) | Image handling: describe for retrieval, send the image for answering | Accepted |
 | [0009](0009-models-and-privacy.md) | Models and privacy: strict zero data retention | Accepted |
 | [0010](0010-database-access-schema-search.md) | Database access, schema and hybrid search | Accepted |
-| [0011](0011-eval-methodology.md) | Eval methodology | Accepted (amended by 0017) |
+| [0011](0011-eval-methodology.md) | Eval methodology | Accepted (amended by 0017, 0018) |
 | [0012](0012-testing-strategy-and-ci.md) | Testing strategy and CI | Accepted |
 | [0013](0013-corpus-specifics.md) | Corpus specifics | Accepted |
 | [0014](0014-judge-model.md) | The eval judge model: GPT-6 Luna | Accepted |
 | [0015](0015-reasoning-off-and-output-caps.md) | Hidden reasoning off for figure descriptions and answers; truncation detected | Accepted |
 | [0016](0016-governance-and-release-gates.md) | Governance: NIST AI RMF + OWASP mapping, pre-registered release gates | Accepted (amended by 0017) |
 | [0017](0017-eval-validity.md) | Eval validity: the judge sees figure images, binding runs are unfiltered, evidence minimums | Accepted |
+| [0018](0018-gold-set-composition.md) | Gold set composition: the question mix and proportional draft sampling | Accepted |
