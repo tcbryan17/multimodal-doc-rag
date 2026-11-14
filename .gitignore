@@ -23,3 +23,6 @@ private/
 
 # Figure images exported for hand-grading (copies of what is already in the database)
 evals/calibration/figures/
+
+# graphify working folder (outputs worth keeping are copied to docs/code-graph/)
+graphify-out/

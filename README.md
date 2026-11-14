@@ -22,7 +22,56 @@ Each architectural choice has a decision record in [`docs/decisions/`](docs/deci
 2. **Chunk and index:** structure-aware chunks, each with a short context header, embedded into pgvector alongside a keyword full-text index.
 3. **Retrieve:** hybrid search (vector + keyword, fused with Reciprocal Rank Fusion), then rerank to the top 3–5 passages.
 4. **Answer:** the LLM answers only from the retrieved passages (and the figure images among them) and returns citations `[doc, page]`, or says "I don't know".
-5. **Evaluate:** human-verified Q&A sets for each corpus, with a held-out split. It tracks recall@5, correctness, faithfulness, citation accuracy, abstention, and prompt-injection resistance, and compares cost against quality across models.
+5. **Evaluate:** reviewed Q&A sets for each corpus, with a held-out split (the dev split was reviewed by Claude for this demo, not a human: ADR 0020). It tracks recall@5, correctness, faithfulness, citation accuracy, abstention, and prompt-injection resistance, and compares cost against quality across models.
+
+## Code map
+
+A knowledge graph of the code, built with [graphify](https://github.com/Graphify-Labs/graphify) from a local tree-sitter parse. No model was involved and no code left the machine. It covers `src/`, `scripts/` and the SQL migrations: 53 files, 964 nodes and 2,619 edges. 88% of the edges were read directly from the code and 12% were inferred by graphify's name resolution.
+
+The diagram below collapses that graph into subsystems. An arrow means "uses", and its number counts the calls, imports and type references that cross between the two subsystems. Links with fewer than 10 are hidden.
+
+```mermaid
+flowchart LR
+    cli["CLI scripts<br/>11 files · 46 nodes"]
+    evals["Eval harness & release gates<br/>14 files · 324 nodes"]
+    models["Model calls via OpenRouter<br/>5 files · 66 nodes"]
+    db["Postgres + pgvector<br/>5 files · 35 nodes"]
+    ingest["Ingest: fetch, parse, chunk<br/>7 files · 182 nodes"]
+    answer["Retrieval & answering<br/>3 files · 46 nodes"]
+    api["API & replay<br/>3 files · 37 nodes"]
+    core["Core types, seams & fakes<br/>4 files · 73 nodes"]
+    cli -->|120| evals
+    ingest -->|92| core
+    cli -->|47| models
+    evals -->|46| models
+    evals -->|41| core
+    answer -->|38| core
+    cli -->|36| ingest
+    ingest -->|31| models
+    models -->|19| core
+    db -->|18| core
+    answer -->|15| api
+    api -->|15| models
+    evals -->|15| ingest
+    evals -->|14| answer
+    ingest -->|14| db
+    cli -->|12| api
+    cli -->|10| core
+    db -->|10| answer
+    evals -->|10| api
+```
+
+How to read it:
+- **Core types, seams & fakes** is what everything else depends on. Each model and parser sits behind a `Protocol`, with a fake beside it for tests (ADR 0012).
+- **The eval harness** is the largest single subsystem, with 324 of the 964 nodes.
+- **The `db → answer` arrow is a type, not a call.** The repository functions annotate their connections with the `Conn` alias defined in `search.py`.
+
+**Explore it in full:**
+- [Interactive graph](https://tcbryan17.github.io/assets/code-graph/multimodal-doc-rag.html) (also linked from the portfolio site's project card): click nodes, filter by community, search. The source is [`docs/code-graph/graph.html`](docs/code-graph/graph.html).
+- [`GRAPH_REPORT.md`](docs/code-graph/GRAPH_REPORT.md): the most-connected abstractions, the 60 detected communities, and surprising links.
+- [`graph.json`](docs/code-graph/graph.json): the full graph, queryable with `graphify query "..."`, `graphify path A B` or `graphify explain X`.
+
+To rebuild after code changes, see [`docs/code-graph/README.md`](docs/code-graph/README.md).
 
 ## API contract (used by the site)
 ```

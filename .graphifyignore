@@ -1,0 +1,22 @@
+# Scope for the code knowledge graph (docs/code-graph/): application code, scripts and SQL only.
+# Prose (ADRs, READMEs), eval data, tests and generated output are left out so the graph shows the system's structure.
+*.md
+*.json
+*.jsonl
+*.toml
+*.yaml
+*.yml
+*.html
+*.txt
+/tests/
+/docs/
+/evals/
+/replay/
+/reports/
+/data/
+/private/
+/docker/
+/.github/
+/.claude/
+/.vscode/
+/graphify-out/
