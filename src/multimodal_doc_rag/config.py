@@ -20,6 +20,13 @@ class Settings(BaseSettings):
         # (so /ask answers 503), not an empty key that gets sent to OpenRouter.
         return None if isinstance(value, str) and not value.strip() else value
 
+    @field_validator("stats_token", mode="before")
+    @classmethod
+    def _blank_token_is_unset(cls, value: object) -> object:
+        # Same reasoning as the key: a blank `STATS_TOKEN=` must disable /stats, not make the
+        # empty string a valid bearer token.
+        return None if isinstance(value, str) and not value.strip() else value
+
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     openrouter_timeout_s: float = 30.0
 
@@ -82,6 +89,40 @@ class Settings(BaseSettings):
         query must filter on exactly this string for the index to be used.
         """
         return f"{self.embedding_model}@{self.embedding_dim}"
+
+    # --- Live-API hardening (docs/governance/control-matrix.md C26, C27, C20) ---------------
+    # Origins allowed to call the API from a browser, comma-separated (a plain string, because
+    # pydantic-settings would demand JSON for a list). Empty = no CORS headers at all, so only
+    # same-origin and non-browser clients work. Intended value: https://tcbryan17.github.io
+    cors_allow_origins: str = ""
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return [o.strip().rstrip("/") for o in self.cors_allow_origins.split(",") if o.strip()]
+
+    # Per-IP limits on /ask (ratelimit.py). 5/min stops scripted bursts but lets a person try
+    # a few questions; 60/day bounds one visitor's total spend (~60 x a few tenths of a cent).
+    rate_limit_per_minute: int = Field(default=5, ge=1)
+    rate_limit_per_day: int = Field(default=60, ge=1)
+    # /figures is a cheap read of an image, and each answer links several, so it gets its own
+    # far more generous per-minute limit (and no daily one). /health is never limited.
+    figures_rate_limit_per_minute: int = Field(default=120, ge=1)
+    # How many reverse proxies sit in front of the app (see ratelimit.client_ip). 0 = none:
+    # use the TCP peer and ignore X-Forwarded-For, because clients can forge that header.
+    trusted_proxy_hops: int = Field(default=0, ge=0)
+
+    # Process-wide cap on live /ask spend per UTC day, in USD (spend.py). Keep it below the
+    # provider credit limit (C22) so it trips first.
+    daily_spend_cap_usd: float = Field(default=1.0, ge=0)
+
+    # Bearer token for GET /stats. Unset = the endpoint is disabled (404).
+    stats_token: SecretStr | None = None
+
+    # Whether to log the text of questions (C20). OFF, and the policy (whether to log at all,
+    # for how long, who may read it) is the owner's open decision. Off means logs carry only
+    # counts and latency. Turning it on only writes question text to the application log; it
+    # does not implement any retention.
+    log_questions: bool = False
 
     # Default matches docker-compose.yml; override in .env or the deploy environment.
     database_url: SecretStr = SecretStr("postgresql://rag:rag-dev-only@localhost:5433/rag")

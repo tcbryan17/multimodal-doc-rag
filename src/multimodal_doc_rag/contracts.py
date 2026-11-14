@@ -16,9 +16,12 @@ MAX_QUESTION_LENGTH = 1000  # input limit, also a cost/abuse guard for the live 
 class AskRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
+    # str_strip_whitespace runs before the length checks, so a whitespace-only question is
+    # stripped to "" and fails min_length=1 (422), and padding can't dodge the maximum.
     question: str = Field(min_length=1, max_length=MAX_QUESTION_LENGTH)
-    corpus: str | None = None
-    doc: str | None = None
+    # Filters are short keys; bounding them keeps junk out of the SQL parameters and logs.
+    corpus: str | None = Field(default=None, max_length=100)
+    doc: str | None = Field(default=None, max_length=100)
 
 
 class Citation(BaseModel):
