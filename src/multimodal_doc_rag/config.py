@@ -118,12 +118,6 @@ class Settings(BaseSettings):
     # Bearer token for GET /stats. Unset = the endpoint is disabled (404).
     stats_token: SecretStr | None = None
 
-    # Whether to log the text of questions (C20). OFF, and the policy (whether to log at all,
-    # for how long, who may read it) is the owner's open decision. Off means logs carry only
-    # counts and latency. Turning it on only writes question text to the application log; it
-    # does not implement any retention.
-    log_questions: bool = False
-
     # Default matches docker-compose.yml; override in .env or the deploy environment.
     database_url: SecretStr = SecretStr("postgresql://rag:rag-dev-only@localhost:5433/rag")
 

@@ -289,13 +289,10 @@ def ask(
     ops.stats.incr("ask_latency_ms_total", latency_ms)
     if is_idk:
         ops.stats.incr("idk_answers")
-    # C20: by default log only counts and latency, never what was asked. The question text is
-    # written only when the owner has decided to (LOG_QUESTIONS; policy still open).
+    # C20 (owner's decision, ADR 0021): log only counts and latency, never what was asked.
     log.info(
         "ask ok latency_ms=%d citations=%d idk=%s", latency_ms, len(response.citations), is_idk
     )
-    if settings.log_questions:
-        log.info("ask question=%r", request.question)
     return response
 
 

@@ -309,22 +309,13 @@ def test_stats_counts_5xx_and_resets_today_at_utc_midnight(
 # --- Question logging (C20) -------------------------------------------------------------
 
 
-def test_log_questions_defaults_off_and_logs_no_question_text(
+def test_question_text_is_never_logged(
     client: TestClient, caplog: pytest.LogCaptureFixture
 ) -> None:
-    assert Settings(_env_file=None).log_questions is False  # type: ignore[call-arg]
+    """ADR 0021: no setting turns question logging on; logs carry counts and latency only."""
+    assert not hasattr(Settings(_env_file=None), "log_questions")  # type: ignore[call-arg]
     _use(FakePipeline())
-    with caplog.at_level(logging.INFO, logger="multimodal_doc_rag"):
+    with caplog.at_level(logging.DEBUG, logger="multimodal_doc_rag"):
         client.post("/ask", json={"question": "my secret question"})
     assert "secret" not in caplog.text
     assert "latency_ms=" in caplog.text
-
-
-def test_log_questions_on_writes_the_question(
-    client: TestClient, caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(settings, "log_questions", True)
-    _use(FakePipeline())
-    with caplog.at_level(logging.INFO, logger="multimodal_doc_rag"):
-        client.post("/ask", json={"question": "my secret question"})
-    assert "my secret question" in caplog.text
