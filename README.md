@@ -122,10 +122,15 @@ In progress. Build-plan steps 0–14 and 16 are done; [`docs/build-plan.md`](doc
 **Eval:**
 - The harness, the LLM judge and the pre-registered release gates are built.
 - The dev gold set is reviewed: 105 questions, reviewed by Claude for this demo ([ADR 0020](docs/decisions/0020-dev-gold-set-reviewed-by-claude.md)).
+- The held-out set is drafted (40 questions) and waits for the owner's review.
+- The prompt-injection set is reviewed ([`evals/injection/REVIEW.md`](evals/injection/REVIEW.md)).
+- A first judged smoke run passed ([report](evals/reports/20261114T161029Z-judge-smoke.md)).
 
 **Next:**
 1. The owner writes the FAA figure questions.
 2. Smoke runs, then the dev baseline.
 3. Judge calibration against the owner's hand grades.
 4. The held-out run and the release check.
-5. Deployment of a public, rate-limited `/ask` endpoint, so visitors can ask their own questions.
+5. Deployment of a public, rate-limited `/ask` endpoint (Fly.io + Neon), so visitors can ask their own questions. The hardening and container work is built and in review.
+
+The working handoff, with the exact order and commands, is [`docs/next-steps.md`](docs/next-steps.md).
