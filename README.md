@@ -98,6 +98,7 @@ uv sync
 uv run pytest
 uv run uvicorn multimodal_doc_rag.api:app --reload
 ```
+Deployment hardening (CORS, per-IP rate limits, daily spend cap, `/stats`, question logging) is configured by environment variables only; `.env.example` lists them. Nothing here is deployed yet. The limits are per process, so run a single instance.
 
 Building the index (needs `OPENROUTER_API_KEY` in `.env`; every run has a spending cap):
 ```bash

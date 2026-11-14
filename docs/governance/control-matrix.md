@@ -75,8 +75,18 @@ Test paths are under `tests/`; `file.py::name` means a test function in that fil
 | C36 | Release needs every gate to pass on enough evidence from one system; missing evidence blocks | all | Manage | `scripts/release_check.py`, `evals/gates.py` | `test_evals_gates.py` (`test_release_check_*`) | tooling implemented; **never run on real evidence** |
 | C37 | Deployment runs `release_check.py` as a required CI step and refuses to ship on a non-zero exit | all | Manage | not built | none | **planned** (deployment) |
 
+## Code ready on branch `deploy-api-hardening` (not deployed)
+
+Nothing below is deployed, so every row above keeps its **planned** status until it runs in production.
+
+- **C26** (per-IP rate limit, daily spend cap): code ready on branch deploy-api-hardening, tested by `test_api_hardening.py::test_ask_is_rate_limited_per_ip_with_429_and_retry_after`, `::test_spoofed_forwarded_header_cannot_dodge_the_limit_by_default`, `::test_trusted_proxy_hops_separates_real_visitors`, `::test_ask_returns_503_once_the_daily_cap_is_reached_and_health_still_works`, `::test_cap_tripping_mid_request_is_also_503`, `::test_real_client_is_built_with_the_shared_meter`, `test_ratelimit.py`, `test_spend.py`; stays **planned** until deployed. Limits are per process (single instance assumed) and reset on restart.
+- **C27** (monitoring counters): code ready on branch deploy-api-hardening, tested by `test_api_hardening.py::test_stats_requires_the_bearer_token`, `::test_stats_disabled_without_token`, `::test_stats_counts_requests_errors_idk_and_spend`; stays **planned** until deployed. The incident response note is still unwritten.
+- **C20** (question logging): code ready on branch deploy-api-hardening, tested by `test_api_hardening.py::test_log_questions_defaults_off_and_logs_no_question_text` and `::test_log_questions_on_writes_the_question`; stays **planned** until deployed. **TODO (owner decision):** whether to log questions at all, for how long, and who may read them. The `LOG_QUESTIONS` setting is off by default and only writes question text to the application log; it implements no retention, redaction or personal-data screening.
+- **C30** (bounded input to the typed request): code ready on branch deploy-api-hardening, tested by `test_api_hardening.py::test_question_length_cap_and_empty_input_are_422` and `::test_filter_fields_are_bounded`. The 1,000-character question limit already existed; whitespace-only questions are now covered by a test. Output caps (1,200 / 3,000 tokens, ADR 0015) are unchanged (C24). The SQL half of C30 is untouched.
+- **C31** (read-only DB role, non-root container): not built on this branch.
+
 ## Gaps this matrix shows
 
 - **Nothing is measured yet.** C4, C10, C11 and C25 exist as tooling only. Their evidence column fills in with the dev baseline, the injection runs and the calibration (build plan steps 15 and 17).
-- **The live API has no spend cap or rate limit** (C26). The offline `CostMeter` protects ingest and eval runs, not `/ask`. Until C26 exists, the only limit on live spending is the provider credit limit (C22).
+- **The live API has no spend cap or rate limit** (C26) *deployed*; the code exists on branch `deploy-api-hardening` (see above). The offline `CostMeter` protects ingest and eval runs, not `/ask`. Until C26 exists, the only limit on live spending is the provider credit limit (C22).
 - **Two controls rest on code review, not tests:** the output caps (C24 asserts no values) and parameterised SQL in search and the repository (C30). A small test for each would make them stronger.
