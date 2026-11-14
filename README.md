@@ -12,7 +12,7 @@ Ask plain-English questions over long documents, including ones where the answer
 - **Public documents only.** Never personal data.
 - **Disclaimer (shown in the UI):** "Not financial, legal, or flight-training advice."
 
-## Planned stack
+## Stack
 Python · FastAPI · Postgres + pgvector (Docker Compose) · psycopg 3 with raw SQL · embedding, reranking and generation models through OpenRouter, zero-data-retention endpoints only · own retrieval code, no LangChain or LlamaIndex
 
 Each architectural choice has a decision record in [`docs/decisions/`](docs/decisions/README.md).
@@ -87,7 +87,7 @@ Citation markers in `answer` point into `citations`: `[k]` is `citations[k-1]`. 
 GET /figures/{chunk_id}.png   → image/png (cached for a year; 404 if that chunk has no figure)
 ```
 `image_url` in a live response is this path, relative to the API's base URL. A figure's image never changes after ingestion, and chunk ids are never reused, so the response is safe to cache indefinitely.
-`scripts/save_replay.py` saves one real response to `replay/sample-run.json`, and `scripts/export_site_replay.py` turns it into the portfolio site's replay events. The site plays it as this project's demo. A rate-limited live endpoint will follow once the eval results are good.
+`scripts/save_replay.py` saves one real response to `replay/sample-run.json`, and `scripts/export_site_replay.py` turns it into the portfolio site's replay events. The site plays it as this project's demo. **There is no public live endpoint yet**, so visitors can't type their own questions. The API runs locally (see Development). A rate-limited public endpoint comes at deployment, and the release check (ADR 0016) must pass before it ships.
 
 ## Development
 Needs [uv](https://docs.astral.sh/uv/) and a Docker runtime (I use [OrbStack](https://orbstack.dev)).
@@ -112,4 +112,20 @@ Evals (gold set, metrics, LLM judge, injection tests) are described in [`evals/R
 The system is mapped to the NIST AI RMF (with its Generative AI Profile) and the OWASP Top 10 for LLM Applications (2026). Release gates were pre-registered before any eval ran. A release check fails unless every gate passes on held-out evidence, and deployment will be required to pass it. See [`docs/governance/`](docs/governance/README.md) and [ADR 0016](docs/decisions/0016-governance-and-release-gates.md).
 
 ## Status
-In progress: the pipeline, parsers and eval tooling are built and tested. Both corpora are ingested, and a recorded replay runs on the portfolio site. The release gates are pre-registered. Next: the gold set and the first eval runs.
+In progress. Build-plan steps 0–14 and 16 are done; [`docs/build-plan.md`](docs/build-plan.md) has the detail.
+
+**Done:**
+- The whole pipeline is built and tested: parsers, chunking, hybrid search, reranking, grounded answers with figure images, and the `/ask` API.
+- Both corpora are ingested: 25 documents, with 493 of 496 figures described.
+- A recorded run plays on the portfolio site.
+
+**Eval:**
+- The harness, the LLM judge and the pre-registered release gates are built.
+- The dev gold set is reviewed: 105 questions, reviewed by Claude for this demo ([ADR 0020](docs/decisions/0020-dev-gold-set-reviewed-by-claude.md)).
+
+**Next:**
+1. The owner writes the FAA figure questions.
+2. Smoke runs, then the dev baseline.
+3. Judge calibration against the owner's hand grades.
+4. The held-out run and the release check.
+5. Deployment of a public, rate-limited `/ask` endpoint, so visitors can ask their own questions.
