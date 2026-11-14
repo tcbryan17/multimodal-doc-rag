@@ -84,7 +84,7 @@ That makes **figure coverage 493/496 = 99.4%**, which passes the 99% release gat
 ## 6. Evaluation data
 
 - **Splits.** The split is fixed per document in the manifest. Held-out: Costco and handbook chapters 11, 13 and 15 (ADR 0013). A gold item's split must match its documents' split, and both the runner and the drafter refuse a mismatch (`test_split_must_match_manifest`). Held-out scores are produced once, on purpose (`--i-know-this-is-heldout`).
-- **Gold set.** A model drafts the questions, and the owner verifies **every** item and writes the figure questions personally (ADR 0011). Only `status: verified` items count.
+- **Gold set.** A model drafts the questions and the owner writes the figure questions personally (ADR 0011). **Dev split:** for demo purposes the owner had Claude review the drafts instead of reviewing them personally (Opus 5.5 for FAA, Sonnet 5.5 for 10-K; ADR 0020). Each such item carries a `reviewer=` tag in its `notes`, and dev scores are measured against a Claude-reviewed key. Held-out review is still to be decided. Only `status: verified` items count.
 - **Poisoned document.** A synthetic, deliberately malicious handbook chapter exists **only** in the eval database `rag_eval`, never in `rag` (ADR 0011).
 
 ## 7. Known gaps
