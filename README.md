@@ -108,7 +108,7 @@ uv run python scripts/ingest_corpus.py                     # ingest; report in r
 ```
 Evals (gold set, metrics, LLM judge, injection tests) are described in [`evals/README.md`](evals/README.md).
 
-Deployment scaffolding (Dockerfile, read-only DB role, deploy gate) and the runbook are in [`docs/deployment.md`](docs/deployment.md). Hosting is not chosen yet.
+Deployment scaffolding (Dockerfile, read-only DB role, deploy gate) and the runbook are in [`docs/deployment.md`](docs/deployment.md). Hosting: Fly.io + Neon (ADR 0021).
 
 ## Governance
 The system is mapped to the NIST AI RMF (with its Generative AI Profile) and the OWASP Top 10 for LLM Applications (2026). Release gates were pre-registered before any eval ran. A release check fails unless every gate passes on held-out evidence, and deployment will be required to pass it. See [`docs/governance/`](docs/governance/README.md) and [ADR 0016](docs/decisions/0016-governance-and-release-gates.md).

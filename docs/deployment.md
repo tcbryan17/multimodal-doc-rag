@@ -1,7 +1,9 @@
 # Deployment
 
 Nothing is deployed yet. This page lists what is already built, what is left, and the order
-to do it in. **Hosting is the owner's decision** and nothing here is tied to a host.
+to do it in. **Hosting is decided** ([ADR 0021](decisions/0021-deployment-hosting-logging-and-review-owners.md)):
+Fly.io runs the API container and Neon hosts Postgres + pgvector. The pieces below are still
+host-agnostic; the Fly-specific steps are written when the Fly app is created.
 
 ## What exists (scaffolding on branch `deploy-ops-scaffolding`)
 
@@ -38,12 +40,9 @@ curl localhost:8000/health        # {"status":"ok"}
 
 ## What is left, in order
 
-1. **Choose the hosts (owner).** You need somewhere to run the container and a managed
-   Postgres with the `vector` extension (pgvector). Questions to weigh: free tier or
-   scale-to-zero (cost and cold starts), whether the host offers a secret store and
-   per-IP rate limiting, and whether the CI runner can reach the database (needed by the
-   release check, step 6). Record the choice as an ADR in `docs/decisions/` (rejected options
-   included), as CLAUDE.md requires for architectural choices.
+1. **Create the accounts (owner).** A Fly.io app and a Neon project (ADR 0021). Check that
+   Neon offers Postgres 18 (or a version `pg_restore` accepts) and pgvector 0.8 or later, and
+   that the GitHub runner can reach the Neon database (the release check, step 6, needs it).
 2. **Create the production database and load the index** (next section). The corpus is
    already ingested locally, so you copy it. You do not re-ingest or spend model credit.
 3. **Create the read-only role** and build the API's connection string from it.
@@ -53,9 +52,12 @@ curl localhost:8000/health        # {"status":"ok"}
 7. Replace the placeholder step in `deploy.yml` with the host's deploy command, deploy, then
    set up monitoring (C27) before announcing the URL.
 
-Not built yet and tracked in the matrix: per-IP rate limits and a daily spend cap (C26),
-the question-logging policy (C20, below), the EU AI Act Art. 50 AI notice, and the UI
-rendering answers as text.
+Built on other branches and tracked in the matrix: per-IP rate limits, a daily spend cap,
+CORS and `/stats` (C26/C27, branch `deploy-api-hardening`); the question-logging policy (C20,
+below: never logged); the EU AI Act Art. 50 AI notice and answers rendered as text only (the
+portfolio site's `rag-live-ask-ui` branch, dormant until the API URL is set).
+On Fly, set `TRUSTED_PROXY_HOPS=1` (one platform proxy; confirm against Fly's docs), or every
+visitor shares one rate-limit bucket.
 
 ## Copy the database from local to production
 
@@ -135,9 +137,8 @@ for the deploy workflow.
 ## CORS origin
 
 Browsers only let the portfolio site call the API if the API allows that site's origin.
-Allow exactly the site's origin (for example `https://<your-site-domain>`), not `*`. How the
-API reads the allowed origin is being added in `api.py`/`config.py` separately; once that
-lands, set the corresponding variable in the host's configuration and confirm with a browser
+Allow exactly the site's origin, not `*`: set `CORS_ALLOW_ORIGINS=https://tcbryan17.github.io`
+in the host's configuration (read by `config.py`; empty means no CORS). Confirm with a browser
 request from the real site.
 
 ## The release check gate
@@ -167,6 +168,8 @@ Check these daily at first (a host dashboard or a small script over logs/provide
   database, missing embeddings); a sudden fall to near zero could mean the model is
   answering things it should refuse. Compare against the held-out run's rate.
 - Host health: the container's `/health` check and restart counts.
+- `GET /stats` (bearer `STATS_TOKEN`; 404 when unset) returns the counters: requests, errors,
+  "I don't know" answers, latency and today's spend. It never holds question text.
 
 ### Cutting spend fast (in this order, stop when spend stops)
 
@@ -175,7 +178,8 @@ Check these daily at first (a host dashboard or a small script over logs/provide
    Create a new key and update the host's secret only after the cause is understood.
 2. **Scale the service to zero** (or stop it) in the host's dashboard.
 3. Lower the key's credit limit to the amount you are willing to lose.
-4. Once rate limits and a daily cap exist (C26), tighten them before turning things back on.
+4. Tighten `RATE_LIMIT_PER_MINUTE`, `RATE_LIMIT_PER_DAY` and `DAILY_SPEND_CAP_USD` (C26)
+   before turning things back on.
 
 ### Who to contact
 
@@ -189,10 +193,9 @@ Write down what happened, how it was noticed, and what changed in a short note u
 `docs/governance/` (and update the risk register if a risk was realised). Rotate any secret
 that may have been exposed.
 
-## Open decision (owner): question logging (C20)
+## Question logging (C20): decided, never logged
 
-Whether to log visitors' questions, for how long, and how to keep personal data out of logs
-is **not decided**. Until the owner decides, the safe default is to not store question text
-anywhere beyond what the host's own request logs keep, and to check what those retain. This
-policy must be written down (control C20) before the public launch; it also affects what you
-can monitor (the "I don't know" rate needs counts, not question text).
+Visitors' question text is **never logged** (ADR 0021), and no setting turns it on
+(`test_question_text_is_never_logged`). Logs and `/stats` carry counts, latency, spend, and
+error and "I don't know" rates only. Check what the host's own request logs keep: `/ask` is a
+POST, so the question is in the body, not the URL, and should not appear in them.
