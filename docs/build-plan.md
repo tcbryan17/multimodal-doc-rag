@@ -70,7 +70,7 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
     - *Concept:* pre-registration. A threshold set after seeing the score describes the result; it doesn't test it.
   - [x] **Eval validity (ADR 0017),** before the gold set: the judge is sent the figure images the generator saw (and the hand-grader is shown them); binding runs search every document; evidence minimums in `gates.toml`; injection runs must match the final run's system; tooling for the embedder, chunk-size and figure-image comparisons (`scripts/embed_missing.py`, `scripts/make_chunk_index.py`, `run_eval.py --no-figure-images`).
     - *Concept:* construct validity. A metric can be computed correctly and still not measure what its name says.
-  - [ ] The owner builds the gold set (after the ingest). Dev drafts are done (ADR 0018): 48 FAA and 60 10-K, waiting for review, plus 12 owner-written FAA figure questions. Held-out drafts still to come.
+  - [ ] The owner builds the gold set (after the ingest). Dev drafts are done (ADR 0018) and reviewed by Claude at the owner's request (ADR 0020): FAA 46 verified, 10-K 59 verified, 3 rejected. Still to come: 12 owner-written FAA figure questions, and the held-out drafts and their review.
   - [ ] Judged smoke run, then the dev baseline. Once the baseline exists, `gates.toml` is frozen.
   - [ ] Injection runs (direct on `rag`, indirect on `rag_eval`) and judge calibration (about 30 hand grades).
   - [ ] Eval comparisons on dev (ADR 0011), checked against the gate table. The LLM-written context header comparison is deferred (ADR 0017).
