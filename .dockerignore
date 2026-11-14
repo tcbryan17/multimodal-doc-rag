@@ -1,0 +1,29 @@
+# Files listed here are NOT sent to Docker as "build context". Anything not sent cannot end
+# up in the image, so this is how secrets and big local data stay out of it.
+
+# Secrets: every env-file variant except the committed template.
+.env*
+!.env.example
+
+# Local data and private notes (corpus downloads, owner notes).
+data/
+private/
+
+# Local virtualenv: the image builds its own from uv.lock.
+.venv/
+
+# The API does not need evals or run reports, and they are large.
+evals/
+reports/
+
+# Caches and VCS metadata.
+.git/
+.github/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+graphify-out/
+.claude/
+.vscode/
