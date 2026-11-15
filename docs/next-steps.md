@@ -1,33 +1,87 @@
-# Next steps (handoff, updated 2026-11-15)
+# Next steps (handoff, updated 2026-11-15, end of day)
 
-Where the project stands (last updated 2026-11-15), and what to do next, in order. To resume with
-Claude, say: *"continue from docs/next-steps.md"*. Delete this file, or rewrite it, once it is
-out of date. `docs/build-plan.md` stays the long-term plan.
+Where the project stands at the end of 2026-11-15, and what to do next, in order. To resume
+with Claude, say: *"continue from docs/next-steps.md"*. Delete this file, or rewrite it, once
+it is out of date. `docs/build-plan.md` stays the long-term plan.
 
-## Branches
+## Start here: merge three PRs (owner)
 
-- **Merged 2026-11-15:** rag #2 `eval-progress`, #3 `deploy-api-hardening`, #4 `deploy-ops-scaffolding`, and site #3 `rag-live-ask-ui`.
-- **CI on #2** was failing on a stale injection test. Fixed in `ac4d027` (2026-11-15).
-- **`figure-questions`** holds the 13 figure items, ADR 0022 and the figure smoke report.
+| Order | PR | What it holds |
+|---|---|---|
+| 1 | rag [#5](https://github.com/tcbryan17/multimodal-doc-rag/pull/5) `figure-questions` | The 13 FAA figure questions (`faa-dev-049`..`061`), ADR 0022, the figure smoke report, and status docs |
+| 2 | rag [#6](https://github.com/tcbryan17/multimodal-doc-rag/pull/6) `security-hardening` | The pre-deploy security review (ADR 0023): API hardening, `fly.toml`, SHA-pinned Actions, Dependabot, `SECURITY.md`, and this file |
+| any | site [#3](https://github.com/tcbryan17/tcbryan17.github.io/pull/3) `rag-live-ask-ui` | The ask box, hidden until `links.api` is set. **Still open**: it wasn't merged on 2026-11-15 with the others |
+
+#6 is built on #5, so merge #5 first. After that, #6 shows only its own commits.
+
+**`main` is protected in both repos** (ruleset `protect-main`, 2026-11-15). Changes go
+through a pull request, force-pushes and branch deletion are blocked, and in the rag repo the
+`check` CI job must pass. So every change, including Claude's, goes on a branch with a PR.
+
+**Already merged on 2026-11-15:** rag #2 `eval-progress` (its CI was fixed by `ac4d027`), #3
+`deploy-api-hardening` and #4 `deploy-ops-scaffolding`.
+
+## Done on 2026-11-15
+
+- **Figure questions (ADR 0022).**
+  - Claude (Opus 5.5) drafted 15 questions, reading each answer from the image. The owner confirmed 13 on a review page and dropped F05 and F12.
+  - They're stored as `origin: llm_draft` and `status: verified`, with the notes tag `drafter=claude-opus-5-5, verifier=owner`.
+  - Tolerances on chart reads are written in words, because `numeric_match` needs every digit in the reference to appear in the answer.
+  - The working file is `private/review-tools/figure_drafts.json`, and the images are in `private/figure-candidates/`.
+  - **Two stored vision descriptions are wrong:** F06's airspeed red line and F14's stall-speed curve. The items `faa-dev-061` and `faa-dev-057` test whether the generator reads the image or trusts the description.
+- **Figure smoke run.** `evals/reports/20261115T141659Z-judge-smoke-figures.md`: 3 questions, every metric 1.00, $0.011. The judge's ZDR endpoint accepts images.
+- **Security review (ADR 0023).**
+  - **No problems found:**
+    - no secrets in either repo's history;
+    - `pip-audit` clean (173 packages);
+    - SQL parameterised, input validated;
+    - question text never logged;
+    - site ask UI renders text only.
+  - **Fixed:**
+    - bodies over 8 KB get 413, and a missing `Content-Length` gets 411;
+    - security headers on every response;
+    - API docs off unless `API_DOCS=true`;
+    - database pool timeout returns 503;
+    - `fly.toml` keeps one machine always on and limits concurrency;
+    - Actions pinned to SHAs, with a read-only CI token;
+    - Dependabot (alerts, security fixes, weekly updates);
+    - private vulnerability reporting and `SECURITY.md`;
+    - personal email removed from `pyproject.toml`.
+  - New controls C38–C43 are in the control matrix.
+- **GitHub settings, both repos:**
+  - ruleset `protect-main`;
+  - Dependabot alerts and security fixes on;
+  - private vulnerability reporting on;
+  - Actions limited to GitHub-owned ones (plus `astral-sh/setup-uv` in the rag repo).
+
+  Secret scanning with push protection was already on.
+- **Local git email.** All four repos in `ai-portfolio` now commit as
+  `85651853+tcbryan17@users.noreply.github.com`. Older commits keep the Gmail address, and
+  history was not rewritten.
+
+## Owner to-dos outside the code
+
+- **GitHub email setting.** Turn on "Block command line pushes that expose my email" under
+  GitHub > Settings > Emails. Claude can't change account settings.
+- **At deploy time:** create a **separate production OpenRouter key** with its own small credit
+  limit (C43). The in-app daily cap lives in memory, so this key's limit is the hard ceiling.
+- **Check the site's next GitHub Pages build.** The site repo now allows only GitHub-owned
+  Actions. Pages uses only those, so the build should be unaffected, but nothing has been
+  built since the change.
 
 ## Owner queue, in order
 
-### 1–2. Figure questions and the figure smoke run: done (2026-11-15)
-
-- **The questions.** Claude (Opus 5.5) drafted 15 and the owner verified them on a review page. 13 were kept as `faa-dev-049`..`061` (ADR 0022). F05 and F12 were dropped. The working file is `private/review-tools/figure_drafts.json` and the images are in `private/figure-candidates/`.
-- **The smoke run.** `evals/reports/20261115T141659Z-judge-smoke-figures.md`: 3 questions, every metric 1.00, $0.011. Each judge call carried 3 or 4 figure images and none failed, so the judge's ZDR endpoint accepts images.
-
-### 3. Settle the judge prompt, then the dev baseline
+### 1. Settle the judge prompt, then the dev baseline (Claude runs it)
 
 ```bash
 uv run python scripts/run_eval.py --label baseline
 ```
 
 - **Once the baseline exists, `evals/gates.toml` is frozen** (ADR 0016).
-- **Don't change the judge after calibration starts.** Calibration is tied to the judge fingerprint (ADR 0019), so any judge change has to happen before step 4.
-- **Expected cost:** at the smoke run's rate, about $0.003 per question all-in, so roughly $0.40 for the 118 verified dev questions.
+- **Don't change the judge after calibration starts.** Calibration is tied to the judge fingerprint (ADR 0019), so any judge change has to happen before step 2.
+- **Expected cost:** at the smoke runs' rate, about $0.003 per question all-in, so roughly $0.40 for the 118 verified dev questions (FAA 59, 10-K 59).
 
-### 4. Calibration: the owner grades about 30 answers (at least 25)
+### 2. Calibration: the owner grades about 30 answers (at least 25)
 
 ```bash
 uv run python scripts/calibrate_judge.py sample --report evals/reports/<baseline>.json --n 30
@@ -38,7 +92,7 @@ uv run python scripts/calibrate_judge.py agreement --name <baseline>
 - **The grades must be the owner's** (ADR 0020).
 - **For figure answers, look at the figure.** `grade` shows it.
 
-### 5. Held-out review: the owner reviews all 40 drafts (ADR 0021)
+### 3. Held-out review: the owner reviews all 40 drafts (ADR 0021)
 
 | Corpus | Answerable | Unanswerable | Status |
 |---|---|---|---|
@@ -49,13 +103,13 @@ uv run python scripts/calibrate_judge.py agreement --name <baseline>
 - **10-K:** Costco FY2026.
 - **FAA:** PHAK chapters 11, 13 and 15.
 
-**How the review runs:** Claude shows one item at a time: the question, the reference answer, the source excerpt, and any other pages that also answer it (found with `rv.py`). The owner then verifies, edits or rejects the item. The checklist is in `evals/README.md`, under "Reviewing a draft".
+**How the review runs:** Claude shows one item at a time: the question, the reference answer, the source excerpt, and any other pages that also answer it (found with `rv.py`). The owner then verifies, edits or rejects the item. The checklist is in `evals/README.md`, under "Reviewing a draft". A review page like the one used for the figure questions also works.
 
 **Evidence minimums:**
 - At least 15 answerable items per corpus must be verified.
 - At least 3 unanswerable items must be verified, counted across both corpora.
 
-### 6. Spot-check the injection review
+### 4. Spot-check the injection review
 
 **Where:** read `evals/injection/REVIEW.md`. It covers 20 verified items and 3 rejected ones. The 3 rejects are fake-citation canaries that `renumber_markers` strips, so they can never fire.
 
@@ -90,14 +144,19 @@ The indirect margin is thin.
 ## Then
 
 1. **Held-out final run and release check** (step 18). Run the held-out split once with `--i-know-this-is-heldout`, then `release_check.py`. Commit the verdict, pass or fail. Then write the system card.
-2. **Deploy to Fly.io + Neon** (step 19). Follow `docs/deployment.md`. The security review is done (ADR 0023). At deploy time: create a separate production OpenRouter key with its own credit limit, deploy with `fly.toml`, then run the per-visitor rate-limit check in `docs/deployment.md`.
-   - **Owner:** create the Fly app and the Neon project.
-   - **Database:** `pg_dump`/`pg_restore` the local database to Neon. There is no re-ingest. First check that Neon supports Postgres 18 and pgvector 0.8 or later.
-   - **Read-only role:** create it from `docker/roles/readonly_role.sql`.
-   - **Secrets:** add `FLY_API_TOKEN` and `RELEASE_CHECK_DATABASE_URL` to GitHub.
-   - **Settings:** set `CORS_ALLOW_ORIGINS=https://tcbryan17.github.io` and `TRUSTED_PROXY_HOPS=1`, and set `STATS_TOKEN` if you want `/stats` on.
-   - **Deploy workflow:** replace the `if: false` placeholder in `.github/workflows/deploy.yml` with `flyctl deploy`.
-   - **Site:** set `links.api` in the site's `projects.js`. That turns on the ask box.
+2. **Deploy to Fly.io + Neon** (step 19). Follow `docs/deployment.md`, including its "Security settings" section.
+   - **Owner:** create the Fly app and the Neon project. Check that Neon supports Postgres 18 and pgvector 0.8 or later.
+   - **Database:** `pg_dump`/`pg_restore` the local database to Neon. There is no re-ingest.
+   - **Read-only role:** create it from `docker/roles/readonly_role.sql`. The API's `DATABASE_URL` uses this role.
+   - **Fly secrets** (`flyctl secrets set`):
+     - `DATABASE_URL`, the read-only URL;
+     - `OPENROUTER_API_KEY`, the **production** key;
+     - optionally `STATS_TOKEN`.
+   - **Already in `fly.toml`:** `CORS_ALLOW_ORIGINS`, `TRUSTED_PROXY_HOPS=1`, `API_DOCS=false`, the always-on machine and the concurrency limit.
+   - **GitHub secrets:** `FLY_API_TOKEN` and `RELEASE_CHECK_DATABASE_URL`.
+   - **Deploy workflow:** replace the `if: false` placeholder in `.github/workflows/deploy.yml` with `flyctl deploy --app <name>`. Pin any new action to a commit SHA: a test enforces it, and the repo only allows GitHub-owned actions plus `astral-sh/setup-uv`.
+   - **After the first deploy:** run the per-visitor rate-limit check in `docs/deployment.md`.
+   - **Site:** merge site #3 if it isn't merged yet, then set `links.api` in `projects.js`. That turns on the ask box.
 
 ## Tools kept between sessions
 
@@ -111,6 +170,7 @@ The indirect margin is thin.
 | `labels.json` | Maps page labels to page indexes. |
 | `overview.py` | Collapses the code graph into the README's Mermaid diagram (an earlier draft of `scripts/code_graph_overview.py`). |
 | `injection_review.jsonl`, `inj_rows.md` | The injection review's source files. |
+| `figure_drafts.json` | The 15 drafted figure questions with leak-check notes (13 kept). |
 
 **`page_idx` is the 0-based position in the file, not the printed label.** Gold pages are written `doc:page_idx:label`.
 
@@ -119,6 +179,18 @@ The indirect margin is thin.
 The OpenRouter key has a $5 credit limit, and every run has its own cap through `CostMeter`. Known spend so far:
 - Ingest: about $0.25.
 - Text smoke run: $0.016.
+- Figure smoke run (2026-11-15): $0.011.
 - Gold drafting: not recorded here.
 
 Check OpenRouter's activity page for the exact remaining balance.
+
+## Notes for Claude
+
+- **The sandbox blocks pytest.** pydantic-settings and pytest both look at the repo's env
+  file, which the sandbox denies. Run `.venv/bin/python -m pytest` outside the sandbox. Claude
+  never reads that file itself.
+- **The sandbox blocks `uv`'s cache.** Use `.venv/bin/ruff` and `.venv/bin/mypy` directly, or
+  set `UV_CACHE_DIR` to a temp folder.
+- **Some commands must run outside the sandbox.** Inside it, `gh` fails GitHub's TLS
+  certificate check, and the sandbox can't write `.git/config`.
+- **Commits now use the noreply email.** Don't put the Gmail address into anything committed.

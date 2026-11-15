@@ -61,7 +61,7 @@ Before calling work done, run pytest, mypy, and ruff check. All of them pass rig
 - If the repo folder is moved or renamed, `.venv` breaks because it stores absolute paths. Delete `.venv` and run `uv sync`.
 
 ## Current status (update as things change)
-**Resume here:** `docs/next-steps.md` is the handoff from 2026-11-14 (branches awaiting review, the owner's queue in order, and what Claude can do meanwhile).
+**Resume here:** `docs/next-steps.md` is the handoff, updated at the end of 2026-11-15. It covers the PRs to merge first (#5 then #6; site #3), the owner's queue in order, what Claude can do meanwhile, and sandbox notes. `main` is protected in both repos: every change goes through a PR.
 
 **Done:** decision records 0001–0023; build-plan steps 0–14 and 16: every pipeline stage, the real ingest of both corpora, the recorded replay on the portfolio site, end-to-end `/ask` tests (text and figures), both parsers validated on the real corpus, fetch scripts; plus the step 14–16 tooling (see Build plan); pre-registered release gates and the data card (ADR 0016); the eval-validity fixes and comparison tooling (ADR 0017).
 
