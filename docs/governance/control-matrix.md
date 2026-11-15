@@ -75,7 +75,18 @@ Test paths are under `tests/`; `file.py::name` means a test function in that fil
 | C36 | Release needs every gate to pass on enough evidence from one system; missing evidence blocks | all | Manage | `scripts/release_check.py`, `evals/gates.py` | `test_evals_gates.py` (`test_release_check_*`) | tooling implemented; **never run on real evidence** |
 | C37 | Deployment runs `release_check.py` as a required CI step and refuses to ship on a non-zero exit | all | Manage | scaffolding ready on branch `deploy-ops-scaffolding`: `.github/workflows/deploy.yml` (manual; checks, then `release_check.py`, deploy step disabled) | `tests/test_deploy_workflow.py` (text checks only; the workflow has never run) | **planned** (deployment); stays planned until deployed |
 
-## Code ready on branch `deploy-api-hardening` (not deployed)
+## 7. Pre-deploy security review (ADR 0023)
+
+| # | Control | OWASP 2026 | NIST | Enforced in | Proven by | Status |
+|---|---|---|---|---|---|---|
+| C38 | Request bodies over `MAX_BODY_BYTES` (8 KB) get 413, and a body without `Content-Length` gets 411, before anything is read into memory | LLM06 | Manage | `api.py` (`BodySizeLimit`) | `test_api_hardening.py::test_oversized_body_is_refused_before_parsing`, `::test_body_without_content_length_is_refused`, `::test_rejected_bodies_still_carry_cors_headers` | code ready; **planned** until deployed |
+| C39 | Security headers on every response (`nosniff`, `DENY` framing, no referrer, HSTS, `default-src 'none'` CSP); interactive API docs off unless `API_DOCS=true` | LLM10 | Manage | `api.py` (`SecurityHeaders`, `create_app`) | `test_api_hardening.py::test_security_headers_on_every_response`, `::test_interactive_docs_are_off_by_default` | code ready; **planned** until deployed |
+| C40 | Bounded concurrency: Fly queues requests past 8 per machine; a request that can't get one of the 4 database connections within 5 s gets 503 | LLM06 | Manage | `api.py` (`PoolTimeout` handler), `fly.toml` (`http_service.concurrency`) | `test_api_hardening.py::test_exhausted_connection_pool_is_a_fast_503` | code ready; **planned** until deployed |
+| C41 | CI supply chain: every action pinned to a commit SHA, read-only job token, no token left in `.git/config`, Dependabot updates for Python, Actions and Docker | LLM04 | Govern | `.github/workflows/*.yml`, `.github/dependabot.yml` | `test_deploy_workflow.py::test_every_action_is_pinned_to_a_commit_sha`, `::test_ci_token_is_read_only` | implemented |
+| C42 | Repository protections: ruleset on `main` (pull request + passing CI, no force push or deletion), secret scanning with push protection, Dependabot alerts and security fixes, private vulnerability reporting (`SECURITY.md`) | LLM04 | Govern | GitHub settings (outside the code) | `SECURITY.md`; settings checked 2026-11-15 | implemented (not testable in code) |
+| C43 | The live spend cap can't be reset by idling: one machine always runs, and production uses its own OpenRouter key with its own small credit limit | LLM06 | Manage | `fly.toml` (`auto_stop_machines = "off"`, `min_machines_running = 1`), OpenRouter account | `docs/deployment.md` (Secrets) | **planned** (owner creates the production key) |
+
+## Code ready on `main` (not deployed)
 
 Nothing below is deployed, so every row above keeps its **planned** status until it runs in production.
 
@@ -83,7 +94,7 @@ Nothing below is deployed, so every row above keeps its **planned** status until
 - **C27** (monitoring counters): code ready on branch deploy-api-hardening, tested by `test_api_hardening.py::test_stats_requires_the_bearer_token`, `::test_stats_disabled_without_token`, `::test_stats_counts_requests_errors_idk_and_spend`; stays **planned** until deployed. The incident response note is still unwritten.
 - **C20** (question logging): decided by the owner (ADR 0021): question text is never logged, only counts and latency. Code ready on branch deploy-api-hardening, tested by `test_api_hardening.py::test_question_text_is_never_logged`; stays **planned** until deployed.
 - **C30** (bounded input to the typed request): code ready on branch deploy-api-hardening, tested by `test_api_hardening.py::test_question_length_cap_and_empty_input_are_422` and `::test_filter_fields_are_bounded`. The 1,000-character question limit already existed; whitespace-only questions are now covered by a test. Output caps (1,200 / 3,000 tokens, ADR 0015) are unchanged (C24). The SQL half of C30 is untouched.
-- **C31** (read-only DB role, non-root container): not built on this branch.
+- **C31** (read-only DB role, non-root container): code ready (`Dockerfile`, `docker/roles/readonly_role.sql`, `tests/test_readonly_role.py`); **planned** until deployed.
 
 ## Gaps this matrix shows
 

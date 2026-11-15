@@ -1,0 +1,23 @@
+# Dependabot (ADR 0023): weekly update PRs for Python packages (uv.lock), the SHA-pinned
+# GitHub Actions and the Docker base images. Security alerts and security-fix PRs are switched
+# on in the repository settings and arrive as soon as an advisory is published.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      python:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly

@@ -27,3 +27,18 @@ def test_deploy_step_is_disabled_and_never_forced_to_run() -> None:
     placeholder = TEXT[TEXT.index("name: Deploy (PLACEHOLDER") :]
     assert "if: false" in placeholder
     assert "always()" not in placeholder
+
+
+def test_every_action_is_pinned_to_a_commit_sha() -> None:
+    # ADR 0023: tags can be moved; a 40-hex commit SHA cannot.
+    import re
+
+    workflows = (Path(__file__).resolve().parent.parent / ".github/workflows").glob("*.yml")
+    for wf in workflows:
+        for ref in re.findall(r"uses:\s*(\S+)", wf.read_text()):
+            assert re.fullmatch(r"[\w.-]+/[\w./-]+@[0-9a-f]{40}", ref), f"{wf.name}: {ref}"
+
+
+def test_ci_token_is_read_only() -> None:
+    ci = (Path(__file__).resolve().parent.parent / ".github/workflows/ci.yml").read_text()
+    assert "permissions:\n  contents: read" in ci

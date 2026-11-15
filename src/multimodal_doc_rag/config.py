@@ -118,6 +118,19 @@ class Settings(BaseSettings):
     # Bearer token for GET /stats. Unset = the endpoint is disabled (404).
     stats_token: SecretStr | None = None
 
+    # Interactive API docs (/docs, /redoc, /openapi.json). Off by default so a deployment
+    # doesn't publish a map of its own endpoints; set API_DOCS=true for local development.
+    api_docs: bool = False
+    # Largest request body accepted, in bytes. A maximal /ask (1,000 characters plus filters)
+    # is well under 8 KB even if every character takes 4 bytes in UTF-8. Bigger bodies get 413
+    # before anything reads them into memory.
+    max_body_bytes: int = Field(default=8192, ge=1024)
+    # Database connection pool. Each /ask holds a connection while the models answer, so the
+    # pool size caps concurrent /ask requests. A request that can't get a connection within the
+    # timeout gets 503 ("busy") instead of queueing indefinitely.
+    db_pool_max_size: int = Field(default=4, ge=1)
+    db_pool_timeout_s: float = Field(default=5.0, gt=0)
+
     # Default matches docker-compose.yml; override in .env or the deploy environment.
     database_url: SecretStr = SecretStr("postgresql://rag:rag-dev-only@localhost:5433/rag")
 

@@ -1,0 +1,49 @@
+# Fly.io configuration for the API (ADR 0021 hosting, ADR 0023 hardening).
+#
+# Deploy with `flyctl deploy --app <your-app-name>`. The app name is left out on purpose, so
+# this file works for whichever app the owner creates. Secrets (DATABASE_URL,
+# OPENROUTER_API_KEY, STATS_TOKEN) go in with `flyctl secrets set`, never in this file.
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8000"
+  # One platform proxy (Fly's edge) sits in front of the app. Confirm after the first deploy
+  # that /ask rate limits per visitor, not for everyone at once (docs/deployment.md).
+  TRUSTED_PROXY_HOPS = "1"
+  CORS_ALLOW_ORIGINS = "https://tcbryan17.github.io"
+  API_DOCS = "false"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  # ADR 0023: the daily spend cap and the rate limits are kept in memory, so a restart
+  # forgets them. Fly normally stops idle machines and starts them on the next request,
+  # which would hand an abuser a fresh daily cap after every idle period. Keep one machine
+  # running at all times instead. The production OpenRouter key's own credit limit is the
+  # hard backstop.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  # The proxy holds back requests beyond these, so a burst queues at Fly's edge instead of
+  # tying up every database connection. hard_limit is twice the connection pool
+  # (DB_POOL_MAX_SIZE=4); requests that can't get a connection within DB_POOL_TIMEOUT_S get 503.
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 4
+    hard_limit = 8
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/health"
+    interval = "30s"
+    timeout = "3s"
+    grace_period = "10s"
+
+# One small machine is enough for a demo. The rate limiter and spend cap are per process,
+# so do NOT scale beyond one machine without moving them to a shared store (ratelimit.py).
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

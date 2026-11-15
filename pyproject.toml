@@ -3,7 +3,7 @@ name = "multimodal-doc-rag"
 version = "0.1.0"
 description = "RAG over text- and image-heavy documents with page-level citations"
 authors = [
-    { name = "tcbryan17", email = "tcbryan17@gmail.com" }
+    { name = "tcbryan17" }
 ]
 requires-python = ">=3.12"
 dependencies = [

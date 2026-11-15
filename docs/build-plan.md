@@ -86,7 +86,7 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
   - Run the held-out split once (`--i-know-this-is-heldout`), then `scripts/release_check.py` with the final, injection and calibration evidence. Commit the release-check report, pass or fail.
   - Write the **system card**: intended and out-of-scope use, models, gate results with CIs, limitations.
   - *Concept:* a release decision is a check that can fail, not a judgement call after the fact.
-- [ ] **19. Deployment**: Fly.io + Neon, question text never logged (ADR 0021). Hardening, Dockerfile, read-only role, deploy gate and the site's ask UI are built and merged (2026-11-15). A full security and hardening review comes first (owner request).
+- [ ] **19. Deployment**: Fly.io + Neon, question text never logged (ADR 0021). Hardening, Dockerfile, read-only role, deploy gate and the site's ask UI are built and merged (2026-11-15). The pre-deploy security review is done (ADR 0023).
   - It ships only if `release_check.py` exits 0 (a required CI step).
   - Live-ops governance: question-log policy (whether to log, retention, no personal data in logs), monitoring (cost per day, error and "I don't know" rates), incident response.
   - Hardening: per-IP rate limits, input and output caps, a read-only DB role, a non-root container.

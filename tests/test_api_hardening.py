@@ -319,3 +319,74 @@ def test_question_text_is_never_logged(
         client.post("/ask", json={"question": "my secret question"})
     assert "secret" not in caplog.text
     assert "latency_ms=" in caplog.text
+
+
+# --- Pre-deploy security review (ADR 0023) ----------------------------------------------
+
+
+def test_interactive_docs_are_off_by_default() -> None:
+    assert Settings().api_docs is False
+    off = TestClient(api.create_app(api_docs=False))
+    for path in ("/docs", "/redoc", "/openapi.json"):
+        assert off.get(path).status_code == 404
+    on = TestClient(api.create_app(api_docs=True))
+    assert on.get("/openapi.json").status_code == 200
+
+
+def test_the_served_app_follows_the_setting() -> None:
+    paths = {getattr(r, "path", "") for r in app.routes}
+    assert ("/openapi.json" in paths) is settings.api_docs
+
+
+def test_oversized_body_is_refused_before_parsing(client: TestClient) -> None:
+    _use(FakePipeline())
+    big = '{"question": "' + "x" * (settings.max_body_bytes + 10) + '"}'
+    r = client.post("/ask", content=big, headers={"Content-Type": "application/json"})
+    assert r.status_code == 413
+
+
+def test_body_without_content_length_is_refused(client: TestClient) -> None:
+    def chunks() -> Iterator[bytes]:
+        yield b'{"question": "hi"}'
+
+    r = client.post("/ask", content=chunks(), headers={"Content-Type": "application/json"})
+    assert r.status_code == 411
+
+
+def test_normal_ask_still_works_under_the_body_limit(client: TestClient) -> None:
+    _use(FakePipeline())
+    r = client.post("/ask", json={"question": "q" * MAX_QUESTION_LENGTH})
+    assert r.status_code == 200
+
+
+def test_security_headers_on_every_response(client: TestClient) -> None:
+    for r in (client.get("/health"), client.get("/no-such-route")):
+        assert r.headers["x-content-type-options"] == "nosniff"
+        assert r.headers["x-frame-options"] == "DENY"
+        assert r.headers["referrer-policy"] == "no-referrer"
+        assert "max-age=" in r.headers["strict-transport-security"]
+        assert r.headers["content-security-policy"].startswith("default-src 'none'")
+
+
+def test_rejected_bodies_still_carry_cors_headers() -> None:
+    target = api.create_app(api_docs=False)
+    target.add_middleware(api.BodySizeLimit, max_bytes=1024)
+    install_cors(target, [SITE])
+    r = TestClient(target).post(
+        "/ask", content="x" * 2000, headers={"Origin": SITE, "Content-Type": "application/json"}
+    )
+    assert r.status_code == 413
+    assert r.headers["access-control-allow-origin"] == SITE
+
+
+def test_exhausted_connection_pool_is_a_fast_503(client: TestClient) -> None:
+    from psycopg_pool import PoolTimeout
+
+    def busy() -> Iterator[None]:
+        raise PoolTimeout("no connection available")
+        yield  # pragma: no cover
+
+    app.dependency_overrides[get_db_conn] = busy
+    r = client.get("/figures/1.png")
+    assert r.status_code == 503
+    assert r.headers["retry-after"] == "5"

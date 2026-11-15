@@ -54,3 +54,4 @@ What this makes easier or harder later, and what would make us revisit it.
 | [0020](0020-dev-gold-set-reviewed-by-claude.md) | The dev gold set is reviewed by Claude, not the owner (demo shortcut) | Accepted |
 | [0021](0021-deployment-hosting-logging-and-review-owners.md) | Deployment on Fly.io + Neon; question text never logged; owner reviews held-out, Claude reviews injection | Accepted |
 | [0022](0022-figure-questions-drafted-by-claude.md) | The FAA figure questions are drafted by Claude and verified by the owner | Accepted |
+| [0023](0023-pre-deploy-security-review.md) | Pre-deploy security review and hardening | Accepted |

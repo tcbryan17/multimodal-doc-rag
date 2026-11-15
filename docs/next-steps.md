@@ -90,7 +90,7 @@ The indirect margin is thin.
 ## Then
 
 1. **Held-out final run and release check** (step 18). Run the held-out split once with `--i-know-this-is-heldout`, then `release_check.py`. Commit the verdict, pass or fail. Then write the system card.
-2. **Deploy to Fly.io + Neon** (step 19). Follow `docs/deployment.md`. **First:** the full security and hardening review the owner asked for (both repos are public).
+2. **Deploy to Fly.io + Neon** (step 19). Follow `docs/deployment.md`. The security review is done (ADR 0023). At deploy time: create a separate production OpenRouter key with its own credit limit, deploy with `fly.toml`, then run the per-visitor rate-limit check in `docs/deployment.md`.
    - **Owner:** create the Fly app and the Neon project.
    - **Database:** `pg_dump`/`pg_restore` the local database to Neon. There is no re-ingest. First check that Neon supports Postgres 18 and pgvector 0.8 or later.
    - **Read-only role:** create it from `docker/roles/readonly_role.sql`.
