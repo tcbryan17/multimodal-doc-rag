@@ -31,6 +31,8 @@ on:
         required: true
         type: string
 
+# Actions are pinned to full commit SHAs (ADR 0023): this job will hold deploy secrets, and a
+# moved tag must not be able to run new code next to them.
 # The job gets read-only access to the repo and nothing else.
 permissions:
   contents: read
@@ -59,8 +61,11 @@ jobs:
       TEST_DATABASE_URL: postgresql://rag:rag-dev-only@localhost:5433/rag_test
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # Don't leave the job's token in .git/config for later steps to find.
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
           enable-cache: true
       - run: uv sync --locked
@@ -96,7 +101,7 @@ jobs:
             --database-url "$RELEASE_CHECK_DATABASE_URL"
 
       # Keep the verdict (a markdown file) even when the gate fails.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: release-check

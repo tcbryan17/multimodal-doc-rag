@@ -13,6 +13,8 @@ host-agnostic; the Fly-specific steps are written when the Fly app is created.
 | Read-only database role (SELECT on `documents`, `chunks`, `embeddings`, `figures` only) | `docker/roles/readonly_role.sql`, `tests/test_readonly_role.py` | C31 |
 | Manual deploy gate: full checks, then `release_check.py`, then a disabled deploy placeholder | `.github/workflows/deploy.yml`, `tests/test_deploy_workflow.py` | C37 |
 | This runbook, including monitoring and incident response | `docs/deployment.md` | C27 |
+| Fly config: one always-on machine, request concurrency limit, health check, proxy and CORS settings | `fly.toml` | C40, C43 |
+| Pre-deploy hardening: body size limit, security headers, docs off, pool timeout, SHA-pinned Actions, Dependabot | `api.py`, `.github/` | C38–C42 (ADR 0023) |
 
 All of these stay **planned** in the [control matrix](governance/control-matrix.md) until a
 real deployment exists and has been checked.
@@ -56,8 +58,12 @@ Also built and tracked in the matrix: per-IP rate limits, a daily spend cap,
 CORS and `/stats` (C26/C27); the question-logging policy (C20,
 below: never logged); the EU AI Act Art. 50 AI notice and answers rendered as text only (the
 portfolio site's ask UI, dormant until the API URL is set).
-On Fly, set `TRUSTED_PROXY_HOPS=1` (one platform proxy; confirm against Fly's docs), or every
-visitor shares one rate-limit bucket.
+On Fly, `TRUSTED_PROXY_HOPS=1` is set in `fly.toml` (one platform proxy), or every visitor
+would share one rate-limit bucket. **Check it after the first deploy:** send 6 `/ask` requests
+in a minute from one network and confirm the 6th gets 429, then confirm a request from a
+different network (e.g. your phone on mobile data) still gets through. If everyone is limited
+together, the hop count is wrong. If nobody is ever limited, `X-Forwarded-For` is being
+trusted too far.
 
 ## Copy the database from local to production
 
@@ -120,6 +126,20 @@ and ingest, from your machine. The same read-only URL also works as the CI secre
 If a future migration adds a table the API must read, add it to the `GRANT SELECT` line in
 the script and re-run it (it is idempotent).
 
+## Security settings (ADR 0023)
+
+- **The machine stays up.** `fly.toml` sets `auto_stop_machines = "off"` and
+  `min_machines_running = 1`, because the spend cap and rate limits live in memory and a
+  restart forgets them. Don't scale past one machine without moving them to a shared store.
+- **API docs are off.** `/docs`, `/redoc` and `/openapi.json` return 404 unless `API_DOCS=true`.
+  Turn it on only locally.
+- **Body size and concurrency.** Bodies over `MAX_BODY_BYTES` (8 KB) get 413. Fly holds
+  requests past 8 per machine at its edge, and a request that can't get a database connection
+  within `DB_POOL_TIMEOUT_S` (5 s) gets 503.
+- **Repository.** `main` only changes through a pull request with passing CI. Secret
+  scanning with push protection, Dependabot alerts and private vulnerability reporting are on.
+  Actions are pinned to commit SHAs. See `SECURITY.md`.
+
 ## Secrets
 
 Set these in the host's **secret store** (or the platform's "environment variables"
@@ -128,7 +148,7 @@ screen marked secret), never in the repo, the image or a committed file:
 | Variable | Value |
 |---|---|
 | `DATABASE_URL` | the read-only URL above |
-| `OPENROUTER_API_KEY` | a project-only key with a low credit limit (C22). Use a **separate key for production** so it can be revoked without touching ingest and evals |
+| `OPENROUTER_API_KEY` | a **separate production key**, created only for the live API, with its own small credit limit set in the OpenRouter dashboard (C22, C43). The in-app daily cap is per process; this limit is the hard ceiling on what an abuser can spend, and keeping it separate means a drained or revoked production key never stops ingest or evals |
 
 Other settings (model IDs, caps) have safe defaults in `config.py`; see `.env.example` for
 the list. In GitHub, add `RELEASE_CHECK_DATABASE_URL` as a repository (or environment) secret

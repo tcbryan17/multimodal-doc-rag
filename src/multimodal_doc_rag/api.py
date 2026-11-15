@@ -1,7 +1,8 @@
 """HTTP API: `/health`, `/ask`, `/figures` and `/stats` (contract in README and ADR 0005).
 
-Live-hardening layers, outermost first: CORS (so browsers can read even error replies), the
-request counters, then per-route guards: per-IP rate limit, daily spend cap, API-key check.
+Live-hardening layers, outermost first: CORS (so browsers can read even error replies),
+security headers, the request-body size limit, the request counters, then per-route guards:
+per-IP rate limit, daily spend cap, API-key check. ADR 0023 records the pre-deploy review.
 """
 
 import hmac
@@ -18,7 +19,8 @@ from fastapi import Depends, FastAPI, HTTPException, Path, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pgvector.psycopg import register_vector
-from psycopg_pool import ConnectionPool
+from psycopg_pool import ConnectionPool, PoolTimeout
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from multimodal_doc_rag.config import settings
 from multimodal_doc_rag.contracts import AskRequest, AskResponse, Pipeline
@@ -87,7 +89,8 @@ def _get_pool() -> ConnectionPool[Any]:
             _pool = ConnectionPool(
                 settings.database_url.get_secret_value(),
                 min_size=1,
-                max_size=4,
+                max_size=settings.db_pool_max_size,
+                timeout=settings.db_pool_timeout_s,
                 configure=_configure,
                 open=True,
             )
@@ -103,7 +106,18 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         _pool = None
 
 
-app = FastAPI(title="multimodal-doc-rag", lifespan=lifespan)
+def create_app(api_docs: bool) -> FastAPI:
+    """The FastAPI app. The interactive docs exist only when `api_docs` is on (ADR 0023)."""
+    return FastAPI(
+        title="multimodal-doc-rag",
+        lifespan=lifespan,
+        docs_url="/docs" if api_docs else None,
+        redoc_url="/redoc" if api_docs else None,
+        openapi_url="/openapi.json" if api_docs else None,
+    )
+
+
+app = create_app(settings.api_docs)
 
 
 @app.middleware("http")
@@ -120,6 +134,84 @@ async def count_requests(request: Request, call_next: Any) -> Response:
         raise
     ops.stats.count_response(response.status_code)
     return response
+
+
+class BodySizeLimit:
+    """Refuse oversized request bodies before anything reads them (ADR 0023).
+
+    A plain ASGI middleware, so it runs before FastAPI parses JSON: without it a client could
+    send megabytes that are read into memory before the 1,000-character check rejects them.
+    It decides from `Content-Length` alone. A body-carrying request without one (chunked
+    upload) gets 411; browsers' `fetch` always sends the header. The server's HTTP parser
+    stops reading at the declared length, so the header can't understate the body.
+    """
+
+    BODY_METHODS = frozenset({"POST", "PUT", "PATCH"})
+
+    def __init__(self, app: ASGIApp, max_bytes: int) -> None:
+        self.app = app
+        self.max_bytes = max_bytes
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "http" and scope["method"] in self.BODY_METHODS:
+            raw = dict(scope["headers"]).get(b"content-length")
+            if raw is None:
+                await JSONResponse({"detail": "Content-Length required"}, 411)(scope, receive, send)
+                return
+            try:
+                length = int(raw)
+            except ValueError:
+                length = -1
+            if length < 0:
+                await JSONResponse({"detail": "bad Content-Length"}, 400)(scope, receive, send)
+                return
+            if length > self.max_bytes:
+                await JSONResponse({"detail": "request body too large"}, 413)(scope, receive, send)
+                return
+        await self.app(scope, receive, send)
+
+
+# Sent on every response. The API returns JSON and PNGs, never HTML meant for a browser, so it
+# can forbid everything a page could do: no scripts, no framing, no MIME sniffing, no referrer.
+SECURITY_HEADERS: tuple[tuple[bytes, bytes], ...] = (
+    (b"x-content-type-options", b"nosniff"),
+    (b"referrer-policy", b"no-referrer"),
+    (b"x-frame-options", b"DENY"),
+    (b"strict-transport-security", b"max-age=63072000; includeSubDomains"),
+)
+STRICT_CSP = (b"content-security-policy", b"default-src 'none'; frame-ancestors 'none'")
+# Swagger UI and ReDoc are HTML pages that load scripts, so they skip the strict CSP. They
+# exist only when API_DOCS is on (local development).
+DOCS_PATHS = frozenset({"/docs", "/docs/oauth2-redirect", "/redoc"})
+
+
+class SecurityHeaders:
+    """Add SECURITY_HEADERS (and the strict CSP) to every HTTP response (ADR 0023)."""
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        extra = list(SECURITY_HEADERS)
+        if scope["path"] not in DOCS_PATHS:
+            extra.append(STRICT_CSP)
+
+        async def send_with_headers(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                message = {**message, "headers": [*message.get("headers", []), *extra]}
+            await send(message)
+
+        await self.app(scope, receive, send_with_headers)
+
+
+# Middleware added later wraps the earlier ones, so this order makes CORS the outermost layer
+# (every reply, even a 413, carries CORS headers the site can read), then security headers,
+# then the body limit, then the request counters registered above.
+app.add_middleware(BodySizeLimit, max_bytes=settings.max_body_bytes)
+app.add_middleware(SecurityHeaders)
 
 
 def install_cors(target: FastAPI, origins: list[str]) -> None:
@@ -153,6 +245,17 @@ def model_provider_error(_: Request, exc: OpenRouterError) -> JSONResponse:
     with a generic message instead of a bare 500. The rerank step already degrades on its own,
     and OpenRouterError messages never contain the API key, but we still don't echo them."""
     return JSONResponse(status_code=502, content={"detail": "model provider unavailable"})
+
+
+@app.exception_handler(PoolTimeout)
+def database_busy(_: Request, exc: PoolTimeout) -> JSONResponse:
+    """Every pooled connection is in use (ADR 0023). Fail fast with 503 rather than letting
+    requests pile up behind a few slow ones."""
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "server busy; try again shortly"},
+        headers={"Retry-After": "5"},
+    )
 
 
 @app.exception_handler(BudgetExceededError)

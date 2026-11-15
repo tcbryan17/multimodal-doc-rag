@@ -114,6 +114,8 @@ Deployment scaffolding (Dockerfile, read-only DB role, deploy gate) and the runb
 ## Governance
 The system is mapped to the NIST AI RMF (with its Generative AI Profile) and the OWASP Top 10 for LLM Applications (2026). Release gates were pre-registered before any eval ran. A release check fails unless every gate passes on held-out evidence, and deployment will be required to pass it. See [`docs/governance/`](docs/governance/README.md) and [ADR 0016](docs/decisions/0016-governance-and-release-gates.md).
 
+Security: the pre-deploy review is recorded in [ADR 0023](docs/decisions/0023-pre-deploy-security-review.md). To report a vulnerability, see [`SECURITY.md`](SECURITY.md).
+
 ## Status
 In progress. Build-plan steps 0–14 and 16 are done; [`docs/build-plan.md`](docs/build-plan.md) has the detail.
 
