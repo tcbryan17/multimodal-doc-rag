@@ -15,7 +15,7 @@
 
 # ---- Stage 1: builder -------------------------------------------------------------------
 # Pinned to an exact patch tag so builds are repeatable; upgrade deliberately.
-FROM python:3.12.13-slim-bookworm AS builder
+FROM python:3.15.0-slim-bookworm AS builder
 
 # Copy the uv binary from its official image (pinned; matches the version used in dev).
 COPY --from=ghcr.io/astral-sh/uv:0.12.5 /uv /usr/local/bin/uv
@@ -38,7 +38,7 @@ COPY src ./src
 RUN uv sync --locked --no-dev --no-editable
 
 # ---- Stage 2: runtime -------------------------------------------------------------------
-FROM python:3.12.13-slim-bookworm AS runtime
+FROM python:3.15.0-slim-bookworm AS runtime
 
 # A dedicated unprivileged user. If the app were ever compromised, the attacker is not
 # root inside the container. Fixed numeric UID so hosts can enforce "runAsNonRoot".
