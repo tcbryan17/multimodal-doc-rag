@@ -29,6 +29,20 @@ def _no_openrouter_key_outside_live_tests(
         monkeypatch.setattr(settings, "openrouter_api_key", None)
 
 
+@pytest.fixture(autouse=True)
+def _fresh_generous_ops(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The API keeps process-wide rate-limit, spend and counter state (`api.ops`). Give every
+    test a fresh one with limits high enough to never interfere, so tests can't affect each
+    other; the hardening tests build their own strict `Ops` explicitly."""
+    from multimodal_doc_rag import api
+
+    monkeypatch.setattr(settings, "rate_limit_per_minute", 10_000)
+    monkeypatch.setattr(settings, "rate_limit_per_day", 10_000)
+    monkeypatch.setattr(settings, "figures_rate_limit_per_minute", 10_000)
+    monkeypatch.setattr(settings, "daily_spend_cap_usd", 1_000.0)
+    monkeypatch.setattr(api, "ops", api.Ops.from_settings())
+
+
 @pytest.fixture(scope="session")
 def test_database_url() -> Iterator[str]:
     """Create `rag_test` if needed, migrate it once per session, and yield its URL."""
