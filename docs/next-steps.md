@@ -6,9 +6,9 @@ out of date. `docs/build-plan.md` stays the long-term plan.
 
 ## Branches
 
-- **Open PRs:** rag #2 `eval-progress`, #3 `deploy-api-hardening` and #4 `deploy-ops-scaffolding` (merge in that order), and site #3 `rag-live-ask-ui`. All were pushed 2026-11-15.
+- **Merged 2026-11-15:** rag #2 `eval-progress`, #3 `deploy-api-hardening`, #4 `deploy-ops-scaffolding`, and site #3 `rag-live-ask-ui`.
 - **CI on #2** was failing on a stale injection test. Fixed in `ac4d027` (2026-11-15).
-- **`figure-questions` (local).** It stacks on `eval-progress` and holds the 13 figure items, ADR 0022 and the figure smoke report.
+- **`figure-questions`** holds the 13 figure items, ADR 0022 and the figure smoke report.
 
 ## Owner queue, in order
 
@@ -90,7 +90,7 @@ The indirect margin is thin.
 ## Then
 
 1. **Held-out final run and release check** (step 18). Run the held-out split once with `--i-know-this-is-heldout`, then `release_check.py`. Commit the verdict, pass or fail. Then write the system card.
-2. **Deploy to Fly.io + Neon** (step 19). Follow `docs/deployment.md` on `deploy-ops-scaffolding`.
+2. **Deploy to Fly.io + Neon** (step 19). Follow `docs/deployment.md`. **First:** the full security and hardening review the owner asked for (both repos are public).
    - **Owner:** create the Fly app and the Neon project.
    - **Database:** `pg_dump`/`pg_restore` the local database to Neon. There is no re-ingest. First check that Neon supports Postgres 18 and pgvector 0.8 or later.
    - **Read-only role:** create it from `docker/roles/readonly_role.sql`.

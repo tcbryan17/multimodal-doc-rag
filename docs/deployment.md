@@ -5,7 +5,7 @@ to do it in. **Hosting is decided** ([ADR 0021](decisions/0021-deployment-hostin
 Fly.io runs the API container and Neon hosts Postgres + pgvector. The pieces below are still
 host-agnostic; the Fly-specific steps are written when the Fly app is created.
 
-## What exists (scaffolding on branch `deploy-ops-scaffolding`)
+## What exists
 
 | Piece | File | Control |
 |---|---|---|
@@ -52,10 +52,10 @@ curl localhost:8000/health        # {"status":"ok"}
 7. Replace the placeholder step in `deploy.yml` with the host's deploy command, deploy, then
    set up monitoring (C27) before announcing the URL.
 
-Built on other branches and tracked in the matrix: per-IP rate limits, a daily spend cap,
-CORS and `/stats` (C26/C27, branch `deploy-api-hardening`); the question-logging policy (C20,
+Also built and tracked in the matrix: per-IP rate limits, a daily spend cap,
+CORS and `/stats` (C26/C27); the question-logging policy (C20,
 below: never logged); the EU AI Act Art. 50 AI notice and answers rendered as text only (the
-portfolio site's `rag-live-ask-ui` branch, dormant until the API URL is set).
+portfolio site's ask UI, dormant until the API URL is set).
 On Fly, set `TRUSTED_PROXY_HOPS=1` (one platform proxy; confirm against Fly's docs), or every
 visitor shares one rate-limit bucket.
 
