@@ -1,0 +1,115 @@
+# Deploy gate (control C37). Manual only: nothing deploys on push.
+#
+# What it does, in order:
+#   1. runs the same checks as ci.yml (lint, types, tests);
+#   2. runs scripts/release_check.py on the evidence you name below (ADR 0016). That script
+#      exits non-zero unless EVERY pre-registered gate passes, which fails this job;
+#   3. only then reaches the deploy step, which is a placeholder until a host is chosen.
+#
+# Start it from GitHub: Actions tab > "Deploy gate" > "Run workflow", filling in the inputs.
+# Or: gh workflow run deploy.yml -f final=evals/reports/<stamp>-final.json ...
+
+name: Deploy gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      final:
+        description: "Held-out final run report, e.g. evals/reports/<stamp>-final.json"
+        required: true
+        type: string
+      injection_direct:
+        description: "Direct-injection report, e.g. evals/reports/<stamp>-direct-injection.json"
+        required: true
+        type: string
+      injection_indirect:
+        description: "Indirect-injection report, e.g. evals/reports/<stamp>-indirect-injection.json"
+        required: true
+        type: string
+      calibration:
+        description: "Calibration name (evals/calibration/<name>.jsonl), without the extension"
+        required: true
+        type: string
+
+# The job gets read-only access to the repo and nothing else.
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    # Service container: same pgvector Postgres as ci.yml, for the test suite.
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.7-pg18
+        env:
+          POSTGRES_USER: rag
+          POSTGRES_PASSWORD: rag-dev-only
+          POSTGRES_DB: rag
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U rag -d rag"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      TEST_DATABASE_URL: postgresql://rag:rag-dev-only@localhost:5433/rag_test
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+
+      # 1. The full check suite (identical to ci.yml).
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy src tests scripts evals
+      - run: uv run pytest
+
+      # 2. The release gate. A non-zero exit from release_check.py (1 = a gate failed or
+      #    evidence is missing, 2 = bad usage) fails this step, and the job stops here.
+      #    Inputs go through env vars, never pasted into the shell line, so a crafted input
+      #    cannot inject commands.
+      #    The check reads figure coverage from the REAL index, not the test database, so it
+      #    needs a database URL in the repository secret RELEASE_CHECK_DATABASE_URL. Use a
+      #    read-only connection (docker/roles/readonly_role.sql). Never use a write-capable
+      #    one here. Whether the CI runner can reach the production database is part of the
+      #    host decision (see docs/deployment.md).
+      - name: Release check (blocks on any failed gate)
+        env:
+          FINAL: ${{ inputs.final }}
+          INJECTION_DIRECT: ${{ inputs.injection_direct }}
+          INJECTION_INDIRECT: ${{ inputs.injection_indirect }}
+          CALIBRATION: ${{ inputs.calibration }}
+          RELEASE_CHECK_DATABASE_URL: ${{ secrets.RELEASE_CHECK_DATABASE_URL }}
+        run: |
+          uv run python scripts/release_check.py \
+            --final "$FINAL" \
+            --injection "$INJECTION_DIRECT" \
+            --injection "$INJECTION_INDIRECT" \
+            --calibration "$CALIBRATION" \
+            --database-url "$RELEASE_CHECK_DATABASE_URL"
+
+      # Keep the verdict (a markdown file) even when the gate fails.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-check
+          path: evals/reports/*-release-check.md
+          if-no-files-found: ignore
+
+      # 3. DEPLOY PLACEHOLDER. Skipped (`if: false`) until the owner picks a host.
+      #    When a host is chosen, replace this step and delete `if: false`. It is placed
+      #    AFTER the release check on purpose: a step only runs if all earlier steps
+      #    succeeded, so a failed gate means the deploy never starts. Typical contents:
+      #    build the image (docker build -t ... .), push it to the host's registry, then
+      #    tell the host to run the new version. Host credentials belong in repository or
+      #    environment secrets, never in this file. Do NOT add `if: always()` here.
+      - name: Deploy (PLACEHOLDER, skipped until a host is chosen)
+        if: false
+        run: echo "no host chosen yet; nothing to deploy"
