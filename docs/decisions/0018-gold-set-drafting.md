@@ -1,6 +1,6 @@
 # 0018. Drafting the gold set: sources, figure share, drafter model, sampling fixes
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by [0020](0020-dev-gold-set-reviewed-by-claude.md): dev drafts reviewed by Claude. Amended by [0022](0022-figure-questions-drafted-by-claude.md): figure questions drafted by Claude, verified by the owner)
 - **Date:** 2026-11-09
 - **Refines:** 0011 (how the "LLM drafts, owner verifies" gold set is produced). Sizes, splits and gates are unchanged.
 

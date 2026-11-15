@@ -1,69 +1,21 @@
-# Next steps (handoff, 2026-11-14)
+# Next steps (handoff, updated 2026-11-15)
 
-Where the project stands at the end of 2026-11-14, and what to do next, in order. To resume with
+Where the project stands (last updated 2026-11-15), and what to do next, in order. To resume with
 Claude, say: *"continue from docs/next-steps.md"*. Delete this file, or rewrite it, once it is
 out of date. `docs/build-plan.md` stays the long-term plan.
 
-## Branches waiting for review
+## Branches
 
-PRs #1 (rag) and #2 (site) are merged. Four branches are **local only, not pushed**. All of them
-start from `cb611e7` and merge cleanly with each other (checked pairwise with `git merge-tree`).
-
-| Branch | Repo | Contents |
-|---|---|---|
-| `eval-progress` | multimodal-doc-rag | Injection review (`evals/injection/REVIEW.md`), the 40 held-out drafts, the judged smoke-run report, and this file. It also carries `cb611e7` (README: current stack and status), which was pushed after PR #1 had merged and so is **not yet on `main`**. |
-| `deploy-api-hardening` | multimodal-doc-rag | CORS, per-IP rate limits, a daily spend cap, `/stats`, input caps; ADR 0021 (Fly.io + Neon, question text never logged, review owners). |
-| `deploy-ops-scaffolding` | multimodal-doc-rag | Non-root Dockerfile, read-only DB role, manual deploy-gate workflow, `docs/deployment.md` runbook (updated for ADR 0021). |
-| `rag-live-ask-ui` | portfolio-site | The "ask your own question" UI, hidden until the project's `links.api` is set. It also carries `6c8238c` (site README update), which missed PR #2's merge. |
-
-Suggested merge order:
-1. `eval-progress`.
-2. `deploy-api-hardening`, which adds ADR 0021.
-3. `deploy-ops-scaffolding`, whose runbook links ADR 0021.
-
-The site PR can go any time.
-
-To push and open a PR: `git push -u origin <branch>`, then `gh pr create`.
+- **Open PRs:** rag #2 `eval-progress`, #3 `deploy-api-hardening` and #4 `deploy-ops-scaffolding` (merge in that order), and site #3 `rag-live-ask-ui`. All were pushed 2026-11-15.
+- **CI on #2** was failing on a stale injection test. Fixed in `ac4d027` (2026-11-15).
+- **`figure-questions` (local).** It stacks on `eval-progress` and holds the 13 figure items, ADR 0022 and the figure smoke report.
 
 ## Owner queue, in order
 
-### 1. Write the FAA figure questions (12; the first 3 unblock the figure smoke run)
+### 1–2. Figure questions and the figure smoke run: done (2026-11-15)
 
-**Send:** lines like `F04 | Q: According to the FAA Pilot's Handbook's carburetor icing chart, … ? | A: …`.
-
-**Where the candidates are:** the images are in `private/figure-candidates/` (gitignored). Open them with `open private/figure-candidates`.
-
-**What Claude does with them:** adds each one with `owner_item` (origin `owner`, status `verified`, type `figure`) and uses the gold page from the table below.
-
-| # | Gold page (`doc:page_idx:label`) | Chunk | What it shows |
-|---|---|---|---|
-| F01 | `phak-ch05:3:5-4` | 1766 | CL/CD vs angle of attack graph |
-| F02 | `phak-ch05:33:5-34` | 1905 | Load factor vs bank angle |
-| F03 | `phak-ch05:37:5-38` | 1917 | Vg diagram |
-| F04 | `phak-ch07:9:7-10` | 2082 | Carburetor icing chart |
-| F05 | `phak-ch07:34:7-35` | 2206 | Atmospheric pressure (psi) table |
-| F06 | `phak-ch08:8:8-9` | 2278 | Airspeed indicator markings |
-| F07 | `phak-ch08:4:8-5` | 2260 | Height above airport table |
-| F08 | `phak-ch08:24:8-25` | 2361 | Compass correction card |
-| F09 | `phak-ch10:7:10-8` | 2467 | Loading graph |
-| F10 | `phak-ch10:7:10-8` | 2468 | CG moment envelope |
-| F11 | `phak-ch12:5:12-6` | 2628 | Takeoff distance vs pressure altitude |
-| F12 | `phak-ch12:11:12-12` | 2651 | Wind symbols |
-| F13 | `phak-ch14:2:14-3` | 2810 | Communication procedures table |
-| F14 | `phak-ch05:25:5-26` | 1864 | Stall speed / load factor vs bank |
-| F15 | `phak-ch10:8:10-9` | 2470 | Loading schedule placard |
-
-Good figure questions need the figure to answer them, for example by reading a value off a chart. If the caption or body text already gives the answer, the question isn't testing the figure.
-
-### 2. Figure smoke run (Claude, a few cents)
-
-```bash
-uv run python scripts/run_eval.py --corpus faa --type figure --limit 3 --label judge-smoke-figures
-```
-
-This run confirms that the judge's zero-data-retention endpoint accepts images.
-
-The text smoke run already passed: `evals/reports/20261114T161029Z-judge-smoke.md`, 5 questions, every metric 1.00, $0.0028 per question, p95 latency 2.9 s, judge fingerprint `e2a908a51730`.
+- **The questions.** Claude (Opus 5.5) drafted 15 and the owner verified them on a review page. 13 were kept as `faa-dev-049`..`061` (ADR 0022). F05 and F12 were dropped. The working file is `private/review-tools/figure_drafts.json` and the images are in `private/figure-candidates/`.
+- **The smoke run.** `evals/reports/20261115T141659Z-judge-smoke-figures.md`: 3 questions, every metric 1.00, $0.011. Each judge call carried 3 or 4 figure images and none failed, so the judge's ZDR endpoint accepts images.
 
 ### 3. Settle the judge prompt, then the dev baseline
 
@@ -73,7 +25,7 @@ uv run python scripts/run_eval.py --label baseline
 
 - **Once the baseline exists, `evals/gates.toml` is frozen** (ADR 0016).
 - **Don't change the judge after calibration starts.** Calibration is tied to the judge fingerprint (ADR 0019), so any judge change has to happen before step 4.
-- **Expected cost:** at the smoke run's rate, about $0.003 per question all-in, so roughly $0.40 for the ~117 dev questions.
+- **Expected cost:** at the smoke run's rate, about $0.003 per question all-in, so roughly $0.40 for the 118 verified dev questions.
 
 ### 4. Calibration: the owner grades about 30 answers (at least 25)
 

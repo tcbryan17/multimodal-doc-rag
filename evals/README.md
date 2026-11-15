@@ -27,8 +27,8 @@ uv run python scripts/draft_gold.py draft --corpus 10k --split dev --n 60
 #    Checklist below ("Reviewing a draft").
 uv run python scripts/draft_gold.py review --corpus faa
 uv run python scripts/draft_gold.py review --corpus 10k
-#    Write the figure questions yourself (the model skips figures on purpose). FAA dev
-#    has 12 of them (ADR 0018). Write 3 first: the figure smoke run in step 3 needs them.
+#    Figure questions are written by hand (the model skips figures on purpose). FAA dev
+#    has 13, drafted by Claude and verified by the owner (ADR 0022). For a new one by hand:
 uv run python scripts/draft_gold.py add --corpus faa --type figure
 #    Top up after rejections: draft N more. Chunks that already seeded a draft are never
 #    reused, and the handbook index and front matter are never used as sources (--skip-docs).
