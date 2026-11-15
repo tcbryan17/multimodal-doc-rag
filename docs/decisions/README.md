@@ -49,7 +49,8 @@ What this makes easier or harder later, and what would make us revisit it.
 | [0015](0015-reasoning-off-and-output-caps.md) | Hidden reasoning off for figure descriptions and answers; truncation detected | Accepted |
 | [0016](0016-governance-and-release-gates.md) | Governance: NIST AI RMF + OWASP mapping, pre-registered release gates | Accepted (amended by 0017, 0019) |
 | [0017](0017-eval-validity.md) | Eval validity: the judge sees figure images, binding runs are unfiltered, evidence minimums | Accepted |
-| [0018](0018-gold-set-drafting.md) | Drafting the gold set: source documents, figure share, drafter model, sampling fixes | Accepted (amended by 0020) |
+| [0018](0018-gold-set-drafting.md) | Drafting the gold set: source documents, figure share, drafter model, sampling fixes | Accepted (amended by 0020, 0022) |
 | [0019](0019-calibration-tied-to-judge.md) | Calibration is tied to one judge configuration (fingerprint checked at release) | Accepted |
 | [0020](0020-dev-gold-set-reviewed-by-claude.md) | The dev gold set is reviewed by Claude, not the owner (demo shortcut) | Accepted |
 | [0021](0021-deployment-hosting-logging-and-review-owners.md) | Deployment on Fly.io + Neon; question text never logged; owner reviews held-out, Claude reviews injection | Accepted |
+| [0022](0022-figure-questions-drafted-by-claude.md) | The FAA figure questions are drafted by Claude and verified by the owner | Accepted |

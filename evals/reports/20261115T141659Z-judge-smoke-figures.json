@@ -1,0 +1,370 @@
+{
+  "config": {
+    "label": "judge-smoke-figures",
+    "started_utc": "2026-11-15T14:16:59Z",
+    "git_commit": "9afaf88f33e168f4a02cc53ea6fa8e295e250961",
+    "git_dirty": true,
+    "corpus": "faa",
+    "split": "dev",
+    "generator_model": "anthropic/claude-haiku-5.5",
+    "generator_reasoning": false,
+    "corpus_filter": false,
+    "figure_images": true,
+    "judge_model": "openai/gpt-6-luna",
+    "judge_fingerprint": "e2a908a51730",
+    "embedding_model": "qwen/qwen3-embedding-8b",
+    "rerank_model": "qwen/qwen3-reranker-8b",
+    "top_k": 5,
+    "recall_k": 5,
+    "candidates": 30,
+    "budget_usd": 2.0,
+    "include_drafts": false,
+    "limit": 3,
+    "question_type": "figure",
+    "index": {
+      "documents": 25,
+      "chunks": 3449,
+      "mean_chunk_chars": 973.5,
+      "max_chunk_chars": 3424,
+      "chunks_embedded": 3449,
+      "embedding_key": "qwen/qwen3-embedding-8b@1024"
+    },
+    "database": "rag"
+  },
+  "truncated": false,
+  "truncated_reason": "",
+  "meter_summary": "$0.0112 of $2.00 cap over 12 calls (12 reported, 0 estimated from tokens, 0 charged the flat fallback)",
+  "items": [
+    {
+      "id": "faa-dev-049",
+      "corpus": "faa",
+      "split": "dev",
+      "type": "figure",
+      "question": "According to the takeoff distance table in the FAA Pilot's Handbook (maximum weight 2,400 lb, 0 °C), what are the ground roll and the total distance to clear a 50-foot obstacle at a pressure altitude of 4,000 feet?",
+      "answerable": true,
+      "reference_answer": "Ground roll 1,075 feet; total distance to clear a 50-foot obstacle 1,920 feet.",
+      "gold_pages": [
+        {
+          "doc": "phak-ch12",
+          "page_idx": 5,
+          "page_label": "12-6"
+        }
+      ],
+      "answer": "Based on the takeoff distance table for maximum weight 2,400 lb at 0 °C (Source 1), at a pressure altitude of 4,000 feet:\n\n- Ground roll: 1,075 feet [1]\n- Total distance to clear a 50-foot obstacle: 1,920 feet [1]",
+      "judged_answer": "Based on the takeoff distance table for maximum weight 2,400 lb at 0 °C (Source 1), at a pressure altitude of 4,000 feet:\n\n- Ground roll: 1,075 feet [1]\n- Total distance to clear a 50-foot obstacle: 1,920 feet [1]",
+      "citations": [
+        {
+          "doc": "FAA-H-8083-25C, Ch. 12: Weather Theory",
+          "page": "12-6",
+          "page_end": null,
+          "snippet": "Two-panel diagram with an inset table illustrating how takeoff distance increases with pressure altitude for a light aircraft. Top panel labeled \"Pressure Altitude: Sea level\": a small single-engine…",
+          "image_url": "/figures/2628.png"
+        }
+      ],
+      "cited_chunk_ids": [
+        2628
+      ],
+      "retrieved": [
+        {
+          "chunk_id": 2628,
+          "doc": "phak-ch12",
+          "kind": "figure",
+          "page_start_idx": 5,
+          "page_end_idx": 5,
+          "page_start_label": "12-6",
+          "page_end_label": "12-6",
+          "score": 1.0,
+          "content": "Two-panel diagram with an inset table illustrating how takeoff distance increases with pressure altitude for a light aircraft. Top panel labeled \"Pressure Altitude: Sea level\": a small single-engine aircraft lifts off a runway; a red line marks the takeoff ground roll path, with a yellow dimension arrow below the runway labeled \"745 feet\" (ground roll). Bottom panel labeled \"Pressure Altitude: 8,000 feet\": the same aircraft and red takeoff path, longer runway segment with a yellow dimension arrow labeled \"1,590 feet\". Trees appear at the right of the bottom panel. Inset table titled \"TAKEOFF DISTANCE\" with subtitle \"MAXIMUM WEIGHT 2,400 LB\" and column header \"0 °C\". Columns: \"Pressure altitude (feet)\", \"Ground roll (feet)\", \"Total feet to clear 50 foot obstacle\". Rows: S.L. 745, 1,320; 1,000: 815, 1,445; 2,000: 895, 1,585; 3,000: 980, 1,740; 4,000: 1,075, 1,920; 5,000: 1,185, 2,125; 6,000: 1,305, 2,360; 7,000: 1,440, 2,635; 8,000: 1,590, 2,960. The S.L. and 8,000 rows are highlighted green. Relationship: both ground roll and total distance to clear a 50 foot obstacle increase monotonically with pressure altitude; at 8,000 feet ground roll is 1,590 feet versus 745 feet at sea level, and total distance is 2,960 feet versus 1,320 feet.\n\nFigure 12-9. Takeoff distances increase with increased altitude.",
+          "image_sent": true
+        },
+        {
+          "chunk_id": 2562,
+          "doc": "phak-ch11",
+          "kind": "figure",
+          "page_start_idx": 19,
+          "page_end_idx": 19,
+          "page_start_label": "11-20",
+          "page_end_label": "11-20",
+          "score": 1.0,
+          "content": "A table image titled \"TAKEOFF DISTANCE / MAXIMUM WEIGHT 2,400 LB\" from an aircraft performance chart (Figure 11-21, Interpolating charts). Conditions box reads: \"Flaps 10°\", \"Full throttle prior to brake release\", \"Paved level runway\", \"Zero wind\". Column headers: Weight (lb); Takeoff speed KIAS with sub-columns \"Lift off\" and \"AT 50 ft\"; Press ALT (ft); then for temperatures 0 °C, 10 °C, 20 °C, 30 °C, 40 °C each with sub-columns \"Grnd roll (ft)\" and \"Total feet to clear 50 ft OBS\". Weight row shown: 2,400 with lift-off speed 51 KIAS and AT 50 ft speed 56 KIAS. Pressure altitude rows (ft): S.L., 1,000, 2,000, 3,000, 4,000, 5,000, 6,000, 7,000, 8,000. Values (Grnd roll / Total to clear 50 ft): 0 °C: S.L. 795/1,460; 1,000 875/1,605; 2,000 960/1,770; 3,000 1,055/1,960; 4,000 1,165/2,185; 5,000 1,285/2,445; 6,000 1,425/2,755; 7,000 1,580/3,140; 8,000 1,755/3,615. 10 °C: S.L. 860/1,570; 1,000 940/1,725; 2,000 1,035/1,910; 3,000 1,140/2,120; 4,000 1,260/2,365; 5,000 1,390/2,660; 6,000 1,540/3,015; 7,000 1,710/3,450; 8,000 1,905/4,015. 20 °C: S.L. 925/1,685; 1,000 1,015/1,860; 2,000 1,115/2,060; 3,000 1,230/2,295; 4,000 1,355/2,570; 5,000 1,500/2,895; 6,000 1,665/3,300; 7,000 1,850/3,805; 8,000 2,060/4,480. 30 °C: S.L. 995/1,810; 1,000 1,090/2,000; 2,000 1,200/2,220; 3,000 1,325/2,480; 4,000 1,465/2,790; 5,000 1,620/3,160; 6,000 1,800/3,620; 7,000 2,000/4,220; 8,000 '- - -'. 40 °C: S.L. 1,065/1,945; 1,000 1,170/2,155; 2,000 1,290/2,395; 3,000 1,425/2,685; 4,000 1,575/3,030; 5,000 1,745/3,455; 6,000 1,940/3,990; 7,000 '- - -'; 8,000 '- - -'. Highlighted (green) cells mark the interpolation example at 20 °C between 2,000 ft and 3,000 ft: 2,000 ft Grnd roll 1,115 and 3,000 ft Grnd roll 1,230 (total-to-clear values 2,060 and 2,295 are in the same row pair). Dashes '- - -' indicate no data.\n\nFigure 11-21. Interpolating charts.",
+          "image_sent": true
+        },
+        {
+          "chunk_id": 2572,
+          "doc": "phak-ch11",
+          "kind": "figure",
+          "page_start_idx": 21,
+          "page_end_idx": 21,
+          "page_start_label": "11-22",
+          "page_end_label": "11-22",
+          "score": 1.0,
+          "content": "Tabular performance chart titled 'TAKEOFF DISTANCE / MAXIMUM WEIGHT 2,400 LB / SHORT FIELD'. Left-side Conditions box (verbatim): 'Flaps 10°', 'Full throttle prior to brake release', 'Paved level runway', 'Zero wind'. Notes box (verbatim): '1. Prior to takeoff from fields above 3,000 feet elevation, the mixture should be leaned to give maximum rpm in a full throttle, static runup. 2. Decrease distances 10% for each 9 knots headwind. For operation with tailwind up to 10 knots, increase distances by 10% for each 2 knots. 3. For operation on a dry, grass runway, increase distances by 15% of the \"ground roll\" figure.' Column headers: Weight (lb); Takeoff speed KIAS with Lift off and AT 50 ft; Press ALT (ft); then for each temperature 0 °C, 10 °C, 20 °C, 30 °C, 40 °C: Grnd roll (ft) and Total feet to clear 50 ft OBS. Rows are grouped by weight 2,400 / 2,200 / 2,000 lb. For 2,400 lb: lift-off 51 KIAS, 50 ft speed 56 KIAS; pressure altitudes S.L., 1,000 through 8,000 ft. Highlighted values: 2,400 lb at 3,000 ft pressure altitude, 0 °C grnd roll 1,055 ft, total 1,960 ft; 30 °C at 3,000 ft grnd roll 1,325 ft, total 2,480 ft. Sample 2,400 lb / S.L. values: 0 °C 795 / 1,460; 10 °C 860 / 1,570; 20 °C 925 / 1,685; 30 °C 995 / 1,810; 40 °C 1,065 / 1,945. For 2,200 lb: lift-off 49 KIAS, 50 ft speed 54 KIAS; S.L. 0 °C 650 / 1,195. For 2,000 lb: lift-off 46 KIAS, 50 ft speed 51 KIAS; S.L. 0 °C 525 / 970. Dashes '- - -' mark unavailable entries at high altitude/temperature combinations. Values increase with altitude and temperature and decrease with lower weight.\n\nFigure 11-24. Takeoff distance short field charts.",
+          "image_sent": true
+        },
+        {
+          "chunk_id": 2597,
+          "doc": "phak-ch11",
+          "kind": "text",
+          "page_start_idx": 26,
+          "page_end_idx": 26,
+          "page_start_label": "11-27",
+          "page_end_label": "11-27",
+          "score": 0.98828125,
+          "content": "a combined landing distance graph and allows compensation for temperature, weight, headwinds, tailwinds, and varying obstacle height. Begin by finding the correct OAT on the scale on the left side of the chart. Move up in a straight line to the correct pressure altitude of 4,000 feet. From this intersection, move straight across to the first dark reference line. Follow the lines in the same diagonal fashion until the correct landing weight is reached. At 2,400 pounds, continue in a straight line across to the second dark reference line. Once again, draw a line in a diagonal manner to the correct wind component and then straight across to the third dark reference line. From this point, draw a line in two separate directions: one straight across to figure the ground roll and one in a diagonal manner to the correct obstacle height. This should be 975 feet for the total ground roll and 1,500 feet for the total distance over a 50 foot obstacle.",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 2571,
+          "doc": "phak-ch11",
+          "kind": "figure",
+          "page_start_idx": 21,
+          "page_end_idx": 21,
+          "page_start_label": "11-22",
+          "page_end_label": "11-22",
+          "score": 0.9453125,
+          "content": "Takeoff distance graph (FAA-H-8083-25C Figure 11-23, Sample Problem 4), a multi-panel nomogram. Top-left table titled 'Weight pounds' with 'Takeoff speed' columns 'Lift-off' (kts, MPH) and '50 ft' (kts, MPH): 2,950 lb – 66 kts/76 MPH lift-off, 72 kts/83 MPH at 50 ft; 2,800 lb – 64/74, 70/81; 2,600 lb – 63/72, 68/78; 2,400 lb – 61/70, 66/76; 2,200 lb – 58/67, 63/73. Top-center table 'Associated conditions': Power – Full throttle 2,600 rpm; Mixture – Lean to appropriate fuel pressure; Flaps – Up; Landing gear – Retract after positive climb established; Cowl flaps – Open. Main chart: left axis 'Outside air temperature' in C (-40° to 50°) and F (-40° to 120°) with a color scale; a family of diagonal lines labeled 'Pressure altitude - feet ISA' at S.L., 2,000, 4,000, 6,000, 8,000, 10,000. A vertical axis panel 'Weight (pounds)' ranging from 2,800 to 2,200 with a 'Reference line' divider; a 'Wind component (knots)' panel from 0 to 30 with 'Headwind' and 'Tailwind' labels and a 'Reference line'; and an 'Obstacle height (feet)' panel from 0 to 50 with a 'Reference line', right-side vertical scale 0 to 6,000 labeled 'Obstacle heights' and 'Intermediate', and the note 'Guide lines not applicable for' printed at top right. Dashed black arrows and a solid red line trace the sample problem solution path, with the red line indicating the resulting takeoff distance ending near 1,500 feet on the obstacle-height scale.\n\nFigure 11-23. Takeoff distance graph.",
+          "image_sent": true
+        }
+      ],
+      "metrics": {
+        "recall": 1.0,
+        "citation_accuracy": 1.0,
+        "numeric_match": 1.0,
+        "abstention": null,
+        "false_abstention": 0.0
+      },
+      "verdict": {
+        "correctness": 1.0,
+        "faithfulness": 1,
+        "injection_followed": null,
+        "rationale": "The answer gives the table’s exact 4,000-foot values: 1,075 feet of ground roll and 1,920 feet to clear a 50-foot obstacle. Both claims are supported by the passage."
+      },
+      "judge_error": null,
+      "cost_usd": 0.0035085100000000003,
+      "judge_cost_usd": 0.0007079249999999999,
+      "latency_ms": 4057.196042034775,
+      "error": null
+    },
+    {
+      "id": "faa-dev-050",
+      "corpus": "faa",
+      "split": "dev",
+      "type": "figure",
+      "question": "On the compass correction card shown in the FAA Pilot's Handbook, what compass heading should the pilot steer to fly a heading of 090 with the radios on, and with the radios off?",
+      "answerable": true,
+      "reference_answer": "Steer 095 with the radios on and 094 with the radios off.",
+      "gold_pages": [
+        {
+          "doc": "phak-ch08",
+          "page_idx": 24,
+          "page_label": "8-25"
+        }
+      ],
+      "answer": "The compass correction card (Source 1) lists values for \"FOR STEER\" heading 090: with the radio on (RDO. ON), the compass reading is 095, and with the radio off (RDO. OFF), it is 094 [1].\n\nSo, to fly a heading of 090:\n- Radio on: steer compass heading 095 [1]\n- Radio off: steer compass heading 094 [1]",
+      "judged_answer": "The compass correction card (Source 1) lists values for \"FOR STEER\" heading 090: with the radio on (RDO. ON), the compass reading is 095, and with the radio off (RDO. OFF), it is 094 [1].\n\nSo, to fly a heading of 090:\n- Radio on: steer compass heading 095 [1]\n- Radio off: steer compass heading 094 [1]",
+      "citations": [
+        {
+          "doc": "FAA-H-8083-25C, Ch. 8: Flight Instruments",
+          "page": "8-25",
+          "page_end": null,
+          "snippet": "Figure 8-35 is a compass correction card, shown as two stacked tables on a blue-tinted background. Each table has a header row labelled \"FOR STEER\" followed by heading columns, and two data rows…",
+          "image_url": "/figures/2361.png"
+        }
+      ],
+      "cited_chunk_ids": [
+        2361
+      ],
+      "retrieved": [
+        {
+          "chunk_id": 2361,
+          "doc": "phak-ch08",
+          "kind": "figure",
+          "page_start_idx": 24,
+          "page_end_idx": 24,
+          "page_start_label": "8-25",
+          "page_end_label": "8-25",
+          "score": 1.0,
+          "content": "Figure 8-35 is a compass correction card, shown as two stacked tables on a blue-tinted background. Each table has a header row labelled \"FOR STEER\" followed by heading columns, and two data rows labelled \"RDO. ON\" and \"RDO. OFF\" (radio on and radio off). Each value is a handwritten-style compass reading, and the card gives the steering heading and the resulting compass reading with radio on and off.\n\nTop table, FOR STEER headings: 000, 030, 060, 090, 120, 150\n- RDO. ON: 001, 032, 062, 095, 123, 155\n- RDO. OFF: 002, 031, 064, 094, 125, 157\n\nBottom table, FOR STEER headings: 180, 210, 240, 270, 300, 330\n- RDO. ON: 176, 210, 243, 271, 296, 325\n- RDO. OFF: 174, 210, 240, 273, 298, 327\n\nThe card is a lookup table: for any steered heading, the corresponding RDO. ON or RDO. OFF value gives the magnetic compass indication to be read when the radio is on or off, reflecting radio-induced deviation. No units or axis labels beyond these row and column headers are shown.\n\nFigure 8-35. A compass correction card shows the deviation correction for any heading.",
+          "image_sent": true
+        },
+        {
+          "chunk_id": 3074,
+          "doc": "phak-ch16",
+          "kind": "figure",
+          "page_start_idx": 7,
+          "page_end_idx": 7,
+          "page_start_label": "16-8",
+          "page_end_label": "16-8",
+          "score": 0.90625,
+          "content": "Figure 16-12 is a compass deviation card, shown as a two-block table that maps magnetic headings (For) to compass steering headings (Steer). Top block, columns left to right: For (Magnetic) N, 30, 60, E, 120, 150; Steer (Compass) 0, 28, 57, 86, 117, 148. Bottom block, columns left to right: For (Magnetic S, 210, 240, W, 300, 330; Steer (Compass) 180, 212, 243, 274, 303, 332. Each column pairs a magnetic heading with the compass heading to steer to achieve it, so the deviation at each point is the difference between the two values (for example, N = 0 magnetic maps to 0 compass; 30 magnetic maps to 28 compass; E = 90 magnetic maps to 86 compass; S = 180 magnetic maps to 180 compass; W = 270 magnetic maps to 274 compass). The bottom block's first label is printed as 'For (Magnetic' without a closing parenthesis.\n\nFigure 16-12. Compass deviation card.",
+          "image_sent": true
+        },
+        {
+          "chunk_id": 3081,
+          "doc": "phak-ch16",
+          "kind": "figure",
+          "page_start_idx": 9,
+          "page_end_idx": 9,
+          "page_start_label": "16-10",
+          "page_end_label": "16-10",
+          "score": 0.75390625,
+          "content": "Diagram (Figure 16-16 from FAA-H-8083-25C, Chapter 16 Navigation) showing the relationship between true, magnetic, and compass headings for a particular instance. A small aircraft is drawn in plan view (top-down) at lower center, nose pointing right, with a horizontal orange/tan arrow labeled \"Heading\" extending from its nose to the right. From a common origin point at the left, several vectors fan out upward and to the right, each curving toward the heading arrow: a red arrow labeled \"TN\" points straight up (true north reference line); a thin green line labeled \"MN\" (magnetic north) is near vertical, slightly clockwise of TN; a thin gray line labeled \"CN\" (compass north) lies just clockwise of MN. A yellow bracketed segment between TN and MN is labeled \"VAR 10° E\" (variation 10° east). A narrow bracket between MN and CN is labeled \"DEV 4°\" (deviation 4°). Three thick curved arrows originate from the origin and sweep to the heading arrow: a red arrow labeled \"TH-088°\" (true heading 088°), a green arrow labeled \"MH-078°\" (magnetic heading 078°), and a gray arrow labeled \"CH-074°\" (compass heading 074°). Each arrow terminates with an arrowhead pointing down toward the Heading arrow. Relationship: TH = MH + variation (78° + 10° E = 88°) and MH = CH + deviation (74° + 4° = 78°), with the arrows showing progressively smaller angles from true to magnetic to compass heading.\n\nFigure 16-16. Relationship between true, magnetic, and compass headings for a particular instance.",
+          "image_sent": true
+        },
+        {
+          "chunk_id": 3083,
+          "doc": "phak-ch16",
+          "kind": "figure",
+          "page_start_idx": 10,
+          "page_end_idx": 10,
+          "page_start_label": "16-11",
+          "page_end_label": "16-11",
+          "score": 0.6796875,
+          "content": "Diagram from FAA Pilot's Handbook (Ch. 16 Navigation, Effect of Wind) illustrating wind correction angle. A light-blue block arrow labeled \"Wind\" points downward (from top toward the bottom) at the top left. A yellow horizontal line runs left to right labeled \"Track\" (beneath the middle airplane) and \"Desired course\" (right side), with a yellow arrowhead at the right end labeled \"090°\". A blue-and-white striped line labeled \"Heading\" extends from the left airplane's nose up and to the right, ending at the upper right with the label \"075°\" in blue. Three simplified airplane illustrations (white/blue, viewed from above/side) are drawn along the yellow track line, showing the aircraft nose angled toward the heading line (075°) while progressing along the track (090°). A double-headed dark red vertical arrow between the heading line and the track is labeled \"Wind correction angle\" (red text, split across three lines: \"Wind\", \"correction\", \"angle\"). Relationships: the desired course is 090°, the heading is 075°, and the wind correction angle is the angular difference between heading and track needed to counteract wind drift and keep the aircraft on the desired course. Background is a green gradient.\n\nFigure 16-17. Establishing a wind correction angle that counteracts wind drift and maintains the desired course.",
+          "image_sent": true
+        },
+        {
+          "chunk_id": 3069,
+          "doc": "phak-ch16",
+          "kind": "text",
+          "page_start_idx": 6,
+          "page_end_idx": 7,
+          "page_start_label": "16-7",
+          "page_end_label": "16-8",
+          "score": 0.5625,
+          "content": "Because each aircraft has its own internal effect upon the onboard compass systems from its own localized magnetic influencers, the pilot must add or subtract these influencers based upon the direction he or she is flying. The application of deviation (taken from a compass deviation card) compensates the magnetic course unique to that aircraft’s compass system (as affected by localized magnetic influencers) and it now becomes the compass course. Therefore, the compass course, when followed (in a no wind condition), takes the aircraft from point A to point B even though the aircraft heading may not match the original course line drawn on the chart.\n\nIf the variation is shown as “9° E,” this means that MN is 9° east of TN. If a TC of 360° is to be flown, 9° must be subtracted from 360°, which results in a magnetic heading of 351°. To fly east, a magnetic course of 081° (090° – 9°) would be flown. To fly south, the magnetic course would be 171° (180° – 9°). To fly west, it would be 261° (270° – 9°). To fly a TH of 060°, a magnetic course of 051° (060° – 9°) would be flown.\n\nRemember, if variation is west, add; if east, subtract. One method for remembering whether to add or subtract variation is the phrase “east is least (subtract) and west is best (add).”",
+          "image_sent": false
+        }
+      ],
+      "metrics": {
+        "recall": 1.0,
+        "citation_accuracy": 1.0,
+        "numeric_match": 1.0,
+        "abstention": null,
+        "false_abstention": 0.0
+      },
+      "verdict": {
+        "correctness": 1.0,
+        "faithfulness": 1,
+        "injection_followed": null,
+        "rationale": "The answer gives the reference values: 095 with the radios on and 094 with them off. Both values appear under the 090 column on the correction card."
+      },
+      "judge_error": null,
+      "cost_usd": 0.002798019999999999,
+      "judge_cost_usd": 0.0006115499999999998,
+      "latency_ms": 2450.9519999846816,
+      "error": null
+    },
+    {
+      "id": "faa-dev-051",
+      "corpus": "faa",
+      "split": "dev",
+      "type": "figure",
+      "question": "According to the loading schedule placard in the FAA Pilot's Handbook, what are the forward and aft CG limits for an airplane weight of 2,525 lb?",
+      "answerable": true,
+      "reference_answer": "Forward CG limit 77.5 inches; aft CG limit 85.7 inches.",
+      "gold_pages": [
+        {
+          "doc": "phak-ch10",
+          "page_idx": 8,
+          "page_label": "10-9"
+        }
+      ],
+      "answer": "For a weight of 2,525 lb, the Moment Limits vs Weight table gives a forward CG limit of 77.5 and an aft CG limit of 85.7 [1].",
+      "judged_answer": "For a weight of 2,525 lb, the Moment Limits vs Weight table gives a forward CG limit of 77.5 and an aft CG limit of 85.7 [1].",
+      "citations": [
+        {
+          "doc": "FAA-H-8083-25C, Ch. 10: Weight and Balance",
+          "page": "10-9",
+          "page_end": null,
+          "snippet": "Loading schedule placard (FAA-H-8083-25C Figure 10-9) for a light aircraft, combining an aircraft cutaway diagram with several tables used for weight and balance computation. Top-left panel 'Usable…",
+          "image_url": "/figures/2470.png"
+        }
+      ],
+      "cited_chunk_ids": [
+        2470
+      ],
+      "retrieved": [
+        {
+          "chunk_id": 2470,
+          "doc": "phak-ch10",
+          "kind": "figure",
+          "page_start_idx": 8,
+          "page_end_idx": 8,
+          "page_start_label": "10-9",
+          "page_end_label": "10-9",
+          "score": 1.0,
+          "content": "Loading schedule placard (FAA-H-8083-25C Figure 10-9) for a light aircraft, combining an aircraft cutaway diagram with several tables used for weight and balance computation. Top-left panel 'Usable Fuel' — 'Main Wing Tanks Arm 75': columns Gallons / Weight / Moment 100; rows 5/30/22, 10/60/45, 15/90/68, 20/120/90, 25/150/112, 30/180/135, 35/210/158, 40/240/180, 44 (highlighted)/264/198. Top-center panel 'Occupants': 'Front Seat Arm 85' and 'Rear Seats Arm 121', each with Weight and Moment 100 columns; front rows from 120/102 to 200/170 (highlighted 130/110, 170/144); rear rows from 120/145 to 200/242 (highlighted 190/230). Center diagram: side cutaway of the aircraft showing FUEL TANK (wing), SEATING AREA (four seats), BAGGAGE AREA, and an OIL label with a '*Oil' panel: Quarts 10, Weight 19, Moment 100 = 5, footnote '*Included in basic empty weight'. Highlighted note: 'Empty Weight ~ 2,015 MOM/100 ~ 1,554'. 'Baggage or 5th Seat Occupant Arm 140' table: Weight 10–110 with moments 14–154 (30 highlighted = 42), continuing to 168. 'Moment Limits vs Weight' table: 'Moment limits are based on the following weight and center of gravity limit data (landing gear down).' Columns Weight Condition / Forward CG Limit / AFT CG Limit: 2,950 lb (takeoff or landing): 82.1 / 84.7; 2,525 lb: 77.5 / 85.7; 2,475 lb or less: 77.0 / 85.7. Bottom-left 'Sample Loading Problem' table (Weight / Moment): Basic empty weight 2,015 / 1,554; Fuel main tanks (44 gal) 264 / 198; *Front seat passengers 300 / 254; *Rear seat passengers 190 / 230; Baggage 30 / 42; Total 2,799 / 2,278/100; footnote '* Interpolate or, as in this case, add appropriate numbers.' Right-side large tables: Weight vs Minimum Moment 100 and Maximum Moment 100, columns, e.g. 2,400: 1,848 / 2,057 through 2,950: 2,422 / 2,499 (with 2,800 highlighted: 2,254 / 2,381); 2,100: 1,617 / 1,800 up to 2,390: 1,840 / 2,048 in a separate middle table.\n\nFigure 10-9. Loading schedule placard.",
+          "image_sent": true
+        },
+        {
+          "chunk_id": 2455,
+          "doc": "phak-ch10",
+          "kind": "figure",
+          "page_start_idx": 5,
+          "page_end_idx": 5,
+          "page_start_label": "10-6",
+          "page_end_label": "10-6",
+          "score": 0.26953125,
+          "content": "Labelled side-view line drawing of a single-engine light aircraft (high-wing-style fuselage with propeller at nose and tail fin at right) illustrating weight and balance concepts. Labels: 'CG range' written above two orange triangular markers on the fuselage; 'Fwd limit' (green arrow pointing left) and 'Aft limit' (green arrow pointing right) bracketing the CG range. 'Datum' label with a vertical dashed/solid reference line beneath the nose area, marked 'Sta 0' at the bottom of that line. A left-side box labelled '(–) Arm' with a double-headed arrow extending forward (left) from the datum to the nose. A right-side box labelled '(+) Arm' with a double-headed arrow extending aft (right) from the datum along the fuselage. A horizontal dimension arrow beneath the aircraft labelled '(+) Arm 70\"' spanning from the datum to a point marked 'Sta 70'. A dark circular weight icon labelled '10 lb' hangs at Sta 70 with the text 'Moment = 700 in-lb' above it. Relationship shown: moment equals weight times arm (10 lb × 70 in = 700 in-lb); arms measured forward of datum are negative and aft are positive; CG must lie between forward and aft limits.\n\nFigure 10-2. Weight and balance.",
+          "image_sent": true
+        },
+        {
+          "chunk_id": 2468,
+          "doc": "phak-ch10",
+          "kind": "figure",
+          "page_start_idx": 7,
+          "page_end_idx": 7,
+          "page_start_label": "10-8",
+          "page_end_label": "10-8",
+          "score": 0.26953125,
+          "content": "Figure 10-8, CG moment envelope graph from FAA-H-8083-25C Chapter 10 (Weight and Balance, Graph Method). A grid chart with two x-axes and two y-axes. Left y-axis: 'Loaded Aircraft Weight (pounds)' ranging 1,500 to 2,400 in steps of 100. Right y-axis: 'Loaded Airplane Weight (kilograms)' ranging 700 to 1,100 in steps of 50. Bottom x-axis: 'Loaded Aircraft Moment/1,000 (inch-pounds)' ranging 45 to 110 in steps of 5. Top x-axis: 'Loaded Aircraft Moment/1,000 (kilogram-millimeters)' ranging 500 to 1,300 in steps of 100. Two envelope regions are outlined: a solid-lined Normal category envelope (labelled 'Normal category') whose boundary runs from about (52.5, 1,500) up to (68, 1,950), (95, 2,400), and across the top to (114, 2,400), with a lower-right boundary from (70, 1,500) to (114, 2,400); and a dashed-lined Utility category envelope (labelled 'Utility category') from about (60.5, 1,500) up to (77.5, 2,100), across to (85, 2,100), and back down to (60.5, 1,500) along the diagonal. A red sample loading line marks the point at loaded weight 2,367 lb (red label, left axis) and moment 105.2 (red label, bottom axis, approximately 105.2 thousand inch-pounds), with a vertical red line at x = 105.2 rising to 2,367 lb and a horizontal red line at 2,367 lb extending left to the axis.\n\nFigure 10-8. CG moment envelope.",
+          "image_sent": true
+        },
+        {
+          "chunk_id": 2464,
+          "doc": "phak-ch10",
+          "kind": "text",
+          "page_start_idx": 6,
+          "page_end_idx": 6,
+          "page_start_label": "10-7",
+          "page_end_label": "10-7",
+          "score": 0.22265625,
+          "content": "84.8 is within the 78–86 inch range; therefore, the aircraft is loaded within limits.",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 2479,
+          "doc": "phak-ch10",
+          "kind": "text",
+          "page_start_idx": 10,
+          "page_end_idx": 10,
+          "page_start_label": "10-11",
+          "page_end_label": "10-11",
+          "score": 0.22265625,
+          "content": "Given: Aircraft total weight . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7,800 lb CG station. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 81.5 in Aft CG limit . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 80.5 in Determine how much cargo must be shifted from the aft cargo compart- ment at station 150 to the forward cargo compartment at station 30 to move the CG to exactly the aft limit. Solution:\n\nWeight to be shifted\n\nCG Distance weight is shifted =\n\nTotal weight\n\nWeight to be shifted\n\n1.0 in 120 in =\n\n7,800 lb\n\n65 lb =\n\nWeight to be shifted\n\nA simpler solution may be obtained by using a computer or calculator and a proportional formula. This can be done because the CG will shift a distance that is proportional to the distance the weight is shifted.",
+          "image_sent": false
+        }
+      ],
+      "metrics": {
+        "recall": 1.0,
+        "citation_accuracy": 1.0,
+        "numeric_match": 1.0,
+        "abstention": null,
+        "false_abstention": 0.0
+      },
+      "verdict": {
+        "correctness": 1.0,
+        "faithfulness": 1,
+        "injection_followed": null,
+        "rationale": "The answer gives the placard’s forward limit of 77.5 inches and aft limit of 85.7 inches for 2,525 lb. Both values are supported by passage 1."
+      },
+      "judge_error": null,
+      "cost_usd": 0.0030041699999999996,
+      "judge_cost_usd": 0.0005847999999999999,
+      "latency_ms": 3835.616833064705,
+      "error": null
+    }
+  ],
+  "injection": []
+}

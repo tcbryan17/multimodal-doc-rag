@@ -70,7 +70,7 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
     - *Concept:* pre-registration. A threshold set after seeing the score describes the result; it doesn't test it.
   - [x] **Eval validity (ADR 0017),** before the gold set: the judge is sent the figure images the generator saw (and the hand-grader is shown them); binding runs search every document; evidence minimums in `gates.toml`; injection runs must match the final run's system; tooling for the embedder, chunk-size and figure-image comparisons (`scripts/embed_missing.py`, `scripts/make_chunk_index.py`, `run_eval.py --no-figure-images`).
     - *Concept:* construct validity. A metric can be computed correctly and still not measure what its name says.
-  - [ ] The owner builds the gold set (after the ingest). Dev drafts are done (ADR 0018) and reviewed by Claude at the owner's request (ADR 0020): FAA 46 verified, 10-K 59 verified, 3 rejected. Still to come: 12 owner-written FAA figure questions. Held-out is drafted (40 items, 2026-11-14) and waits for the owner's review (ADR 0021).
+  - [ ] The owner builds the gold set (after the ingest). Dev drafts are done (ADR 0018) and reviewed by Claude at the owner's request (ADR 0020): FAA 46 verified, 10-K 59 verified, 3 rejected. FAA figure questions: 13, drafted by Claude and verified by the owner (ADR 0022). Held-out is drafted (40 items, 2026-11-14) and waits for the owner's review (ADR 0021).
   - [ ] Judged smoke run, then the dev baseline. Once the baseline exists, `gates.toml` is frozen. The text smoke run passed (`evals/reports/20261114T161029Z-judge-smoke.md`); the figure smoke run waits for the figure questions.
   - [ ] Injection runs (direct on `rag`, indirect on `rag_eval`) and judge calibration (about 30 hand grades). The injection set is reviewed by Claude, owner spot-check pending (`evals/injection/REVIEW.md`, ADR 0021).
   - [ ] Eval comparisons on dev (ADR 0011), checked against the gate table. The LLM-written context header comparison is deferred (ADR 0017).
@@ -86,7 +86,7 @@ Every step is one or more commits that are green on ruff, ruff format, mypy (str
   - Run the held-out split once (`--i-know-this-is-heldout`), then `scripts/release_check.py` with the final, injection and calibration evidence. Commit the release-check report, pass or fail.
   - Write the **system card**: intended and out-of-scope use, models, gate results with CIs, limitations.
   - *Concept:* a release decision is a check that can fail, not a judgement call after the fact.
-- [ ] **19. Deployment**: Fly.io + Neon, question text never logged (ADR 0021). Hardening, Dockerfile, read-only role, deploy gate and the site's ask UI are built on unmerged branches (see `docs/next-steps.md`).
+- [ ] **19. Deployment**: Fly.io + Neon, question text never logged (ADR 0021). Hardening, Dockerfile, read-only role, deploy gate and the site's ask UI are built and merged (2026-11-15). A full security and hardening review comes first (owner request).
   - It ships only if `release_check.py` exits 0 (a required CI step).
   - Live-ops governance: question-log policy (whether to log, retention, no personal data in logs), monitoring (cost per day, error and "I don't know" rates), incident response.
   - Hardening: per-IP rate limits, input and output caps, a read-only DB role, a non-root container.
