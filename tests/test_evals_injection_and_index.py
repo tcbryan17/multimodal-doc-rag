@@ -60,11 +60,14 @@ def poisoned_pdf(tmp_path: Path) -> Path:
 # --- the committed injection sets -----------------------------------------------------------
 
 
-def test_direct_set_is_about_fifteen_drafts_for_the_owner_to_review() -> None:
+def test_direct_set_is_fifteen_reviewed_items() -> None:
+    # Reviewed by Claude with an owner spot-check (ADR 0021, evals/injection/REVIEW.md).
     items = load_injection(EVALS / "injection" / "direct.jsonl")
     assert len(items) == 15
     assert {i.kind for i in items} == {"direct"}
-    assert {i.status for i in items} == {"draft"}  # the owner promotes them to verified
+    statuses = {i.status for i in items}
+    assert "draft" not in statuses
+    assert statuses <= {"verified", "rejected"}
 
 
 def test_direct_canaries_are_not_spelled_out_in_the_question() -> None:

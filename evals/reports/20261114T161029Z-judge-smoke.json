@@ -1,0 +1,595 @@
+{
+  "config": {
+    "label": "judge-smoke",
+    "started_utc": "2026-11-14T16:10:29Z",
+    "git_commit": "cb611e7574e8363b429d5e9135467acba619a87b",
+    "git_dirty": false,
+    "corpus": "faa",
+    "split": "dev",
+    "generator_model": "anthropic/claude-haiku-5.5",
+    "generator_reasoning": false,
+    "corpus_filter": false,
+    "figure_images": true,
+    "judge_model": "openai/gpt-6-luna",
+    "judge_fingerprint": "e2a908a51730",
+    "embedding_model": "qwen/qwen3-embedding-8b",
+    "rerank_model": "qwen/qwen3-reranker-8b",
+    "top_k": 5,
+    "recall_k": 5,
+    "candidates": 30,
+    "budget_usd": 2.0,
+    "include_drafts": false,
+    "limit": 5,
+    "question_type": null,
+    "index": {
+      "documents": 25,
+      "chunks": 3449,
+      "mean_chunk_chars": 973.5,
+      "max_chunk_chars": 3424,
+      "chunks_embedded": 3449,
+      "embedding_key": "qwen/qwen3-embedding-8b@1024"
+    },
+    "database": "rag"
+  },
+  "truncated": false,
+  "truncated_reason": "",
+  "meter_summary": "$0.0155 of $2.00 cap over 20 calls (20 reported, 0 estimated from tokens, 0 charged the flat fallback)",
+  "items": [
+    {
+      "id": "faa-dev-001",
+      "corpus": "faa",
+      "split": "dev",
+      "type": "fact",
+      "question": "In the FAA Pilot's Handbook's list of aviation acronyms and NOTAM contractions, what does the abbreviation ACAS stand for?",
+      "answerable": true,
+      "reference_answer": "ACAS stands for aircraft collision avoidance system.",
+      "gold_pages": [
+        {
+          "doc": "phak-appendices",
+          "page_idx": 8,
+          "page_label": "B-1"
+        }
+      ],
+      "answer": "ACAS stands for \"aircraft collision avoidance system\" [1].",
+      "judged_answer": "ACAS stands for \"aircraft collision avoidance system\" [1].",
+      "citations": [
+        {
+          "doc": "FAA-H-8083-25C, Appendices",
+          "page": "B-1",
+          "page_end": null,
+          "snippet": "This is a list of common acronyms and abbreviations used in the aviation industry as well as NOTAM contractions. For a more complete list of contractions used in aviation, see FAA Order JO 7340.2 (as…",
+          "image_url": null
+        }
+      ],
+      "cited_chunk_ids": [
+        1403
+      ],
+      "retrieved": [
+        {
+          "chunk_id": 1403,
+          "doc": "phak-appendices",
+          "kind": "text",
+          "page_start_idx": 8,
+          "page_end_idx": 8,
+          "page_start_label": "B-1",
+          "page_end_label": "B-1",
+          "score": 0.999472740752847,
+          "content": "This is a list of common acronyms and abbreviations used in the aviation industry as well as NOTAM contractions. For a more complete list of contractions used in aviation, see FAA Order JO 7340.2 (as amended). Additional information regarding NOTAMs can be found at pilotweb.nas.faa.gov/PilotWeb/.\n\nA\n\nA/C—aircraft A/FD—airport/facility directory A/G—air to ground A/HA—altitude/height AAF—Army Air Field AAI —arrival aircraft interval AAP—advanced automation program AAR—airport acceptance rate ABDIS—Automated Data Interchange System Service B ABN—aerodrome beacon ABV—above ACAIS—air carrier activity information system ACAS—aircraft collision avoidance system ACC—area control center; Airports Consultants Council ACCT—accounting records ACCUM—accumulate ACD—Automatic Call Distributor ACDO—Air Carrier District Office ACF—Area Control Facility ACFO—Aircraft Certification Field Office ACFT—aircraft ACID—aircraft identification ACI-NA—Airports Council International-North America ACIP—airport capital improvement plan ACLS—automatic carrier landing system ACLT—actual landing time calculated ACO—Office of Airports Compliance and Field Operations; Aircraft Certification Office ACR—air carrier ACRP—Airport Cooperative Research Program ACS—Airman Certification Standard ACT—active, activated, or activity ADA—air defense area ADAP—Airport Development Aid Program ADAS—AWOS data acquisition system ADCCP—advanced data communications control procedure ADDA—administrative data ADF—automatic direction finding ADI—automatic de-ice and inhibitor",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 1422,
+          "doc": "phak-appendices",
+          "kind": "text",
+          "page_start_idx": 18,
+          "page_end_idx": 18,
+          "page_start_label": "B-11",
+          "page_end_label": "B-11",
+          "score": 0.8345768999370071,
+          "content": "T—temperature T1MUX—T1 multiplexer TAA—terminal arrival area TAAS—terminal advance automation system TACAN—tactical air navigation TACR—TACAN at VOR, TACAN only TAF—terminal area forecast TAR—terminal area surveillance radar TARS—terminal automated radar service TAS—true air speed TATCA—terminal air traffic control automation TAVT—terminal airspace visualization tool TCA—traffic control airport or tower control airport; terminal control area TCACCIS—Transportation Coordinator Automated Command And Control Information System TCAS—Traffic Alert and Collision Avoidance System TCC—DOT Transportation Computer Center TCCC—Tower Control Computer Complex TCE—tone control equipment TCLT—tentative calculated landing time TCO—Telecommunications Certification Officer TCOM—Terminal Communications TCS—tower communications system TDLS—Tower Data-Link Services TDMUX—time division data multiplexer TDWR—terminal doppler weather radar TDZ—touchdown zone TDZ LG—touchdown zone lights TELCO—telephone company TELMS—telecommunications management system TEMPO—temporary TERPS—terminal instrument procedures TFAC—to facility TFC—traffic TFR—temporary flight restriction TGL—touch-and-go landings TH—threshold THN—thin THR—threshold THRU—through THU—Thursday TIL—until",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 1407,
+          "doc": "phak-appendices",
+          "kind": "text",
+          "page_start_idx": 10,
+          "page_end_idx": 10,
+          "page_start_label": "B-3",
+          "page_end_label": "B-3",
+          "score": 0.29396214757125955,
+          "content": "BC—back course BCA—benefit/cost analysis BCN—beacon BCR—benefit/cost ratio BDAT—digitized beacon data BERM—snowbank(s) containing earth/gravel BLW—below BMP—best management practices BND—bound BOC—Bell Operating Company bps—bits per second BRG—bearing BRI—basic rate interface BRITE—bright radar indicator terminal equipment BRL—building restriction line BUEC—back-up emergency communications BUECE—back-up emergency communications equipment BYD—beyond\n\nC\n\nC/S/S/N—capacity/safety/security/noise CAA—civil aviation authority; Clean Air Act CAAS—Class A Airspace CAB—civil aeronautics board CARF—Central Altitude Reservation Facility CASFO—Civil Aviation Security Office CAT—category; clear-air turbulence CAU—Crypto Ancillary Unit CBAS—Class B airspace CBI—computer based instruction CBSA—Class B surface area CC&O—customer cost and obligation CCAS—Class C Airspace CCC—Communications Command Center CCCC—staff communications CCCH—central computer complex host CCLKWS—counterclockwise CCS7-NI—Communication Channel Signal-7-Network Interconnect CCSA—Class C surface area CCSD—Command Communications Service Designator CCU—Central Control Unit CD—clearance delivery; common digitizer CDAS—Class D Airspace CDR—cost detail report CDSA—Class D surface area CDT—controlled departure time CDTI—cockpit display of traffic information CEAS—Class E Airspace CENTX—central telephone exchange CEP—capacity enhancement program CEQ—council on environmental quality",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 1484,
+          "doc": "phak-ch01",
+          "kind": "text",
+          "page_start_idx": 12,
+          "page_end_idx": 13,
+          "page_start_label": "1-13",
+          "page_end_label": "1-14",
+          "score": 0.18151367581829125,
+          "content": "• Flight restrictions in the proximity of the President and other parties\n\n• 14 CFR part 139 certificated airport condition changes\n\n• Snow conditions affecting glide slope operation\n\n• Air defense emergencies\n\n• Emergency flight rules\n\n• Substitute airway routes\n\n• Special data\n\n• U.S. Government charting corrections\n\n• Laser activity\n\nNOTAM Composition NOTAMs contain the elements below from left to right in the following order:\n\n• An exclamation point (!)\n\n• Accountability Location (the identifier of the accountability location)\n\n• Affected Location (the identifier of the affected facility or location)\n\n• KEYWORD (one of the following: RWY, TWY, RAMP, APRON, AD, COM, NAV, SVC, OBST, AIRSPACE, (U) and (O))\n\n• Surface Identification (optional—this shall be the runway identification for runway related NOTAMs, the taxiway identification for taxiway-related NOTAMs, or the ramp/apron identification for ramp/ apron-related NOTAMs)\n\n• Condition (the condition being reported)\n\n• Time (identifies the effective time(s) of the NOTAM condition)\n\nAltitude and height are in feet mean sea level (MSL) up to 17,999; e.g., 275, 1225 (feet and MSL is not written), and in flight levels (FL) for 18,000 and above; e.g., FL180, FL550. When MSL is not known, above ground level (AGL) will be written (304 AGL).\n\nWhen time is expressed in a NOTAM, the day begins at 0000 and ends at 2359. Times used in the NOTAM system are universal time coordinated (UTC) and shall be stated in 10 digits (year, month, day, hour, and minute). The following are two examples of how the time would be presented:\n\n!DCA LDN NAV VOR OTS WEF 0708051600-0708052359\n\n!DCA LDN NAV VOR OTS WEF 0709050000-0709050400 NOTAM Dissemination and Availability The system for disseminating aeronautical information is made up of two subsystems: the Airmen's Information System (AIS) and the NOTAM System. The AIS consists of charts and publications and is disseminated by the following methods:",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 1408,
+          "doc": "phak-appendices",
+          "kind": "text",
+          "page_start_idx": 10,
+          "page_end_idx": 11,
+          "page_start_label": "B-3",
+          "page_end_label": "B-4",
+          "score": 0.14245435604289103,
+          "content": "CERAP—center radar approach control; combined center radar approach control CESA—Class E surface area CFC—central flow control CFCF—Central Flow Control Facility CFCS—central flow control service CFR—Code of Federal Regulations CFWP—central flow weather processor CFWU—central flow weather unit CGAS—Class G Airspace; Coast Guard Air Station CHG—change CIG—ceiling CK—check CL—centerline CLC—course line computer CLIN—contract line item CLKWS—clockwise CLR—clearance, clear(s), cleared to CLSD—closed CLT—calculated landing time CM—commercial service airport CMB—climb CMSND—commissioned CNL—cancel CNMPS—Canadian Minimum Navigation Performance Specification Airspace CNS—consolidated NOTAM system CNSP—consolidated NOTAM system processor CO—central office COE—U.S. Army Corps of Engineers COM—communications COMCO—command communications outlet CONC—concrete CONUS—Continental United States CORP—private corporation other than ARINC or MITRE CPD—coupled CPE—customer premise equipment CPMIS—consolidated personnel management information system CRA—conflict resolution advisory CRDA—converging runway display aid CRS—course CRT—cathode ray tube CSA—communications service authorization CSIS—centralized storm information system CSO—customer service office CSR—communications service request CSS—central site system CTA—controlled time of arrival; control area CTA/FIR—control area/flight information region CTAF—common traffic advisory frequency CTAS—center-TRACON automation system\n\nCTC—contact CTL—control CTMA—Center Traffic Management Advisor CUPS—consolidated uniform payroll system CVFR—controlled visual flight rules CVTS—compressed video transmission service CW—continuous wave CWSU—Central Weather Service Unit CWY—clearway\n\nD",
+          "image_sent": false
+        }
+      ],
+      "metrics": {
+        "recall": 1.0,
+        "citation_accuracy": 1.0,
+        "numeric_match": null,
+        "abstention": null,
+        "false_abstention": 0.0
+      },
+      "verdict": {
+        "correctness": 1.0,
+        "faithfulness": 1,
+        "injection_followed": null,
+        "rationale": "The answer gives the expansion of ACAS exactly as stated in passage 1, and the claim is supported by that passage."
+      },
+      "judge_error": null,
+      "cost_usd": 0.0031163000000000002,
+      "judge_cost_usd": 0.00034205,
+      "latency_ms": 2756.3826250843704,
+      "error": null
+    },
+    {
+      "id": "faa-dev-002",
+      "corpus": "faa",
+      "split": "dev",
+      "type": "fact",
+      "question": "In the FAA Pilot's Handbook's list of acronyms and abbreviations, what does DNL stand for?",
+      "answerable": true,
+      "reference_answer": "DNL stands for day-night equivalent sound level (also called Ldn).",
+      "gold_pages": [
+        {
+          "doc": "phak-appendices",
+          "page_idx": 11,
+          "page_label": "B-4"
+        }
+      ],
+      "answer": "DNL stands for \"day-night equivalent sound level,\" also called Ldn. [1]",
+      "judged_answer": "DNL stands for \"day-night equivalent sound level,\" also called Ldn. [1]",
+      "citations": [
+        {
+          "doc": "FAA-H-8083-25C, Appendices",
+          "page": "B-4",
+          "page_end": null,
+          "snippet": "DLA—delay or delayed DLT—delete DLY—daily DME—distance measuring equipment DME/P—precision distance measuring equipment DMN—Data Multiplexing Network DMSTN—demonstration DNL—day-night equivalent sound…",
+          "image_url": null
+        }
+      ],
+      "cited_chunk_ids": [
+        1410
+      ],
+      "retrieved": [
+        {
+          "chunk_id": 1410,
+          "doc": "phak-appendices",
+          "kind": "text",
+          "page_start_idx": 11,
+          "page_end_idx": 11,
+          "page_start_label": "B-4",
+          "page_end_label": "B-4",
+          "score": 1.0,
+          "content": "DLA—delay or delayed DLT—delete DLY—daily DME—distance measuring equipment DME/P—precision distance measuring equipment DMN—Data Multiplexing Network DMSTN—demonstration DNL—day-night equivalent sound level (also called Ldn) DOD—direct outward dial DoD—Department of Defense DOI—Department of Interior DOS—Department of State DOT—Department of Transportation DOTCC—Department of Transportation Computer Center DOTS—dynamic ocean tracking system DP—dew point temperature DRFT—snowbank(s) caused by wind action DSCS—digital satellite compression service DSPLCD—displaced DSUA—dynamic special use airspace DTS—dedicated transmission service DUAT—direct user access terminal DVFR—defense visual flight rules; day visual flight rules DVOR—doppler very high frequency omni-directional range DYSIM—dynamic simulator\n\nE\n\nE—east EA—environmental assessment EARTS—en route automated radar tracking system EB—eastbound ECOM—en route communications ECVFP—expanded charted visual flight procedures EDCT—expedite departure path EFC—expect further clearance EFIS—electronic flight information systems EIAF—expanded inward access features EIS—environmental impact statement ELEV—elevation ELT—emergency locator transmitter ELWRT—electrowriter EMAS—engineered materials arresting system EMPS—en route maintenance processor system EMS—environmental management system E-MSAW—en route automated minimum safe altitude warning ENAV—en route navigational aids ENG—engine ENRT—en route ENTR—entire EOF—emergency Operating Facility EPA—Environmental Protection Agency EPS—Engineered Performance Standards",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 1403,
+          "doc": "phak-appendices",
+          "kind": "text",
+          "page_start_idx": 8,
+          "page_end_idx": 8,
+          "page_start_label": "B-1",
+          "page_end_label": "B-1",
+          "score": 0.1484375,
+          "content": "This is a list of common acronyms and abbreviations used in the aviation industry as well as NOTAM contractions. For a more complete list of contractions used in aviation, see FAA Order JO 7340.2 (as amended). Additional information regarding NOTAMs can be found at pilotweb.nas.faa.gov/PilotWeb/.\n\nA\n\nA/C—aircraft A/FD—airport/facility directory A/G—air to ground A/HA—altitude/height AAF—Army Air Field AAI —arrival aircraft interval AAP—advanced automation program AAR—airport acceptance rate ABDIS—Automated Data Interchange System Service B ABN—aerodrome beacon ABV—above ACAIS—air carrier activity information system ACAS—aircraft collision avoidance system ACC—area control center; Airports Consultants Council ACCT—accounting records ACCUM—accumulate ACD—Automatic Call Distributor ACDO—Air Carrier District Office ACF—Area Control Facility ACFO—Aircraft Certification Field Office ACFT—aircraft ACID—aircraft identification ACI-NA—Airports Council International-North America ACIP—airport capital improvement plan ACLS—automatic carrier landing system ACLT—actual landing time calculated ACO—Office of Airports Compliance and Field Operations; Aircraft Certification Office ACR—air carrier ACRP—Airport Cooperative Research Program ACS—Airman Certification Standard ACT—active, activated, or activity ADA—air defense area ADAP—Airport Development Aid Program ADAS—AWOS data acquisition system ADCCP—advanced data communications control procedure ADDA—administrative data ADF—automatic direction finding ADI—automatic de-ice and inhibitor",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 1418,
+          "doc": "phak-appendices",
+          "kind": "text",
+          "page_start_idx": 16,
+          "page_end_idx": 16,
+          "page_start_label": "B-9",
+          "page_end_label": "B-9",
+          "score": 0.10693359375,
+          "content": "PARL—parallel PAT—pattern PATWAS—Pilots Automatic Telephone Weather Answering Service PAX—passenger PBCT—proposed boundary crossing time PBRF—pilot briefing PBX—private branch exchange PCA—positive control airspace PCL—pilot controlled lighting PCM—pulse code modulation PD—Pilot Deviation PDAR—preferential arrival and departure route PDC—pre-departure clearance; program designator code PDN—Public Data Network PDR—preferential departure route PERM—permanent/permanently PFC—passenger facility charge PGP—planning grant program PIC—principal interexchange carrier PIDP—programmable indicator data processor PIREP—pilot weather report PJE—parachute jumping exercise PLA—practice low approach PLW—plow/plowed PMS—program management system PNR—prior notice required POLIC—police station POP—point of presence POT—point of termination PPIMS—personal property information management system PPR—prior permission required PR—primary commercial service airport PREV—previous PRI—primary rate interface PRM—precision runway monitor PRN—pseudo random noise PROC—procedure PROP—propeller PSDN—public switched data network PSN—packet switched network PSR —packed snow on runway(s) PSS—packet switched service PSTN—public switched telephone network PTC—presumed-to-conform PTCHY—patchy PTN—procedure turn PUB—publication PUP—principal user processor PVC—permanent virtual circuit PVD—plan view display PVT—private\n\nR",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 1406,
+          "doc": "phak-appendices",
+          "kind": "text",
+          "page_start_idx": 9,
+          "page_end_idx": 9,
+          "page_start_label": "B-2",
+          "page_end_label": "B-2",
+          "score": 0.10693359375,
+          "content": "ASP—arrival sequencing program ASPH—asphalt ASQP—airline service quality performance ASR—airport surveillance radar ASTA—airport surface traffic automation ASV—airline schedule vendor AT—air traffic ATA—Air Transport Association of America ATAS—airspace and traffic advisory service ATC—air traffic control ATCAA—air traffic control assigned airspace ATCBI—air traffic control beacon indicator ATCCC—Air Traffic Control Command Center ATCO—Air Taxi Commercial Operator ATCRB—air traffic control radar beacon ATCRBS—air traffic control radar beacon system ATCSCC—Air Traffic Control System Command Center ATCT—airport traffic control tower ATIS—automatic terminal information service ATISR—ATIS recorder ATM—air traffic management; asynchronous transfer mode ATMS—advanced traffic management system ATN—Aeronautical Telecommunications Network ATODN—AUTODIN terminal (FUS) ATOMS—air traffic operations management system ATOVN—AUOTVON (facility) ATS—air traffic service ATSCCP—ATS contingency command post AUTH—authority AUTOB—automatic weather reporting system AUTODIN—DoD Automatic Digital Network AUTOVON—DoD Automatic Voice Network AVBL—available AVN—Aviation Standards National Field Office, Oklahoma City AVON—AUTOVON service AWlS—airport weather information AWOS—automatic weather; observing/reporting system AWP—Aviation Weather Processor AWPG—aviation weather products generator AWS—air weather station AWY—airway AZM—azimuth\n\nB\n\nBA FAIR—braking action fair BA NIL—braking action nil BA POOR—braking action poor BANS—BRITE alphanumeric system BART—billing analysis reporting tool (GSA software tool) BASIC—basic contract observing station BASOP—military base operations",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 1413,
+          "doc": "phak-appendices",
+          "kind": "text",
+          "page_start_idx": 13,
+          "page_end_idx": 13,
+          "page_start_label": "B-6",
+          "page_end_label": "B-6",
+          "score": 0.0849609375,
+          "content": "H—non-directional radio homing beacon (NDB) HAA—height above airport HAL—height above landing HARS—high altitude route system HAT—height above touchdown HAZMAT—hazardous materials HCAP—high capacity carriers HDG—heading HDME—NDB with distance measuring equipment HDQ—FAA headquarters HEL—helicopter HELI—heliport HF—high frequency HH—NDB, 2kw or more HI-EFAS—high altitude EFAS HIRL—high intensity runway lights HIWAS—Hazardous lnflight Weather Advisory Service HLDC—high level data link control HLDG—holding HOL—holiday HOV—high occupancy vehicle HP—holding pattern HR—hour HSI—horizontal situation indicators HUD—housing and urban development HWAS—hazardous in-flight weather advisory Hz—Hertz\n\nI\n\nI/AFSS—international AFSS IA—indirect access IAF—initial approach fix IAP—instrument approach procedures IAPA—instrument approach procedures automation IBM—International Business Machines IBP—international boundary point IBR—intermediate bit rate ICAO—International Civil Aviation Organization ICSS—international communications switching systems\n\nID—identification IDAT—interfacility data IDENT—identify/identifier/identification IF—intermediate fix IFCP—interfacility communications processor IFDS—interfacility data system IFEA—in-flight emergency assistance IFO—International Field Office IFR—instrument flight rules IFSS—international flight service station ILS—instrument landing system IM—inner marker IMC—instrument meteorological conditions IN—inch/inches INBD—inbound INDEFLY—indefinitely INFO—information INM—integrated noise model INOP—inoperative INS—inertial navigation system INSTR—instrument INT—intersection INTL—international INTST—intensity IR—ice on runway(s) IRMP—information resources management plan ISDN—integrated services digital network ISMLS—interim standard microwave landing system ITI—interactive terminal interface IVRS—interim voice response system IW—inside wiring\n\nK\n\nKbps—Kilobits per second Khz—Kilohertz KT—knots KVDT—keyboard video display terminal\n\nL",
+          "image_sent": false
+        }
+      ],
+      "metrics": {
+        "recall": 1.0,
+        "citation_accuracy": 1.0,
+        "numeric_match": null,
+        "abstention": null,
+        "false_abstention": 0.0
+      },
+      "verdict": {
+        "correctness": 1.0,
+        "faithfulness": 1,
+        "injection_followed": null,
+        "rationale": "The answer gives the passage’s definition of DNL and its alternate name, Ldn. Both claims are supported by passage 1."
+      },
+      "judge_error": null,
+      "cost_usd": 0.0028511499999999998,
+      "judge_cost_usd": 0.00034742500000000016,
+      "latency_ms": 2067.7782502025366,
+      "error": null
+    },
+    {
+      "id": "faa-dev-003",
+      "corpus": "faa",
+      "split": "dev",
+      "type": "fact",
+      "question": "In the FAA Pilot's Handbook's list of acronyms and NOTAM contractions, what does NTZ stand for?",
+      "answerable": true,
+      "reference_answer": "NTZ stands for no transgression zone.",
+      "gold_pages": [
+        {
+          "doc": "phak-appendices",
+          "page_idx": 15,
+          "page_label": "B-8"
+        }
+      ],
+      "answer": "NTZ stands for \"no transgression zone\" [1].",
+      "judged_answer": "NTZ stands for \"no transgression zone\" [1].",
+      "citations": [
+        {
+          "doc": "FAA-H-8083-25C, Appendices",
+          "page": "B-8",
+          "page_end": null,
+          "snippet": "NPIAS—national plan of integrated airport systems NR—number NRC—non-recurring charge NRCS—national radio communications systems NSAP—National Service Assurance Plan NSRCATN—National Strategy to Reduce…",
+          "image_url": null
+        }
+      ],
+      "cited_chunk_ids": [
+        1417
+      ],
+      "retrieved": [
+        {
+          "chunk_id": 1417,
+          "doc": "phak-appendices",
+          "kind": "text",
+          "page_start_idx": 15,
+          "page_end_idx": 15,
+          "page_start_label": "B-8",
+          "page_end_label": "B-8",
+          "score": 0.99609375,
+          "content": "NPIAS—national plan of integrated airport systems NR—number NRC—non-recurring charge NRCS—national radio communications systems NSAP—National Service Assurance Plan NSRCATN—National Strategy to Reduce Congestion on America’s Transportation Network NSSFC—National Severe Storms Forecast Center NSSL—National Severe Storms Laboratory, Norman, OK NSWRH—NWS Regional Headquarters NTAP—Notices To Airmen Publication NTP—National Transportation Policy NTSB—National Transportation Safety Board NTZ—no transgression zone NW—northwest NWS—National Weather Service NWSR—NWS weather excluding NXRD NXRD—advanced weather radar system\n\nO\n\nOAG—official airline guide OALT—operational acceptable level of traffic OAW—off-airway weather station OBSC—obscured OBST—obstruction ODAL—omnidirectional approach lighting system ODAPS—oceanic display and processing station OEP—operational evolution plan/partnership OFA—object free area OFDPS—offshore flight data processing system OFT—outer fix time OFZ—obstacle free zone OM—outer marker OMB—Office Of Management and Budget ONER—Oceanic Navigational Error Report OPLT—operational acceptable level of traffic OPR—operate OPS—operation OPSW—operational switch OPX—off premises exchange ORD—operational readiness demonstration ORIG—original OTR—oceanic transition route OTS—out of service; organized track system OVR—over\n\nP\n\nPABX—private automated branch exchange PAD—packet assembler/disassembler PAEW—personnel and equipment working PAM—peripheral adapter module PAPI—precision approach path indicator PAR—precision approach radar; preferential arrival route",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 1403,
+          "doc": "phak-appendices",
+          "kind": "text",
+          "page_start_idx": 8,
+          "page_end_idx": 8,
+          "page_start_label": "B-1",
+          "page_end_label": "B-1",
+          "score": 0.3203125,
+          "content": "This is a list of common acronyms and abbreviations used in the aviation industry as well as NOTAM contractions. For a more complete list of contractions used in aviation, see FAA Order JO 7340.2 (as amended). Additional information regarding NOTAMs can be found at pilotweb.nas.faa.gov/PilotWeb/.\n\nA\n\nA/C—aircraft A/FD—airport/facility directory A/G—air to ground A/HA—altitude/height AAF—Army Air Field AAI —arrival aircraft interval AAP—advanced automation program AAR—airport acceptance rate ABDIS—Automated Data Interchange System Service B ABN—aerodrome beacon ABV—above ACAIS—air carrier activity information system ACAS—aircraft collision avoidance system ACC—area control center; Airports Consultants Council ACCT—accounting records ACCUM—accumulate ACD—Automatic Call Distributor ACDO—Air Carrier District Office ACF—Area Control Facility ACFO—Aircraft Certification Field Office ACFT—aircraft ACID—aircraft identification ACI-NA—Airports Council International-North America ACIP—airport capital improvement plan ACLS—automatic carrier landing system ACLT—actual landing time calculated ACO—Office of Airports Compliance and Field Operations; Aircraft Certification Office ACR—air carrier ACRP—Airport Cooperative Research Program ACS—Airman Certification Standard ACT—active, activated, or activity ADA—air defense area ADAP—Airport Development Aid Program ADAS—AWOS data acquisition system ADCCP—advanced data communications control procedure ADDA—administrative data ADF—automatic direction finding ADI—automatic de-ice and inhibitor",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 1481,
+          "doc": "phak-ch01",
+          "kind": "text",
+          "page_start_idx": 11,
+          "page_end_idx": 11,
+          "page_start_label": "1-12",
+          "page_end_label": "1-12",
+          "score": 0.294921875,
+          "content": "Notices to Airmen, or NOTAMs, are time-critical aeronautical information either temporary in nature or not sufficiently known in advance to permit publication on aeronautical charts or in other operational publications. The information receives immediate dissemination via the National Notice to Airmen (NOTAM) System. NOTAMs contain current notices to airmen that are considered essential to the safety of flight, as well as supplemental data affecting other operational publications. There are many different reasons that NOTAMs are issued. Following are some of those reasons:\n\n• Hazards, such as air shows, parachute jumps, kite flying, and rocket launches\n\n• Flights by important people such as heads of state\n\n• Closed runways\n\n• Inoperable radio navigational aids\n\n• Military exercises with resulting airspace restrictions\n\n• Inoperable lights on tall obstructions\n\n• Temporary erection of obstacles near airfields\n\n• Passage of flocks of birds through airspace (a NOTAM in this category is known as a BIRDTAM)\n\n• Notifications of runway/taxiway/apron status with respect to snow, ice, and standing water (a SNOWTAM)\n\n• Notification of an operationally significant change in volcanic ash or other dust contamination (an ASHTAM)\n\n• Software code risk announcements with associated patches to reduce specific vulnerabilities\n\nNOTAM information is generally classified into four categories: NOTAM (D) or NOTAMs that receive distant dissemination, distant and Flight Data Center (FDC) NOTAMs, Pointer NOTAMs, and Military NOTAMs pertaining to military airports or NAVAIDs that are part of the NAS. NOTAMs are available through Flight Service Station (FSS), Direct User Access Terminal Service (DUATS), private vendors, and many online websites.",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 3371,
+          "doc": "phak-glossary",
+          "kind": "text",
+          "page_start_idx": 20,
+          "page_end_idx": 21,
+          "page_start_label": "G-21",
+          "page_end_label": "G-22",
+          "score": 0.294921875,
+          "content": "No-gyro approach. A radar approach that may be used in case of a malfunctioning gyro-compass or directional gyro. Instead of providing the pilot with headings to be flown, the controller observes the radar track and issues control instructions “turn right/left” or “stop turn,” as appropriate.\n\nNondirectional radio beacon (NDB). A ground-based radio transmitter that transmits radio energy in all directions.\n\nNonprecision approach. A standard instrument approach procedure in which only horizontal guidance is provided.\n\nNo procedure turn (NoPT). Term used with the appropriate course and altitude to denote that the procedure turn is not required.\n\nNoPT. See no procedure turn.\n\nNOTAM. See Notice to Airmen.\n\nNotice to Airmen (NOTAM). A notice filed with an aviation authority to alert aircraft pilots of any hazards en route or at a specific location. The authority in turn provides means of disseminating relevant NOTAMs to pilots.\n\nNRP. See National Route Program.\n\nNSA. See National Security Area.\n\nNTSB. See National Transportation Safety Board.\n\nNWS. National Weather Service.\n\nO\n\nObstacle departure procedures (ODP). A preplanned instrument flight rule (IFR) departure procedure printed for pilot use in textual or graphic form to provide obstruction clearance via the least onerous route from the terminal area to the appropriate en route structure. ODPs are recommended for obstruction clearance and may be flown without ATC clearance unless an alternate departure procedure (SID or radar vector) has been specifically assigned by ATC.\n\nObstruction lights. Lights that can be found both on and off an airport to identify obstructions.\n\nOccluded front. A frontal occlusion occurs when a fast- moving cold front catches up with a slow moving warm front. The difference in temperature within each frontal system is a major factor in determining whether a cold or warm front occlusion occurs.\n\nODP. See obstacle departure procedures.\n\nOM. Outer marker.",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 1483,
+          "doc": "phak-ch01",
+          "kind": "figure",
+          "page_start_idx": 12,
+          "page_end_idx": 12,
+          "page_start_label": "1-13",
+          "page_end_label": "1-13",
+          "score": 0.26953125,
+          "content": "Figure 1-19 NOTAM (D) Information: a three-column table with headers 'Keyword', 'Example', 'Meaning'. Rows (keyword: example -> meaning):\nRWY: RWY 3/21 CLSD -> Runways 3 and 21 are closed to aircraft.\nTWY: TWY F LGTS OTS -> Taxiway F lights are out of service.\nRAMP: RAMP TERMINAL EAST SIDE CONSTRUCTION -> The ramp in front of the east side of the terminal has ongoing construction.\nAPRON: APRON SW TWY C NEAR HANGARS CLSD -> The apron near the southwest taxiway C in front of the hangars is closed.\nAD: AD ABN OTS -> Aerodromes: The airport beacon is out of service.\nOBST: OBST TOWER 283 (245 AGL) 2.2 S LGTS OTS (ASR 1065881) TIL 0707272300 -> Obstruction: The lights are out of service on a tower that is 283 feet above mean sea level (MSL) or 245 feet above ground level (AGL) 2.2 statute miles south of the field. The FCC antenna structure registration (ASR) number is 1065881. The lights will be returned to service 2300 UTC (Coordinated Universal Time) on July 27, 2007.\nNAV: NAV VOR OTS -> Navigation: The VOR located on this airport is out of service.\nCOM: COM ATIS OTS -> Communications: The Automatic Terminal Information Service (ATIS) is out of service.\nSVC: SVC TWR 1215-0330 MON -FRI/1430-2300 SAT/1600-0100 SUN TIL 0707300100 -> Service: The control tower has new operating hours, 1215-0330 UTC Monday Thru Friday. 1430-2300 UTC on Saturday and 1600-0100 UTC on Sunday until 0100 on July 30, 2007.\nSVC: SVC FUEL UNAVBL TIL 0707291600 -> Service: All fuel for this airport is unavailable until July 29, 2007, at 1600 UTC.\nSVC: SVC CUSTOMS UNAVBL TIL 0708150800 -> Service: United States Customs service for this airport will not be available until August 15, 2007, at 0800 UTC.\nAIRSPACE: AIRSPACE AIRSHOW ACFT 5000/BLW 3 NMR AIRPORT AVOIDANCE ADZD WEF 0707152000-0707152200 -> Airspace. There is an airshow being held at this airport with aircraft flying 5,000 feet and below within a 5 nautical mile radius. Avoidance is advised from 2000 UTC on July 15, 2007, until 2200 on July 15, 2007.\nU: ORT 6K8 (U) RWY ABANDONED VEHICLE -> Unverified aeronautical information.\nO: LOZ LOZ (O) CONTROLLED BURN OF HOUSE 8 NE APCH END RWY 23 WEF 0710211300-0710211700 -> Other aeronautical information received from any authorized source that may be beneficial to aircraft operations and does not meet defined NOTAM criteria.\n\nFigure 1-19. NOTAM (D) Information.",
+          "image_sent": true
+        }
+      ],
+      "metrics": {
+        "recall": 1.0,
+        "citation_accuracy": 1.0,
+        "numeric_match": null,
+        "abstention": null,
+        "false_abstention": 0.0
+      },
+      "verdict": {
+        "correctness": 1.0,
+        "faithfulness": 1,
+        "injection_followed": null,
+        "rationale": "The answer gives the stated expansion of NTZ, and passage 1 explicitly supports it."
+      },
+      "judge_error": null,
+      "cost_usd": 0.00327077,
+      "judge_cost_usd": 0.00047004999999999963,
+      "latency_ms": 2908.1433340907097,
+      "error": null
+    },
+    {
+      "id": "faa-dev-004",
+      "corpus": "faa",
+      "split": "dev",
+      "type": "fact",
+      "question": "According to the FAA Pilot's Handbook, where must FAA Aviation Safety Inspectors (ASIs) complete their training program, and what does that program include?",
+      "answerable": true,
+      "reference_answer": "ASIs must complete a training program at the FAA Academy in Oklahoma City, Oklahoma, which includes airman evaluation and pilot testing techniques and procedures.",
+      "gold_pages": [
+        {
+          "doc": "phak-ch01",
+          "page_idx": 8,
+          "page_label": "1-9"
+        }
+      ],
+      "answer": "ASIs must complete a training program at the FAA Academy in Oklahoma City, Oklahoma. The program includes airman evaluation and pilot testing techniques and procedures [1].",
+      "judged_answer": "ASIs must complete a training program at the FAA Academy in Oklahoma City, Oklahoma. The program includes airman evaluation and pilot testing techniques and procedures [1].",
+      "citations": [
+        {
+          "doc": "FAA-H-8083-25C, Ch. 1: Introduction to Flying",
+          "page": "1-9",
+          "page_end": null,
+          "snippet": "The ASIs administer and enforce safety regulations and standards for the production, operation, maintenance, and/ or modification of aircraft used in civil aviation. They also specialize in conducting…",
+          "image_url": null
+        }
+      ],
+      "cited_chunk_ids": [
+        1463
+      ],
+      "retrieved": [
+        {
+          "chunk_id": 1463,
+          "doc": "phak-ch01",
+          "kind": "text",
+          "page_start_idx": 8,
+          "page_end_idx": 8,
+          "page_start_label": "1-9",
+          "page_end_label": "1-9",
+          "score": 1.0,
+          "content": "The ASIs administer and enforce safety regulations and standards for the production, operation, maintenance, and/ or modification of aircraft used in civil aviation. They also specialize in conducting inspections of various aspects of the aviation system, such as aircraft and parts manufacturing, aircraft operation, aircraft airworthiness, and cabin safety. ASIs must complete a training program at the FAA Academy in Oklahoma City, Oklahoma, which includes airman evaluation and pilot testing techniques and procedures. ASIs also receive extensive on-the-job training and recurrent training on a regular basis. The FAA has approximately 3,700 inspectors located in its FSDO offices. All questions concerning pilot certification (and/or requests for other aviation information or services) should be directed to the local FSDO.",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 3320,
+          "doc": "phak-front",
+          "kind": "text",
+          "page_start_idx": 0,
+          "page_end_idx": 0,
+          "page_start_label": null,
+          "page_end_label": null,
+          "score": 0.376953125,
+          "content": "FAA-H-8083-25C",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 3323,
+          "doc": "phak-front",
+          "kind": "text",
+          "page_start_idx": 2,
+          "page_end_idx": 2,
+          "page_start_label": "iii",
+          "page_end_label": "iii",
+          "score": 0.06005859375,
+          "content": "This handbook provides the basic knowledge that is essential for pilots. It introduces pilots to the broad spectrum of knowledge that will be needed as they progress in their pilot training. Except for the Code of Federal Regulations pertinent to civil aviation, most of the knowledge areas applicable to pilot certification are presented. This handbook is useful to beginning pilots, as well as those pursuing more advanced pilot certificates.\n\nOccasionally the word “must” or similar language is used where the desired action is deemed critical. The use of such language is not intended to add to, interpret, or relieve a duty imposed by Title 14 of the Code of Federal Regulations (14 CFR).\n\nIt is essential for persons using this handbook to become familiar with and apply the pertinent parts of 14 CFR and the Aeronautical Information Manual (AIM). The AIM is available online at www.faa.gov. The current Flight Standards Service airman training and testing material and learning statements for all airman certificates and ratings can be obtained from www.faa.gov.\n\nThis handbook supersedes FAA-H-8083-25B, Pilot’s Handbook of Aeronautical Knowledge, dated 2016; the Pilot’s Handbook of Aeronautical Knowledge Addendum A, dated February 2021; the Pilot’s Handbook of Aeronautical Knowledge Addendum B, dated January 2022; and the Pilot’s Handbook of Aeronautical Knowledge Addendum C, dated March 2023.\n\nThis handbook is available for download, in PDF format, from www.faa.gov.\n\nThis handbook is published by the United States Department of Transportation, Federal Aviation Administration, Airman Testing Standards Branch, AFS-630, P.O. Box 25082, Oklahoma City, OK 73125.\n\nComments regarding this publication should be emailed to AFS630comments@faa.gov.",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 3325,
+          "doc": "phak-front",
+          "kind": "text",
+          "page_start_idx": 4,
+          "page_end_idx": 4,
+          "page_start_label": "v",
+          "page_end_label": "v",
+          "score": 0.029296875,
+          "content": "The Pilot’s Handbook of Aeronautical Knowledge was produced by the Federal Aviation Administration (FAA) with the assistance of Safety Research Corporation of America. The FAA wishes to acknowledge the following contributors:\n\nMrs. Nancy A. Wright for providing imagery of a de Haviland DH-4 inaugural air mail flight (Chapter 1)\n\nThe Raab Collection, Philadelphia, Pennsylvania, for images of the first pilot license (Chapter 1)\n\nSandy Kenyon and Rod Magner (magicair.com) for photo of 1929 TravelAir 4000 (Chapter 1)\n\nDr. Pat Veillette for information used on decision-making (Chapter 2)\n\nAdventure Seaplanes for photos of a ski and float training plane (Chapter 3)\n\nJack Davis, Stearman Restorers Asociation, for photo of a 1941 PT-17 Army Air Corps trainer (Chapter 3)\n\nMichael J. Hoke, Abaris Training Resources, Inc., for images and information about composite aircraft (Chapter 3)\n\nColin Cutler, Boldmethod, for images and content on the topic of ground effect (Chapter 5)\n\nMark R. Korin, Alpha Systems, for images of AOA disaplys (Chapter 5)\n\nM. van Leeuwen (www.zap16.com) for image of Piaggio P-180 (Chapter 6)\n\nGreg Richter, Blue Mountain Avionics, for autopilot information and imagery (Chapter 6)\n\nMountain High E&S Company for various images provided regarding oxygen systems (Chapter 7)\n\nJeff Callahan, Aerox, for image of MSK-AS Silicone Mask without Microphone (Chapter 7)\n\nNonin Medical, Inc. for image of Onyx pulse oximeter (Chapter 7)\n\nPilotfriend.com for photo of a TKS Weeping Wing (Chapter 7)\n\nChelton Flight Systems for image of FlightLogic (Chapter 8)\n\nAvidyne Corporation for image of the Entegra (Chapter 8)\n\nTeledyne Controls for image of an air data computer (Chapter 8)\n\nWatson Industries, Inc. (www.watson-gyro.com) for image of Attitude and Heading Reference system (Chapter 8)\n\nEngineering Arresting Systems Corporation (www.esco.zodiacaerospace.com) for EMAS imagery and EMASMAX technical digrams (Chapter 14)",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 1523,
+          "doc": "phak-ch01",
+          "kind": "text",
+          "page_start_idx": 21,
+          "page_end_idx": 21,
+          "page_start_label": "1-22",
+          "page_end_label": "1-22",
+          "score": 0.027587890625,
+          "content": "The FAA has developed PTS for FAA pilot certificates and associated ratings. [Figure 1-25] In 2015, the FAA began transitioning to the ACS approach. The ACS is essentially an “enhanced” version of the PTS. It adds task- specific knowledge and risk management elements to each PTS Area of Operation and Task. The result is a holistic, integrated presentation of specific knowledge, skills, and risk management elements and performance metrics for each Area of Operation and Task The ACS evaluation program will eventually replace the PTS program for evaluating and certifying pilots.\n\nThe practical tests are administered by FAA ASIs and DPEs. Title 14 CFR part 61 specifies the areas of operation in which",
+          "image_sent": false
+        }
+      ],
+      "metrics": {
+        "recall": 1.0,
+        "citation_accuracy": 1.0,
+        "numeric_match": null,
+        "abstention": null,
+        "false_abstention": 0.0
+      },
+      "verdict": {
+        "correctness": 1.0,
+        "faithfulness": 1,
+        "injection_followed": null,
+        "rationale": "The answer gives the stated location and both components of the training program, all supported by passage 1."
+      },
+      "judge_error": null,
+      "cost_usd": 0.0022219400000000004,
+      "judge_cost_usd": 0.0002591750000000004,
+      "latency_ms": 2349.511374719441,
+      "error": null
+    },
+    {
+      "id": "faa-dev-005",
+      "corpus": "faa",
+      "split": "dev",
+      "type": "fact",
+      "question": "According to the FAA Pilot's Handbook, which FAA online service provides access to current NOTAM information?",
+      "answerable": true,
+      "reference_answer": "PilotWeb (www.pilotweb.nas.faa.gov).",
+      "gold_pages": [
+        {
+          "doc": "phak-ch01",
+          "page_idx": 13,
+          "page_label": "1-14"
+        },
+        {
+          "doc": "phak-appendices",
+          "page_idx": 8,
+          "page_label": "B-1"
+        }
+      ],
+      "answer": "PilotWeb (www.pilotweb.nas.faa.gov) provides access to current NOTAM information [1].",
+      "judged_answer": "PilotWeb (www.pilotweb.nas.faa.gov) provides access to current NOTAM information [1].",
+      "citations": [
+        {
+          "doc": "FAA-H-8083-25C, Ch. 1: Introduction to Flying",
+          "page": "1-14",
+          "page_end": null,
+          "snippet": "Aeronautical charts depicting permanent baseline data: • IFR Charts—Enroute High Altitude Conterminous U.S., Enroute Low Altitude Conterminous U.S., Alaska Charts, and Pacific Charts • U.S. Terminal…",
+          "image_url": null
+        }
+      ],
+      "cited_chunk_ids": [
+        1485
+      ],
+      "retrieved": [
+        {
+          "chunk_id": 1485,
+          "doc": "phak-ch01",
+          "kind": "text",
+          "page_start_idx": 13,
+          "page_end_idx": 13,
+          "page_start_label": "1-14",
+          "page_end_label": "1-14",
+          "score": 0.9982070079021097,
+          "content": "Aeronautical charts depicting permanent baseline data:\n\n• IFR Charts—Enroute High Altitude Conterminous U.S., Enroute Low Altitude Conterminous U.S., Alaska Charts, and Pacific Charts\n\n• U.S. Terminal Procedures—Departure Procedures (DPs), Standard Terminal Arrivals (STARs) and Standard Instrument Approach Procedures (SIAPs)\n\n• VFR Charts—Sectional Aeronautical Charts, Terminal Area Charts (TAC), and World Aeronautical Charts (WAC)\n\nFlight information publications outlining baseline data:\n\n• Notices to Airmen (NTAP)—Published by System Operations Services, System Operations and Safety, Publications, every 28 days)\n\n• Chart Supplement U.S. (formerly Airport/Facility Directory)\n\n• Pacific Chart Supplement\n\n• Alaska Supplement\n\n• Alaska Terminal\n\n• Aeronautical Information Manual (AIM)\n\nNOTAMs are available in printed form through subscription from the Superintendent of Documents, from an FSS, or online at PilotWeb (www.pilotweb.nas.faa.gov), which provides access to current NOTAM information. Local airport NOTAMs can be obtained online from various websites. Some examples are www.fltplan.com and www. aopa.org/whatsnew/notams.html. Most sites require a free registration and acceptance of terms but offer pilots updated NOTAMs and TFRs.",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 2986,
+          "doc": "phak-ch14",
+          "kind": "text",
+          "page_start_idx": 37,
+          "page_end_idx": 37,
+          "page_start_label": "14-38",
+          "page_end_label": "14-38",
+          "score": 0.8261715038425573,
+          "content": "The chapter identifies best practices to help you avoid errors that may potentially lead to runway incursions. Although the chapter pertains mostly to surface movements for single-pilot operations, all of the information is relevant for flight crew operations as well.\n\nAdditional information about surface operations is available through the following sources:\n\n• Federal Aviation Administration (FAA) Runway Safety website—www.faa.gov/go/runwaysafety\n\n• FAA National Aeronautical Navigation Services (AeroNav), formerly known as the National Aeronautical Charting Office (NACO)—www.faa. gov/air_traffic/flight_info/aeronav\n\n• Chart Supplement U.S. (formerly Airport/Facility Directory)—www.faa.gov/air_traffic/flight_info/ aeronav/digital_products/dafd/search/\n\n• Automatic Terminal Information Service (ATIS)\n\n• Notice to Airmen (NOTAMs)—http://www.faa.gov/ pilots/flt_plan/notams\n\n• Advisory Circular (AC) 91-73, part 91 and part 135, Single-Pilot and Flight School Procedures During Taxi Operations\n\n• Aeronautical Information Manual (AIM)—www.faa. gov/air_traffic/publications/atpubs/aim/\n\n• AC 120-74, parts 91, 121, 125, and 135, Flight Crew Procedures During Taxi Operations",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 3323,
+          "doc": "phak-front",
+          "kind": "text",
+          "page_start_idx": 2,
+          "page_end_idx": 2,
+          "page_start_label": "iii",
+          "page_end_label": "iii",
+          "score": 0.6905262501025262,
+          "content": "This handbook provides the basic knowledge that is essential for pilots. It introduces pilots to the broad spectrum of knowledge that will be needed as they progress in their pilot training. Except for the Code of Federal Regulations pertinent to civil aviation, most of the knowledge areas applicable to pilot certification are presented. This handbook is useful to beginning pilots, as well as those pursuing more advanced pilot certificates.\n\nOccasionally the word “must” or similar language is used where the desired action is deemed critical. The use of such language is not intended to add to, interpret, or relieve a duty imposed by Title 14 of the Code of Federal Regulations (14 CFR).\n\nIt is essential for persons using this handbook to become familiar with and apply the pertinent parts of 14 CFR and the Aeronautical Information Manual (AIM). The AIM is available online at www.faa.gov. The current Flight Standards Service airman training and testing material and learning statements for all airman certificates and ratings can be obtained from www.faa.gov.\n\nThis handbook supersedes FAA-H-8083-25B, Pilot’s Handbook of Aeronautical Knowledge, dated 2016; the Pilot’s Handbook of Aeronautical Knowledge Addendum A, dated February 2021; the Pilot’s Handbook of Aeronautical Knowledge Addendum B, dated January 2022; and the Pilot’s Handbook of Aeronautical Knowledge Addendum C, dated March 2023.\n\nThis handbook is available for download, in PDF format, from www.faa.gov.\n\nThis handbook is published by the United States Department of Transportation, Federal Aviation Administration, Airman Testing Standards Branch, AFS-630, P.O. Box 25082, Oklahoma City, OK 73125.\n\nComments regarding this publication should be emailed to AFS630comments@faa.gov.",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 1481,
+          "doc": "phak-ch01",
+          "kind": "text",
+          "page_start_idx": 11,
+          "page_end_idx": 11,
+          "page_start_label": "1-12",
+          "page_end_label": "1-12",
+          "score": 0.5776436116184277,
+          "content": "Notices to Airmen, or NOTAMs, are time-critical aeronautical information either temporary in nature or not sufficiently known in advance to permit publication on aeronautical charts or in other operational publications. The information receives immediate dissemination via the National Notice to Airmen (NOTAM) System. NOTAMs contain current notices to airmen that are considered essential to the safety of flight, as well as supplemental data affecting other operational publications. There are many different reasons that NOTAMs are issued. Following are some of those reasons:\n\n• Hazards, such as air shows, parachute jumps, kite flying, and rocket launches\n\n• Flights by important people such as heads of state\n\n• Closed runways\n\n• Inoperable radio navigational aids\n\n• Military exercises with resulting airspace restrictions\n\n• Inoperable lights on tall obstructions\n\n• Temporary erection of obstacles near airfields\n\n• Passage of flocks of birds through airspace (a NOTAM in this category is known as a BIRDTAM)\n\n• Notifications of runway/taxiway/apron status with respect to snow, ice, and standing water (a SNOWTAM)\n\n• Notification of an operationally significant change in volcanic ash or other dust contamination (an ASHTAM)\n\n• Software code risk announcements with associated patches to reduce specific vulnerabilities\n\nNOTAM information is generally classified into four categories: NOTAM (D) or NOTAMs that receive distant dissemination, distant and Flight Data Center (FDC) NOTAMs, Pointer NOTAMs, and Military NOTAMs pertaining to military airports or NAVAIDs that are part of the NAS. NOTAMs are available through Flight Service Station (FSS), Direct User Access Terminal Service (DUATS), private vendors, and many online websites.",
+          "image_sent": false
+        },
+        {
+          "chunk_id": 2812,
+          "doc": "phak-ch14",
+          "kind": "text",
+          "page_start_idx": 2,
+          "page_end_idx": 2,
+          "page_start_label": "14-3",
+          "page_end_label": "14-3",
+          "score": 0.16964161439608721,
+          "content": "When a pilot flies into a different airport, it is important to review the current data for that airport. This data provides the\n\npilot with information, such as communication frequencies, services available, closed runways, or airport construction. Three common sources of information are:\n\n• Aeronautical Charts\n\n• Chart Supplement U.S. (formerly Airport/Facility Directory)\n\n• Notices to Airmen (NOTAMs)\n\n• Automated Terminal Information Service (ATIS)",
+          "image_sent": false
+        }
+      ],
+      "metrics": {
+        "recall": 1.0,
+        "citation_accuracy": 1.0,
+        "numeric_match": null,
+        "abstention": null,
+        "false_abstention": 0.0
+      },
+      "verdict": {
+        "correctness": 1.0,
+        "faithfulness": 1,
+        "injection_followed": null,
+        "rationale": "The answer identifies PilotWeb and its URL, matching the reference. The passage explicitly says PilotWeb provides access to current NOTAM information."
+      },
+      "judge_error": null,
+      "cost_usd": 0.00234092,
+      "judge_cost_usd": 0.00028417499999999936,
+      "latency_ms": 2048.8225421868265,
+      "error": null
+    }
+  ],
+  "injection": []
+}
