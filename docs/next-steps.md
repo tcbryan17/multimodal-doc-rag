@@ -4,6 +4,17 @@ Where the project stands (last updated 2026-11-15), and what to do next, in orde
 Claude, say: *"continue from docs/next-steps.md"*. Delete this file, or rewrite it, once it is
 out of date. `docs/build-plan.md` stays the long-term plan.
 
+## Added 2026-11-26
+
+New queue items for the owner (ADR 0024):
+
+- **Write the three stubs**, each a `TODO(human)` with options in its docstring:
+  - `src/multimodal_doc_rag/refusal.py` first. **Settle the refusal choice before step 3 (the dev baseline).** It affects the abstention gates, which freeze at the baseline.
+  - `src/multimodal_doc_rag/evals/rank_metrics.py` (MRR, nDCG@k; report only).
+  - `src/multimodal_doc_rag/evals/agreement_stats.py` (weighted kappa and a bootstrap CI).
+- **Fill in the interview answers** at the end of each guide in `docs/concepts/`.
+- **Review the governance drafts** in `docs/governance/`: accept or change the NIST tags, check framework IDs against source, and settle the GDPR open items (deploy region, DPAs, Fly and Neon log retention, a privacy notice shipped with the AI notice C15).
+
 ## Branches
 
 - **Merged 2026-11-15:** rag #2 `eval-progress`, #3 `deploy-api-hardening`, #4 `deploy-ops-scaffolding`, and site #3 `rag-live-ask-ui`.
